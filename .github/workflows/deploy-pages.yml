@@ -1,0 +1,73 @@
+name: Deploy to GitHub Pages
+
+# 每次推送到 main / master 分支，或在 Actions 页面手动触发时，
+# 自动在 GitHub 的服务器上构建 Angular 应用并发布到 GitHub Pages。
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+# GitHub Pages 部署所需权限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只跑一个部署，新推送会取消进行中的旧部署
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # 根据仓库名自动计算 base-href：
+      #   - 用户/组织站点仓库（<owner>.github.io）-> "/"
+      #   - 普通项目仓库                          -> "/<仓库名>/"
+      # 这样无论你把仓库叫什么，资源路径都正确，无需手改 angular.json
+      - name: Compute base href
+        id: base
+        run: |
+          REPO="${{ github.event.repository.name }}"
+          OWNER="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          if [ "$(echo "$REPO" | tr '[:upper:]' '[:lower:]')" = "${OWNER}.github.io" ]; then
+            echo "href=/" >> "$GITHUB_OUTPUT"
+          else
+            echo "href=/$REPO/" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npx ng build --base-href "${{ steps.base.outputs.href }}"
+
+      # 单页应用刷新/深链回退：把 index.html 复制为 404.html
+      - name: SPA fallback
+        run: cp dist/angular-app/browser/index.html dist/angular-app/browser/404.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/angular-app/browser
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

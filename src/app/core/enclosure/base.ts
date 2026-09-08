@@ -1,11 +1,14 @@
 import { booleans } from '@jscad/modeling';
+import type { Geom3 } from '@jscad/modeling/src/geometries/types';
 import { Params } from '../params';
 
 import { holes } from './holes';
 import { flanges } from './wallmount';
-import { clover, hollowRoundCube, roundedCube } from './utils';
+import { bottomChamferTool, clover, hollowRoundCube, roundedCube, topRimChamferTool } from './utils';
 import { waterProofSealCutout } from './waterproofseal';
 import { screws } from './screws';
+import { ventilationCut } from './ventilation';
+import { baseSnapPockets } from './snapfit';
 import { translate } from '@jscad/modeling/src/operations/transforms';
 
 const { subtract, union } = booleans;
@@ -71,8 +74,50 @@ export const base = (params: Params) => {
   }
 
   if (subtracts.length > 0) {
-    return subtract(union(body), union(subtracts));
+    return finish(subtract(union(body), union(subtracts)), params);
   } else {
-    return union(body);
+    return finish(union(body), params);
   }
+};
+
+// 统一应用「散热槽 / 底边倒角 / 卡扣凹槽」等后处理
+const finish = (solid: Geom3, params: Params): Geom3 => {
+  const {
+    width,
+    length,
+    height,
+    wall,
+    cornerRadius,
+    waterProof,
+    insertThickness,
+    insertClearance,
+    baseBedChamfer,
+    baseRimChamfer,
+  } = params;
+  let result = solid;
+
+  const vent = ventilationCut(params, 'base');
+  if (vent) {
+    result = subtract(result, vent);
+  }
+
+  const pockets = baseSnapPockets(params);
+  if (pockets) {
+    result = subtract(result, pockets);
+  }
+
+  if (baseBedChamfer > 0) {
+    result = subtract(result, bottomChamferTool(width, length, baseBedChamfer, cornerRadius));
+  }
+
+  // 内壁顶端导入倒角：内壁内缩量随是否防水而不同
+  if (baseRimChamfer > 0) {
+    const innerInset = waterProof ? wall * 2 + insertClearance * 2 + insertThickness : wall;
+    result = subtract(
+      result,
+      topRimChamferTool(width, length, innerInset, baseRimChamfer, height, cornerRadius),
+    );
+  }
+
+  return result;
 };

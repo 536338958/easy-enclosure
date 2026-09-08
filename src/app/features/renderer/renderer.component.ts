@@ -14,6 +14,7 @@ import type { Vec3 } from '@jscad/modeling/src/maths/types';
 import measureBoundingBox from '@jscad/modeling/src/measurements/measureBoundingBox';
 import { union } from '@jscad/modeling/src/operations/booleans';
 import { translate } from '@jscad/modeling/src/operations/transforms';
+import { colorize } from '@jscad/modeling/src/colors';
 import {
   cameras,
   controls,
@@ -27,6 +28,7 @@ import { base } from '../../core/enclosure/base';
 import { internalWalls } from '../../core/enclosure/internalwalls';
 import { lid } from '../../core/enclosure/lid';
 import { pcbMountsOnBase, pcbMountsOnLid } from '../../core/enclosure/pcbmount';
+import { pcbBoard, pcbComponentZone, pcbCollision } from '../../core/enclosure/pcbpreview';
 import { waterProofSeal } from '../../core/enclosure/waterproofseal';
 import type { Params } from '../../core/params';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
@@ -47,6 +49,9 @@ const lidDeps = [
   'insertHeight',
   'insertClearance',
   'holes',
+  'ventilation',
+  'snapFit',
+  'lidBedChamfer',
 ];
 const baseDeps = [
   'length',
@@ -66,6 +71,10 @@ const baseDeps = [
   'wallMountScrewDiameter',
   'wallMountCount',
   'insertClearance',
+  'ventilation',
+  'snapFit',
+  'baseBedChamfer',
+  'baseRimChamfer',
 ];
 const sealDeps = [
   'length',
@@ -225,7 +234,9 @@ const makeAdaptiveGridCommand = (regl: any, params: any = {}) => {
 const rendererDrawCommands = {
   ...drawCommands,
   drawGrid: makeAdaptiveGridCommand,
-} as typeof drawCommands;
+  // 用 size=1 创建坐标轴命令；实际长度通过实体 model 矩阵里的均匀缩放给出
+  drawAxis: (regl: any) => (drawCommands as any).drawAxis(regl, { size: 1, lineWidth: 2 }),
+} as unknown as typeof drawCommands;
 
 type RenderOptions = {
   camera: typeof cameras.perspective.defaults;
@@ -236,7 +247,7 @@ type RenderOptions = {
 type Vec3Tuple = [number, number, number];
 
 type SurfaceLabel = {
-  name: 'Front' | 'Back' | 'Left' | 'Right' | 'Lid' | 'Bottom' | 'Seal';
+  name: string;
   x: number;
   y: number;
 };
@@ -309,6 +320,11 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
   private wheelInteractionHandle: ReturnType<typeof setTimeout> | null = null;
 
   readonly surfaceLabels = signal<SurfaceLabel[]>([]);
+  readonly pcbCollision = signal<{ collides: boolean; hitsWalls: boolean; hitsCeiling: boolean }>({
+    collides: false,
+    hitsWalls: false,
+    hitsCeiling: false,
+  });
 
   constructor() {
     effect(() => {
@@ -448,6 +464,29 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
 
   private roundUpToStep(value: number, step: number): number {
     return Math.max(step, Math.ceil(value / step) * step);
+  }
+
+  /**
+   * Build an XYZ axis gizmo anchored at the base's local origin (its corner),
+   * using the renderer's native `drawAxis` command. Axis length is encoded as a
+   * uniform scale in the model matrix (the command is created with size=1).
+   * X=red→左面(+X), Y=green→前面(+Y), Z=blue→上(+Z). The entity carries no
+   * `geometry`, so it is excluded from camera framing.
+   */
+  private buildAxisEntity(params: Params): Entity | null {
+    if (!params.showAxes) {
+      return null;
+    }
+    const axisLength = Math.max(params.width, params.length, params.height) * 0.9;
+    const L = Math.max(axisLength, 1);
+    const [ox, oy, oz] = this.baseOrigin;
+    return {
+      visuals: {
+        drawCmd: 'drawAxis',
+        show: true,
+      },
+      model: [L, 0, 0, 0, 0, L, 0, 0, 0, 0, L, 0, ox, oy, oz, 1],
+    } as unknown as Entity;
   }
 
   private buildTranslationMatrix(x: number, y: number, z: number): number[] {
@@ -603,27 +642,27 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
 
     const anchors: SurfaceAnchor[] = [
       {
-        name: 'Front',
+        name: '前面',
         point: [originX + width / 2, originY + length, originZ + height / 2],
         normal: [0, 1, 0],
       },
       {
-        name: 'Back',
+        name: '后面',
         point: [originX + width / 2, originY, originZ + height / 2],
         normal: [0, -1, 0],
       },
       {
-        name: 'Left',
+        name: '左面',
         point: [originX + width, originY + length / 2, originZ + height / 2],
         normal: [1, 0, 0],
       },
       {
-        name: 'Right',
+        name: '右面',
         point: [originX, originY + length / 2, originZ + height / 2],
         normal: [-1, 0, 0],
       },
       {
-        name: 'Bottom',
+        name: '底面',
         point: [originX + width / 2, originY + length / 2, originZ],
         normal: [0, 0, -1],
       },
@@ -631,7 +670,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
 
     if (this.lidModel) {
       anchors.push({
-        name: 'Lid',
+        name: '盖板',
         point: [lidX + width / 2, lidY + length / 2, lidZ + roof + insertHeight],
         normal: [0, 0, 1],
       });
@@ -640,7 +679,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     if (this.sealModel) {
       const [sealX, sealY, sealZ] = this.sealOrigin;
       anchors.push({
-        name: 'Seal',
+        name: '密封圈',
         point: [sealX + width / 2, sealY + length / 2, sealZ + Math.max(1, roof) / 2],
         normal: [0, 0, 1],
       });
@@ -736,6 +775,37 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       return [0, 0, 0];
     }
     return [vector[0] / magnitude, vector[1] / magnitude, vector[2] / magnitude];
+  }
+
+  private buildPcbEntities(params: Params): Entity[] {
+    if (!params.pcbPreview.enabled) {
+      this.pcbCollision.set({ collides: false, hitsWalls: false, hitsCeiling: false });
+      return [];
+    }
+
+    const collision = pcbCollision(params);
+    this.pcbCollision.set(collision);
+
+    // 板体在基座本地坐标系中构建，平移到与基座相同的位置
+    const boardColor: [number, number, number, number] = collision.collides
+      ? [0.9, 0.15, 0.15, 0.85]
+      : [0.15, 0.6, 0.28, 0.85];
+    const zoneColor: [number, number, number, number] = collision.collides
+      ? [0.9, 0.3, 0.3, 0.12]
+      : [0.2, 0.65, 0.35, 0.12];
+
+    const entities: Entity[] = [];
+
+    const board = translate(this.baseOrigin, pcbBoard(params));
+    entities.push(...(entitiesFromSolids({}, colorize(boardColor, board)) as Entity[]));
+
+    const zone = pcbComponentZone(params);
+    if (zone) {
+      const placedZone = translate(this.baseOrigin, zone);
+      entities.push(...(entitiesFromSolids({}, colorize(zoneColor, placedZone)) as Entity[]));
+    }
+
+    return entities;
   }
 
   private async renderModel(params: Params, diff: string[]): Promise<void> {
@@ -835,6 +905,16 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     // The grid is a reference plane sitting under the model, so list it first
     // so it draws before the solid geometry.
     const entities: Entity[] = gridEntity ? [gridEntity, ...modelEntities] : modelEntities;
+
+    const axisEntity = this.buildAxisEntity(params);
+    if (axisEntity) {
+      entities.push(axisEntity);
+    }
+
+    const pcbEntities = this.buildPcbEntities(params);
+    if (pcbEntities.length > 0) {
+      entities.push(...pcbEntities);
+    }
 
     // Re-frame the camera when the grid becomes visible (so it lands in view)
     // or when its size-affecting inputs change while it is on. Leave the user's

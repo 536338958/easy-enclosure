@@ -45,15 +45,18 @@ export const holes = (
       const totalWallThickness = insertThickness + insertClearance * 2 + wall * 2;
       let holeDepth = totalWallThickness;
 
+      // 统一偏移约定（与通风槽一致）：
+      //   hole.x = 面内「水平」偏移，+ 指向 +世界轴（前/后面→+X=左面；左/右面→+Y=前面）
+      //   hole.y = 面内「垂直/纵向」偏移（墙面→+Z 向上；顶/底面→+Y 向前面）
       if (surface === 'front') {
         y = length - totalWallThickness / 2;
-        x = width / 2 - hole.y;
-        z = height / 2 + hole.x;
+        x = width / 2 + hole.x;
+        z = height / 2 + hole.y;
         rot = [degToRad(90), 0, 0];
       } else if (surface === 'right') {
         x = totalWallThickness / 2;
-        y = length / 2 - hole.y;
-        z = height / 2 + hole.x;
+        y = length / 2 + hole.x;
+        z = height / 2 + hole.y;
         if (hole.shape === 'circle') {
           rot = [0, degToRad(90), 0];
         } else {
@@ -61,21 +64,21 @@ export const holes = (
         }
       } else if (surface === 'back') {
         y = totalWallThickness / 2;
-        x = width / 2 - hole.y;
-        z = height / 2 + hole.x;
+        x = width / 2 + hole.x;
+        z = height / 2 + hole.y;
         rot = [degToRad(90), 0, 0];
       } else if (surface === 'left') {
         x = width - totalWallThickness / 2;
-        y = length / 2 - hole.y;
-        z = height / 2 + hole.x;
+        y = length / 2 + hole.x;
+        z = height / 2 + hole.y;
         if (hole.shape === 'circle') {
           rot = [0, degToRad(90), 0];
         } else {
           rot = [degToRad(90), 0, degToRad(90)];
         }
       } else if (surface === 'bottom' || surface === 'top') {
-        y = length / 2 - hole.x;
-        x = width / 2 - hole.y;
+        x = width / 2 + hole.x;
+        y = length / 2 + hole.y;
         z = 0;
         if (surface === 'top') {
           holeDepth = roof + insertHeight + TOP_HOLE_DEPTH_TOLERANCE;

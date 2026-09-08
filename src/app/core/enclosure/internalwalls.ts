@@ -20,7 +20,8 @@ export const internalWalls = (params: Params) => {
 
   internalWalls.forEach((wall) => {
     const z = floor + wall.height / 2;
-    walls.push(translate([width / 2 - wall.x, length / 2 - wall.y, z], internalWall(wall)));
+    // 偏移约定：wall.x = 左右偏移（+ 向 +X=左面），wall.y = 前后偏移（+ 向 +Y=前面）
+    walls.push(translate([width / 2 + wall.x, length / 2 + wall.y, z], internalWall(wall)));
   });
 
   return union(walls);

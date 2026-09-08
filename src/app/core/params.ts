@@ -28,6 +28,41 @@ export type InternalWall = {
   rotation: number;
 };
 
+export type PCBPreview = {
+  enabled: boolean;
+  width: number;
+  length: number;
+  thickness: number;
+  componentHeight: number;
+  x: number;
+  y: number;
+};
+
+export type Ventilation = {
+  surface: 'top' | 'bottom' | 'front' | 'back' | 'left' | 'right';
+  // 竖切 = 槽沿竖直/纵向；横切 = 槽沿水平/横向
+  orientation: 'vertical' | 'horizontal';
+  slotWidth: number;
+  slotLength: number;
+  slotGap: number;
+  slotCount: number;
+  // 在所在面内的偏移：x = 水平方向，y = 竖直/纵向
+  x: number;
+  y: number;
+};
+
+export type SnapFit = {
+  enabled: boolean;
+  // 卡扣总数量预设：4 / 6 / 8
+  preset: 4 | 6 | 8;
+  // 卡扣离每条边两端的距离（占该边长度的百分比）
+  endPercent: number;
+  width: number;
+  depth: number;
+  height: number;
+  clearance: number;
+};
+
 export type Params = {
   length: number;
   width: number;
@@ -43,6 +78,7 @@ export type Params = {
   showLid: boolean;
   showBase: boolean;
   showGrid: boolean;
+  showAxes: boolean;
   gridSpacing: number;
   cornerRadius: number;
   holes: Hole[];
@@ -54,6 +90,13 @@ export type Params = {
   lidScrews: boolean;
   lidScrewDiameter: number;
   baseLidScrewDiameter: number;
+  pcbPreview: PCBPreview;
+  ventilation: Ventilation[];
+  snapFit: SnapFit;
+  baseBedChamfer: number;
+  lidBedChamfer: number;
+  // 基座内壁顶端「导入倒角」尺寸（mm）：在内腔开口顶部内缘切 45° 斜面，便于盖板/卡扣导入
+  baseRimChamfer: number;
 };
 
 export const DEFAULT_PARAMS: Params = {
@@ -71,6 +114,7 @@ export const DEFAULT_PARAMS: Params = {
   showLid: true,
   showBase: true,
   showGrid: true,
+  showAxes: false,
   gridSpacing: 10,
   cornerRadius: 3,
   holes: [
@@ -170,6 +214,28 @@ export const DEFAULT_PARAMS: Params = {
   lidScrews: true,
   lidScrewDiameter: 2.98,
   baseLidScrewDiameter: 2.88,
+  pcbPreview: {
+    enabled: false,
+    width: 68,
+    length: 54,
+    thickness: 1.6,
+    componentHeight: 8,
+    x: 0,
+    y: 0,
+  },
+  ventilation: [],
+  snapFit: {
+    enabled: false,
+    preset: 4,
+    endPercent: 10,
+    width: 8,
+    depth: 0.8,
+    height: 1.2,
+    clearance: 0.2,
+  },
+  baseBedChamfer: 0.6,
+  lidBedChamfer: 0.6,
+  baseRimChamfer: 0.8,
 };
 
 export const cloneParams = (params: Params): Params => {

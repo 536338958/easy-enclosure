@@ -1,17 +1,17 @@
 <div class="grid grid-cols-3 gap-2">
   <app-action-button
     variant="toolbar"
-    [title]="'Load settings from file'"
+    [title]="'从文件加载设置'"
     (click)="openFilePicker()"
   >
-    Load
+    加载
   </app-action-button>
-  <app-action-button variant="toolbar" [title]="'Save settings to file'" (click)="saveParamsFile()">
-    Save
+  <app-action-button variant="toolbar" [title]="'保存设置到文件'" (click)="saveParamsFile()">
+    保存
   </app-action-button>
   <app-action-button
     variant="toolbar-primary"
-    [title]="'Export to STL'"
+    [title]="'导出为 STL'"
     (click)="openExportModal()"
   >
     STL
@@ -31,19 +31,19 @@
       class="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-transparent bg-transparent text-xl text-slate-500 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/30"
       type="button"
       (click)="closeExportModal()"
-      aria-label="Close export modal"
+      aria-label="关闭导出窗口"
     >
       &times;
     </button>
     <p class="mx-auto mb-5 max-w-88 text-sm leading-relaxed text-slate-600">
-      Export the full enclosure or only PCB mounts for quick fit checks.
+      导出完整外壳，或仅导出 PCB 支柱以便快速试装检查。
     </p>
     <div class="flex flex-wrap items-center justify-center gap-2">
       <app-action-button variant="dialog" (click)="exportPcbMountsStl()">
-        Export PCB Mounts
+        导出 PCB 支柱
       </app-action-button>
       <app-action-button variant="dialog-primary" (click)="exportStl()">
-        Export Full Enclosure
+        导出完整外壳
       </app-action-button>
     </div>
   </div>

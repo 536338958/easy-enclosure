@@ -4,6 +4,7 @@ import { mirrorX, rotateY, translate } from '@jscad/modeling/src/operations/tran
 import { cube, cuboid, cylinder } from '@jscad/modeling/src/primitives';
 
 import { Params } from '../params';
+import { chamferSolidBottom } from './utils';
 
 const SCREWCLEARANCE = 2;
 const RIDGEWIDTH = 2;
@@ -48,19 +49,22 @@ export const flange = (screwDiameter: number) => {
 };
 
 export const flanges = (params: Params) => {
-  const { length, width, cornerRadius, wallMountScrewDiameter, wallMountCount } = params;
+  const { length, width, cornerRadius, wallMountScrewDiameter, wallMountCount, baseBedChamfer } =
+    params;
   const outerWidth = wallMountScrewDiameter + SCREWCLEARANCE * 2 + RIDGEWIDTH * 2;
   const cornerSpacing = cornerRadius + outerWidth / 2;
   const z = outerWidth / 2;
 
   const yPositions = wallMountCount === 2 ? [length / 2] : [cornerSpacing, length - cornerSpacing];
 
-  const left = yPositions.map((y) =>
-    translate([-RIDGEWIDTH, y, z], flange(wallMountScrewDiameter)),
-  );
-  const right = yPositions.map((y) =>
-    translate([width + RIDGEWIDTH, y, z], mirrorX(flange(wallMountScrewDiameter))),
-  );
+  // 单个挂耳（局部坐标，底面在 z = -outerWidth/2）；开启底边倒角时对其底边做 45° 倒角
+  const ear =
+    baseBedChamfer > 0
+      ? chamferSolidBottom(flange(wallMountScrewDiameter), baseBedChamfer)
+      : flange(wallMountScrewDiameter);
+
+  const left = yPositions.map((y) => translate([-RIDGEWIDTH, y, z], ear));
+  const right = yPositions.map((y) => translate([width + RIDGEWIDTH, y, z], mirrorX(ear)));
 
   return union(...left, ...right);
 };

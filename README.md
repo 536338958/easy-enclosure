@@ -1,89 +1,91 @@
-# Easy Enclosure
+# Easy Enclosure 简易外壳设计器
 
 ![](public/screenshot.png)
 
-EasyEnclosure is an open-source 3D modeling software tailored specifically for designing 3D-printable enclosures. It aims to provide an intuitive interface and a set of user-friendly controls that allow even those with little or no 3D modeling experience to create custom enclosures for their electronic projects, prototypes, or DIY gadgets.
+EasyEnclosure 是一款开源的 3D 建模软件，专门用于设计可 3D 打印的外壳。它力求提供直观的界面和一套简单易用的控件，让即使没有或几乎没有 3D 建模经验的人，也能为自己的电子项目、原型或 DIY 小装置制作定制外壳。
 
-### **[Try it online now](https://bruceborrett.github.io/easy-enclosure/)**
+> 本文档为社区汉化版本。英文原版见 [README.en.md](README.en.md)。
 
-## Key Features
+### **[立即在线体验](https://bruceborrett.github.io/easy-enclosure/)**
 
-- User-Friendly Interface
-- Real-Time 3D Preview
-- Export to STL Format
-- Save and load parameter presets as JSON
+## 主要特性
 
-## Technology Stack
+- 界面友好，简单易上手
+- 实时 3D 预览
+- 导出为 STL 格式
+- 以 JSON 形式保存和加载参数预设
 
-TypeScript, Angular, JSCAD
+## 技术栈
 
-## Development
+TypeScript、Angular、JSCAD
 
-### Prerequisites
+## 开发
+
+### 环境要求
 
 - Node.js 20+
 - npm 10+
 
-### Install
+### 安装依赖
 
 ```bash
 npm install
 ```
 
-### Run Locally
+### 本地运行
 
 ```bash
 npm run dev
 ```
 
-This starts the Angular app from the repository root and synchronizes the UI version badge from `package.json`.
+该命令会从仓库根目录启动 Angular 应用，并根据 `package.json` 同步界面上的版本号徽标。
 
-### Build
+### 构建
 
 ```bash
 npm run build
 ```
 
-### Test
+### 测试
 
 ```bash
 npm test
 ```
 
-or watch mode:
+或使用监听模式：
 
 ```bash
 npm run test:watch
 ```
 
-### Deploy to GitHub Pages
+### 部署到 GitHub Pages
 
 ```bash
 npm run deploy
 ```
 
-Deployment publishes `dist/angular-app/browser`.
+部署会发布 `dist/angular-app/browser` 目录。
 
-## Contributions
+## 贡献与支持
 
 <a href="https://github.com/sponsors/bruceborrett" target="_blank"><img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%232f5d85" height="50" width="217"></a>
 <a href="https://www.buymeacoffee.com/bruceborrett" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-blue.png" alt="Buy Me A Coffee" height="50" width="217" style="border-radius:8px;"></a>
 
-If you find this software useful and would like to see further development please consider [donating](https://www.buymeacoffee.com/bruceborrett) or [sponsoring](https://github.com/sponsors/bruceborrett).
+如果你觉得这款软件有用，并希望它能持续开发，欢迎通过 [Buy Me a Coffee 捐赠](https://www.buymeacoffee.com/bruceborrett) 或 [GitHub 赞助](https://github.com/sponsors/bruceborrett) 支持作者。
 
-It is very time consuming and expensive to continuously test prints with all the various combinations of settings, so you can also help by printing with as many different settings as possible and reporting any issues you may find.
+由于要不断用各种设置组合去测试打印，既耗时又费钱，因此你也可以通过尽可能多地用不同设置进行打印、并反馈你发现的任何问题来提供帮助。
 
-Pull requests are also welcome!
+同样欢迎提交 Pull Request！
 
-## Notes
+## 说明
 
-- All measurements are in millimeters
-- Enclosures intended for outdoor use should be printed with PETG filament
-- Waterproof seal should be printed with TPU filament
-- Supports are required for holes
-- Overall height = Base Height + wall thickness
-- Inner height = Base Height - wall thickness
-- Inner width = width - (wall thickness \* 2)
-- Inner length = length - (wall thickness \* 2)
-- Screws take up extra space in corners, keep this in mind when deciding length and width
-- PCB mount X and Y is derived from center of base
+- 所有尺寸单位均为毫米（mm）
+- 用于户外的外壳应使用 PETG 耗材打印
+- 防水密封圈应使用 TPU 耗材打印
+- 开孔处打印时需要添加支撑
+- 总高度 = 底座高度 + 壁厚
+- 内部高度 = 底座高度 − 壁厚
+- 内部宽度 = 宽度 −（壁厚 × 2）
+- 内部长度 = 长度 −（壁厚 × 2）
+- 螺丝会占用四角的额外空间，在确定长度和宽度时请留意这一点
+- PCB 支柱的 X 和 Y 坐标以底座中心为原点计算

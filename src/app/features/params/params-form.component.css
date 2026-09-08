@@ -92,6 +92,20 @@ label {
   vertical-align: top;
 }
 
+/* 参数说明小字：放在输入框下方，帮助理解每个参数的含义/单位/方向 */
+.hint {
+  display: block;
+  margin-top: 3px;
+  padding-right: 8px;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
+  opacity: 0.85;
+}
+
 .input-group-full {
   width: 100%;
 }

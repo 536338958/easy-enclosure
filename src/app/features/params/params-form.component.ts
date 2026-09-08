@@ -1,6 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 
-import type { Hole, InternalWall, PCBMount, Params } from '../../core/params';
+import type {
+  Hole,
+  InternalWall,
+  PCBMount,
+  PCBPreview,
+  Params,
+  SnapFit,
+  Ventilation,
+} from '../../core/params';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
 
 type Surface = 'top' | 'bottom' | 'left' | 'right' | 'front' | 'back';
@@ -19,10 +27,31 @@ export class ParamsFormComponent {
   readonly surfaces: Surface[] = ['front', 'right', 'back', 'left', 'top', 'bottom'];
 
   surfaceLabel(surface: Surface): string {
-    if (surface === 'top') {
-      return 'Lid';
+    const labels: Record<Surface, string> = {
+      top: '盖板',
+      bottom: '底面',
+      left: '左面',
+      right: '右面',
+      front: '前面',
+      back: '后面',
+    };
+    return labels[surface];
+  }
+
+  // 面内「水平」偏移标签：前/后面沿宽度(左右)，左/右面沿长度(前后)，顶/底面沿宽度(左右)
+  offsetHLabel(surface: Surface): string {
+    if (surface === 'left' || surface === 'right') {
+      return '水平偏移 X（+ 向前面）';
     }
-    return surface[0].toUpperCase() + surface.slice(1);
+    return '左右偏移 X（+ 向左面）';
+  }
+
+  // 面内「垂直/纵向」偏移标签：墙面为高度方向(上下)，顶/底面为长度方向(前后)
+  offsetVLabel(surface: Surface): string {
+    if (surface === 'top' || surface === 'bottom') {
+      return '前后偏移 Y（+ 向前面）';
+    }
+    return '垂直偏移 Y（+ 向上）';
   }
 
   params(): Params {
@@ -60,8 +89,8 @@ export class ParamsFormComponent {
       diameter: 12.5,
       width: 10,
       length: 10,
-      y: current.width / 2,
-      x: 6,
+      y: 0,
+      x: 0,
     };
     this.state.patchParams({ holes: [...current.holes, next] });
   }
@@ -142,6 +171,80 @@ export class ParamsFormComponent {
       lidScrews: checked,
       waterProof: checked ? this.params().waterProof : false,
     });
+  }
+
+  setPcbPreviewEnabled(checked: boolean): void {
+    const current = this.params();
+    this.state.patchParams({ pcbPreview: { ...current.pcbPreview, enabled: checked } });
+  }
+
+  setPcbPreviewNumber(key: keyof PCBPreview, rawValue: string): void {
+    if (!rawValue) {
+      return;
+    }
+    const parsed = parseFloat(rawValue);
+    if (Number.isNaN(parsed)) {
+      return;
+    }
+    const current = this.params();
+    this.state.patchParams({ pcbPreview: { ...current.pcbPreview, [key]: parsed } });
+  }
+
+  addVentilation(): void {
+    const current = this.params();
+    const next: Ventilation = {
+      surface: 'top',
+      orientation: 'horizontal',
+      slotWidth: 2,
+      slotLength: 0,
+      slotGap: 2,
+      slotCount: 8,
+      x: 0,
+      y: 0,
+    };
+    this.state.patchParams({ ventilation: [...current.ventilation, next] });
+  }
+
+  removeVentilation(index: number): void {
+    const current = this.params();
+    this.state.patchParams({ ventilation: current.ventilation.filter((_, i) => i !== index) });
+  }
+
+  updateVentilation(index: number, patch: Partial<Ventilation>): void {
+    const current = this.params();
+    this.state.patchParams({
+      ventilation: current.ventilation.map((item, i) =>
+        i === index ? { ...item, ...patch } : item,
+      ),
+    });
+  }
+
+  setSnapFitEnabled(checked: boolean): void {
+    const current = this.params();
+    this.state.patchParams({ snapFit: { ...current.snapFit, enabled: checked } });
+  }
+
+  setSnapFitPreset(rawValue: string): void {
+    const preset = parseInt(rawValue, 10) as SnapFit['preset'];
+    if (preset !== 4 && preset !== 6 && preset !== 8) {
+      return;
+    }
+    const current = this.params();
+    // 切换预设时同步更新离端默认百分比（4→10%，6/8→20%）
+    const endPercent = preset === 4 ? 10 : 20;
+    this.state.patchParams({ snapFit: { ...current.snapFit, preset, endPercent } });
+  }
+
+  setSnapFitNumber(key: keyof SnapFit, rawValue: string): void {
+    if (!rawValue) {
+      return;
+    }
+    const parsed = parseFloat(rawValue);
+    if (Number.isNaN(parsed)) {
+      return;
+    }
+    const current = this.params();
+    this.state.patchParams({ snapFit: { ...current.snapFit, [key]: parsed } });
   }
 
   parseIntValue(rawValue: string): number {

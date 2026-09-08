@@ -28,10 +28,12 @@ const placeBaseMount = (mount: PCBMount, params: Params): Geom3 => {
   const mountBody = pcbMount(mount);
   const innerWall = waterProof ? wall * 2 + insertClearance * 2 + insertThickness : wall;
   const baseFloor = params.lidScrews ? floor : innerWall;
-  const bottomX = width / 2 - mount.x;
-  const bottomY = length / 2 - mount.y;
-  const wallX = width / 2 - mount.x;
-  const wallY = length / 2 - mount.x;
+  // 统一偏移约定：mount.x = 面内水平偏移（+ 向 +X=左面 / 左右面时 + 向 +Y=前面），
+  //   mount.y = 底面时纵向（+ 向 +Y=前面）；墙面时垂直（+ 向上）
+  const bottomX = width / 2 + mount.x;
+  const bottomY = length / 2 + mount.y;
+  const wallX = width / 2 + mount.x;
+  const wallY = length / 2 + mount.x;
   const wallZ = height / 2 + mount.y;
 
   if (surface === 'bottom') {
@@ -68,7 +70,7 @@ const placeBaseMount = (mount: PCBMount, params: Params): Geom3 => {
 const placeLidMount = (mount: PCBMount, params: Params): Geom3 => {
   const { length, width, roof } = params;
   return translate(
-    [width / 2 - mount.x, length / 2 - mount.y, roof + mount.height / 2],
+    [width / 2 + mount.x, length / 2 + mount.y, roof + mount.height / 2],
     pcbMount(mount),
   );
 };
