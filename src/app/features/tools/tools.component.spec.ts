@@ -8,6 +8,51 @@ describe('ToolsComponent', () => {
   let component: ToolsComponent;
   let state: EnclosureStateService;
 
+  // 用固定内容替换 FileReader，让导入路径可在无浏览器 I/O 的情况下被断言
+  const withFileContents = (contents: string, run: () => void): void => {
+    const originalFileReader = globalThis.FileReader;
+
+    class MockFileReader {
+      result: string | ArrayBuffer | null = null;
+      onload: ((this: FileReader, ev: ProgressEvent<FileReader>) => unknown) | null = null;
+      onerror: ((this: FileReader, ev: ProgressEvent<FileReader>) => unknown) | null = null;
+
+      readAsText(): void {
+        this.result = contents;
+        if (this.onload) {
+          this.onload.call(
+            this as unknown as FileReader,
+            new ProgressEvent('load') as ProgressEvent<FileReader>,
+          );
+        }
+      }
+    }
+
+    (globalThis as { FileReader: typeof FileReader }).FileReader =
+      MockFileReader as unknown as typeof FileReader;
+    (window as Window & { FileReader: typeof FileReader }).FileReader =
+      MockFileReader as unknown as typeof FileReader;
+
+    try {
+      run();
+    } finally {
+      (globalThis as { FileReader: typeof FileReader }).FileReader = originalFileReader;
+      (window as Window & { FileReader: typeof FileReader }).FileReader = originalFileReader;
+    }
+  };
+
+  const fileInputFor = (): HTMLInputElement => {
+    const input = document.createElement('input');
+    const file = new File(['{}'], 'params.json', { type: 'application/json' });
+    const fileList = {
+      0: file,
+      length: 1,
+      item: (index: number) => (index === 0 ? file : null),
+    } as unknown as FileList;
+    Object.defineProperty(input, 'files', { value: fileList });
+    return input;
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ToolsComponent],
@@ -39,37 +84,8 @@ describe('ToolsComponent', () => {
   });
 
   it('loads params from json and merges with current settings', () => {
-    const originalFileReader = globalThis.FileReader;
-
-    class MockFileReader {
-      result: string | ArrayBuffer | null = null;
-      onload: ((this: FileReader, ev: ProgressEvent<FileReader>) => unknown) | null = null;
-
-      readAsText(): void {
-        this.result = '{"length": 145, "waterProof": false}';
-        if (this.onload) {
-          this.onload.call(
-            this as unknown as FileReader,
-            new ProgressEvent('load') as ProgressEvent<FileReader>,
-          );
-        }
-      }
-    }
-
-    (globalThis as { FileReader: typeof FileReader }).FileReader =
-      MockFileReader as unknown as typeof FileReader;
-    (window as Window & { FileReader: typeof FileReader }).FileReader =
-      MockFileReader as unknown as typeof FileReader;
-
-    try {
-      const input = document.createElement('input');
-      const file = new File(['{"length": 145}'], 'params.json', { type: 'application/json' });
-      const fileList = {
-        0: file,
-        length: 1,
-        item: (index: number) => (index === 0 ? file : null),
-      } as unknown as FileList;
-      Object.defineProperty(input, 'files', { value: fileList });
+    withFileContents('{"length": 145, "waterProof": false}', () => {
+      const input = fileInputFor();
 
       component.loadParamsFile({ target: input } as unknown as Event);
 
@@ -77,10 +93,31 @@ describe('ToolsComponent', () => {
       expect(state.params().waterProof).toBeFalse();
       expect(state.params().width).toBe(100);
       expect(input.value).toBe('');
-    } finally {
-      (globalThis as { FileReader: typeof FileReader }).FileReader = originalFileReader;
-      (window as Window & { FileReader: typeof FileReader }).FileReader = originalFileReader;
-    }
+    });
+  });
+
+  // 回归：JSON.parse 原先没有 try/catch，导入损坏文件会直接抛异常且界面无任何反馈
+  it('reports an error instead of throwing when the json is malformed', () => {
+    withFileContents('not json at all', () => {
+      const input = fileInputFor();
+
+      expect(() => component.loadParamsFile({ target: input } as unknown as Event)).not.toThrow();
+      expect(component.loadError()).toBeTruthy();
+      expect(state.params().length).toBe(80);
+    });
+  });
+
+  it('keeps nested defaults when an older preset omits new fields', () => {
+    withFileContents('{"snapFit": {"enabled": true}}', () => {
+      const before = cloneParams(state.params()).snapFit;
+
+      component.loadParamsFile({ target: fileInputFor() } as unknown as Event);
+
+      expect(component.loadError()).toBeNull();
+      expect(state.params().snapFit.enabled).toBeTrue();
+      expect(state.params().snapFit.width).toBe(before.width);
+      expect(state.params().snapFit.preset).toBe(before.preset);
+    });
   });
 
   it('exports the expected STL artifacts for a simple waterproof enclosure', () => {

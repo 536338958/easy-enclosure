@@ -52,6 +52,12 @@ const lidDeps = [
   'ventilation',
   'snapFit',
   'lidBedChamfer',
+  'lidTopChamfer',
+  // 沉头倒角会在盖板顶面切锥坑
+  'lidScrewCountersink',
+  // 凸出量改动螺丝柱，孔位改动螺丝孔，两者都会改几何，缺一个就「改了不刷新」
+  'lidScrewProtrusion',
+  'lidScrewOffset',
 ];
 const baseDeps = [
   'length',
@@ -74,7 +80,12 @@ const baseDeps = [
   'ventilation',
   'snapFit',
   'baseBedChamfer',
-  'baseRimChamfer',
+  // 切角角度直接改挂耳几何，必须触发基座重建，否则预览不会刷新
+  'wallMountChamferAngle',
+  'lidScrewProtrusion',
+  'lidScrewOffset',
+  // 穿孔开关只改基座孔深，归 baseDeps
+  'lidScrewThrough',
 ];
 const sealDeps = [
   'length',
@@ -101,6 +112,8 @@ const mountDeps = [
   'width',
   'insertThickness',
   'insertClearance',
+  // 根部过渡会改变支柱几何
+  'pcbMountFillet',
 ];
 const internalWallDeps = ['internalWalls', 'length', 'width', 'waterProof', 'floor'];
 const gridDeps = [
@@ -301,8 +314,12 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
 
   private lidModel: Geom3 | null = null;
   private baseModel: Geom3 | null = null;
+  // 基座在未平移（本地）坐标系下的几何，供 PCB 碰撞检测复用，避免重复计算
+  private baseModelLocal: Geom3 | null = null;
   private sealModel: Geom3 | null = null;
-  private mountsModel: Geom3 | null = null;
+  // 基座与盖板的 PCB 支柱分开缓存，这样「只显示盖板」时不会混进基座支柱
+  private baseMountsModel: Geom3 | null = null;
+  private lidMountsModel: Geom3 | null = null;
   private internalWallsModel: Geom3 | null = null;
 
   private model: Geom3 | null = null;
@@ -320,6 +337,9 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
   private wheelInteractionHandle: ReturnType<typeof setTimeout> | null = null;
 
   readonly surfaceLabels = signal<SurfaceLabel[]>([]);
+  // state.loading 此前没有任何消费端：复杂参数下主线程被几何运算占满，
+  // 界面看起来就是「卡死」。这里把它透出给模板做生成中提示。
+  readonly loading = this.state.loading;
   readonly pcbCollision = signal<{ collides: boolean; hitsWalls: boolean; hitsCeiling: boolean }>({
     collides: false,
     hitsWalls: false,
@@ -411,9 +431,23 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
   private diffParams(previous: Params, current: Params): string[] {
     const diffKeys: string[] = [];
     (Object.keys(previous) as Array<keyof Params>).forEach((key) => {
-      if (JSON.stringify(previous[key]) !== JSON.stringify(current[key])) {
-        diffKeys.push(key);
+      const before = previous[key];
+      const after = current[key];
+
+      // 标量字段占绝大多数，引用相等即可快速跳过，省掉逐 key 的序列化
+      if (before === after) {
+        return;
       }
+
+      // 只有 holes / pcbMounts / ventilation / snapFit 这类嵌套结构才需要深比较
+      if (typeof before === 'object' && before !== null) {
+        if (JSON.stringify(before) !== JSON.stringify(after)) {
+          diffKeys.push(key);
+        }
+        return;
+      }
+
+      diffKeys.push(key);
     });
     return diffKeys;
   }
@@ -515,7 +549,10 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     this.renderDelayHandle = setTimeout(() => {
       void this.renderModel(params, paramsDiff).finally(() => {
         this.state.setLoading(false);
-        this.prevParams = JSON.parse(JSON.stringify(params)) as Params;
+        // Params 是不可变的：每次更新都由 updateParam/patchParams 生成新对象，
+        // 嵌套数组经 map/filter 重建，不存在就地修改，因此直接持有引用即可，
+        // 无需每帧再做一次完整深拷贝。
+        this.prevParams = params;
       });
     }, 250);
   }
@@ -783,7 +820,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       return [];
     }
 
-    const collision = pcbCollision(params);
+    const collision = pcbCollision(params, this.baseModelLocal ?? undefined);
     this.pcbCollision.set(collision);
 
     // 板体在基座本地坐标系中构建，平移到与基座相同的位置
@@ -833,7 +870,8 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
         ? [-width / 2, -length / 2, 0]
         : [-(width + SPACING / 2), -length / 2, 0];
       this.baseOrigin = basePos;
-      this.baseModel = translate(basePos, base(params));
+      this.baseModelLocal = base(params);
+      this.baseModel = translate(basePos, this.baseModelLocal);
     }
 
     if (this.checkDeps(diff, sealDeps) && waterProof) {
@@ -853,20 +891,11 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
         ? [width / 2 + SPACING, -length / 2, 0]
         : [SPACING / 2, -length / 2, 0];
 
-      const mountParts: Geom3[] = [];
       const baseMounts = pcbMountsOnBase(params);
       const lidMounts = pcbMountsOnLid(params);
 
-      if (baseMounts) {
-        mountParts.push(translate(baseMountsPos, baseMounts));
-      }
-
-      if (lidMounts) {
-        mountParts.push(translate(lidMountsPos, lidMounts));
-      }
-
-      this.mountsModel =
-        mountParts.length > 0 ? (mountParts.length > 1 ? union(mountParts) : mountParts[0]) : null;
+      this.baseMountsModel = baseMounts ? translate(baseMountsPos, baseMounts) : null;
+      this.lidMountsModel = lidMounts ? translate(lidMountsPos, lidMounts) : null;
     }
 
     if (this.checkDeps(diff, internalWallDeps) && internalWallParams.length > 0) {
@@ -876,24 +905,42 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       this.internalWallsModel = translate(mountsPos, internalWalls(params));
     }
 
+    // showLid / showBase 只影响组装，不影响几何本身，因此上面各部件仍走缓存重建
     const result: Geom3[] = [];
-    if (this.lidModel) {
+    if (this.lidModel && params.showLid) {
       result.push(this.lidModel);
     }
-    if (this.baseModel) {
+    if (this.baseModel && params.showBase) {
       result.push(this.baseModel);
     }
-    if (this.sealModel && waterProof) {
+    // 密封圈是盖板的配件，跟随盖板一起显隐
+    if (this.sealModel && waterProof && params.showLid) {
       result.push(this.sealModel);
     }
-    if (this.mountsModel && pcbMountParams.length > 0) {
-      result.push(this.mountsModel);
+    if (this.baseMountsModel && pcbMountParams.length > 0 && params.showBase) {
+      result.push(this.baseMountsModel);
     }
-    if (this.internalWallsModel && internalWallParams.length > 0) {
+    if (this.lidMountsModel && pcbMountParams.length > 0 && params.showLid) {
+      result.push(this.lidMountsModel);
+    }
+    if (this.internalWallsModel && internalWallParams.length > 0 && params.showBase) {
       result.push(this.internalWallsModel);
     }
 
     if (result.length === 0) {
+      // 两部分都被隐藏时不能沿用上一帧的模型，否则开关看起来像失灵
+      this.model = null;
+      this.pcbCollision.set({ collides: false, hitsWalls: false, hitsCeiling: false });
+      this.surfaceLabels.set([]);
+      if (this.renderOptions) {
+        const emptyBounds: [Vec3Tuple, Vec3Tuple] = [
+          [0, 0, 0],
+          [width, length, params.height],
+        ];
+        const gridOnly = this.buildGridEntity(params, emptyBounds);
+        this.renderOptions.entities = gridOnly ? [gridOnly] : [];
+        this.updateView = true;
+      }
       return;
     }
 
@@ -911,8 +958,9 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       entities.push(axisEntity);
     }
 
+    // 碰撞检测照常跑，只是基座隐藏时不把 PCB 悬空画出来
     const pcbEntities = this.buildPcbEntities(params);
-    if (pcbEntities.length > 0) {
+    if (pcbEntities.length > 0 && params.showBase) {
       entities.push(...pcbEntities);
     }
 

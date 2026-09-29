@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { APP_VERSION } from '../../app-version';
+import { innerWallInset } from '../../core/enclosure/dimensions';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
 import { FundingComponent } from '../../shared/funding/funding.component';
 import { ParamsFormComponent } from '../params/params-form.component';
@@ -31,9 +32,7 @@ export class SidebarComponent {
 
   readonly enclosureMeasurements = computed(() => {
     const params = this.state.params();
-    const innerWallThickness = params.waterProof
-      ? params.wall * 2 + params.insertClearance * 2 + params.insertThickness
-      : params.wall;
+    const innerWallThickness = innerWallInset(params);
 
     const wallToWall = {
       width: Math.max(0, params.width - innerWallThickness * 2),

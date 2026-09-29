@@ -5,6 +5,7 @@ import { cuboid, cylinder } from '@jscad/modeling/src/primitives';
 import { degToRad } from '@jscad/modeling/src/utils';
 
 import { Params } from '../params';
+import { innerWallInset } from './dimensions';
 
 // 卡扣沿插入深度方向的相对位置（0=贴近盖顶，1=插入边尖端）
 const ENGAGE_RATIO = 0.6;
@@ -27,7 +28,8 @@ const bead = (depth: number, height: number, barWidth: number, along: 'x' | 'y')
 };
 
 // 计算所有卡扣布置。预设 4/6/8 决定数量与所在边，endPercent 决定离两端距离。
-const computePlacements = (params: Params): Placement[] => {
+// 导出以便直接断言布置规则（数量、所在墙、边距夹取），不必从 union 后的实体反推。
+export const computePlacements = (params: Params): Placement[] => {
   const { snapFit, width: W, length: L, wall, insertClearance, cornerRadius } = params;
   const preset = snapFit.preset;
   const p = snapFit.endPercent / 100;
@@ -112,22 +114,12 @@ export const lidSnapBumps = (params: Params): Geom3 | null => {
 
 // 基座内壁上与卡扣凸起对应的凹槽
 export const baseSnapPockets = (params: Params): Geom3 | null => {
-  const {
-    snapFit,
-    length,
-    width,
-    height,
-    wall,
-    waterProof,
-    insertThickness,
-    insertClearance,
-    insertHeight,
-  } = params;
+  const { snapFit, length, width, height, insertHeight } = params;
   if (!snapFit.enabled) {
     return null;
   }
 
-  const innerWall = waterProof ? wall * 2 + insertClearance * 2 + insertThickness : wall;
+  const innerWall = innerWallInset(params);
   const z = height - insertHeight * ENGAGE_RATIO;
 
   const clr = snapFit.clearance;

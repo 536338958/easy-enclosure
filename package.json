@@ -1,6 +1,6 @@
 {
   "name": "easy-enclosure",
-  "version": "1.3.4",
+  "version": "1.4.0",
   "private": true,
   "homepage": "https://bruceborrett.github.io/easy-enclosure/",
   "prettier": {
@@ -35,7 +35,6 @@
     "@angular/common": "^20.3.0",
     "@angular/compiler": "^20.3.0",
     "@angular/core": "^20.3.0",
-    "@angular/forms": "^20.3.0",
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
     "@jscad/modeling": "^2.13.0",

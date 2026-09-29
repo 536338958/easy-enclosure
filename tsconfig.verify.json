@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2022",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "outDir": ".verify-build",
+    "rootDir": "src/app/core"
+  },
+  "include": ["src/app/core/**/*.ts"],
+  "exclude": ["src/app/core/**/*.spec.ts", "src/app/core/state/**"]
+}

@@ -36,6 +36,7 @@ export class ToolsComponent {
   private readonly state = inject(EnclosureStateService);
 
   readonly isExportModalOpen = signal(false);
+  readonly loadError = signal<string | null>(null);
 
   openFilePicker(): void {
     this.fileInput?.nativeElement.click();
@@ -72,12 +73,24 @@ export class ToolsComponent {
 
     const fileReader = new FileReader();
     fileReader.onload = () => {
-      const data = JSON.parse(fileReader.result as string) as Partial<Params>;
-      const merged = {
-        ...this.state.params(),
-        ...data,
-      };
-      this.state.setParams(merged as Params);
+      this.loadError.set(null);
+      try {
+        const data = JSON.parse(fileReader.result as string) as Partial<Params>;
+        const current = this.state.params();
+        // 嵌套对象要逐层合并：旧版预设里没有 snapFit / pcbPreview 的新字段，
+        // 直接整块覆盖会把它们抹成 undefined，进而让几何函数读到 NaN。
+        this.state.setParams({
+          ...current,
+          ...data,
+          snapFit: { ...current.snapFit, ...(data.snapFit ?? {}) },
+          pcbPreview: { ...current.pcbPreview, ...(data.pcbPreview ?? {}) },
+        });
+      } catch {
+        this.loadError.set('无法解析该文件，请确认是本工具导出的 JSON 预设。');
+      }
+    };
+    fileReader.onerror = () => {
+      this.loadError.set('文件读取失败，请重试。');
     };
     fileReader.readAsText(input.files[0], 'UTF-8');
 

@@ -10,6 +10,9 @@ import type {
   Ventilation,
 } from '../../core/params';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
+import { screwOffset, screwPostProtrusion } from '../../core/enclosure/dimensions';
+import { mountFilletSize } from '../../core/enclosure/pcbmount';
+import { WALL_MOUNT_CHAMFER_MAX, WALL_MOUNT_CHAMFER_MIN } from '../../core/enclosure/wallmount';
 
 type Surface = 'top' | 'bottom' | 'left' | 'right' | 'front' | 'back';
 
@@ -25,6 +28,51 @@ export class ParamsFormComponent {
   readonly activeTab = signal<number | null>(null);
 
   readonly surfaces: Surface[] = ['front', 'right', 'back', 'left', 'top', 'bottom'];
+
+  readonly chamferAngleMin = WALL_MOUNT_CHAMFER_MIN;
+  readonly chamferAngleMax = WALL_MOUNT_CHAMFER_MAX;
+  readonly chamferAngleError = signal<string | null>(null);
+
+  // 螺丝柱凸出量的实际生效值（自定义值会被夹到允许区间，这里回显结果）
+  effectiveScrewProtrusion(): number {
+    return Math.round(screwPostProtrusion(this.params()) * 100) / 100;
+  }
+
+  // 螺丝孔中心距边距离的实际生效值。默认跟随内缩量，可单独覆盖
+  effectiveScrewOffset(): number {
+    const params = this.params();
+    const diameterMax = Math.max(params.baseLidScrewDiameter, params.lidScrewDiameter);
+    return Math.round(screwOffset(params, diameterMax) * 100) / 100;
+  }
+
+  /**
+   * 挂耳切角角度只接受 45–70°。越界时不写入参数、给出提示，
+   * 由模板把输入框回退到当前生效值，做到「阻止提交」。
+   */
+  setChamferAngle(rawValue: string): void {
+    const current = this.params().wallMountChamferAngle;
+
+    if (!rawValue) {
+      this.chamferAngleError.set(null);
+      return;
+    }
+
+    const parsed = parseFloat(rawValue);
+    if (Number.isNaN(parsed)) {
+      this.chamferAngleError.set('请输入数字。');
+      return;
+    }
+
+    if (parsed < this.chamferAngleMin || parsed > this.chamferAngleMax) {
+      this.chamferAngleError.set(
+        `切角角度需在 ${this.chamferAngleMin}–${this.chamferAngleMax}° 之间，已保持 ${current}°。`,
+      );
+      return;
+    }
+
+    this.chamferAngleError.set(null);
+    this.state.updateParam('wallMountChamferAngle', parsed);
+  }
 
   surfaceLabel(surface: Surface): string {
     const labels: Record<Surface, string> = {
@@ -219,6 +267,40 @@ export class ParamsFormComponent {
     });
   }
 
+  setPcbMountFilletStyle(style: string): void {
+    if (style !== 'none' && style !== 'round' && style !== 'chamfer') {
+      return;
+    }
+    const current = this.params();
+    this.state.patchParams({
+      pcbMountFillet: { ...current.pcbMountFillet, style },
+    });
+  }
+
+  setPcbMountFilletSize(rawValue: string): void {
+    if (!rawValue) {
+      return;
+    }
+    const parsed = parseFloat(rawValue);
+    if (Number.isNaN(parsed)) {
+      return;
+    }
+    const current = this.params();
+    this.state.patchParams({
+      pcbMountFillet: { ...current.pcbMountFillet, size: Math.max(0, parsed) },
+    });
+  }
+
+  // 根部过渡的实际生效尺寸：受支柱高度与外径夹紧，取所有支柱里最小的那个
+  effectiveMountFillet(): number {
+    const params = this.params();
+    if (params.pcbMountFillet.style === 'none' || params.pcbMounts.length === 0) {
+      return 0;
+    }
+    const sizes = params.pcbMounts.map((mount) => mountFilletSize(params, mount));
+    return Math.round(Math.min(...sizes) * 100) / 100;
+  }
+
   setSnapFitEnabled(checked: boolean): void {
     const current = this.params();
     this.state.patchParams({ snapFit: { ...current.snapFit, enabled: checked } });
@@ -230,8 +312,8 @@ export class ParamsFormComponent {
       return;
     }
     const current = this.params();
-    // 切换预设时同步更新离端默认百分比（4→10%，6/8→20%）
-    const endPercent = preset === 4 ? 10 : 20;
+    // 切换预设时同步更新离端部百分比默认值：4 个卡扣为 20%，6 / 8 个维持 20%
+    const endPercent = 20;
     this.state.patchParams({ snapFit: { ...current.snapFit, preset, endPercent } });
   }
 

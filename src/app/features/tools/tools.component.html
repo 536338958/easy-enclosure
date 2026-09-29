@@ -1,24 +1,20 @@
 <div class="grid grid-cols-3 gap-2">
-  <app-action-button
-    variant="toolbar"
-    [title]="'从文件加载设置'"
-    (click)="openFilePicker()"
-  >
+  <app-action-button variant="toolbar" [title]="'从文件加载设置'" (click)="openFilePicker()">
     加载
   </app-action-button>
   <app-action-button variant="toolbar" [title]="'保存设置到文件'" (click)="saveParamsFile()">
     保存
   </app-action-button>
-  <app-action-button
-    variant="toolbar-primary"
-    [title]="'导出为 STL'"
-    (click)="openExportModal()"
-  >
+  <app-action-button variant="toolbar-primary" [title]="'导出为 STL'" (click)="openExportModal()">
     STL
   </app-action-button>
 
   <input #fileInput type="file" accept=".json" class="hidden" (change)="loadParamsFile($event)" />
 </div>
+
+@if (loadError()) {
+  <p class="mt-2 text-[11px] leading-relaxed text-red-600">{{ loadError() }}</p>
+}
 
 <dialog
   #exportDialog

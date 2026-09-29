@@ -4,11 +4,12 @@ import { Params } from '../params';
 
 import { holes } from './holes';
 import { flanges } from './wallmount';
-import { bottomChamferTool, clover, hollowRoundCube, roundedCube, topRimChamferTool } from './utils';
+import { bottomChamferTool, clover, hollowRoundCube, roundedCube } from './utils';
 import { waterProofSealCutout } from './waterproofseal';
 import { screws } from './screws';
 import { ventilationCut } from './ventilation';
 import { baseSnapPockets } from './snapfit';
+import { innerWallInset, screwOffset, screwPostProtrusion } from './dimensions';
 import { translate } from '@jscad/modeling/src/operations/transforms';
 
 const { subtract, union } = booleans;
@@ -21,8 +22,6 @@ export const base = (params: Params) => {
     wall,
     floor,
     cornerRadius,
-    insertThickness,
-    insertClearance,
     lidScrewDiameter,
     baseLidScrewDiameter,
   } = params;
@@ -30,29 +29,36 @@ export const base = (params: Params) => {
   const body = [];
   const subtracts = [];
 
-  let _wall = wall;
-  if (params.waterProof) {
-    _wall = wall * 2 + insertClearance * 2 + insertThickness;
-  }
+  const _wall = innerWallInset(params);
 
   if (params.lidScrews) {
     let diameterMax = Math.max(baseLidScrewDiameter, lidScrewDiameter);
+    // 螺丝柱（内腔四角凸出的那块实体）用凸出量，螺丝孔位置单独用孔位参数，两者互不影响
+    const postProtrusion = screwPostProtrusion(params);
+    const screwCentre = screwOffset(params, diameterMax);
     body.push(
       subtract(
         roundedCube(width, length, height, cornerRadius),
         translate(
           [_wall, _wall, floor],
-          clover(
-            width - _wall * 2,
-            length - _wall * 2,
-            height,
-            diameterMax / 2 + cornerRadius / 4 + wall / 2,
-          ),
+          clover(width - _wall * 2, length - _wall * 2, height, postProtrusion),
         ),
       ),
     );
-    let screwOffset = diameterMax / 2 + cornerRadius / 4 + wall / 2;
-    subtracts.push(screws(length, width, height, screwOffset, baseLidScrewDiameter));
+    // 基座螺丝孔深度取决于「是否穿孔」（该开关只作用于基座，盖板始终贯穿）：
+    // - 穿孔（默认）：从基座底面贯穿到顶面
+    // - 不穿孔：基座底板（厚 floor）整层留作底部余料，
+    //   孔深 = 总厚度 − 底板厚度 = height − floor，在底板顶面（z = floor）处终止
+    if (params.lidScrewThrough) {
+      subtracts.push(screws(length, width, height, screwCentre, baseLidScrewDiameter));
+    } else if (height > floor) {
+      subtracts.push(
+        translate(
+          [0, 0, floor],
+          screws(length, width, height - floor, screwCentre, baseLidScrewDiameter),
+        ),
+      );
+    }
   } else {
     body.push(hollowRoundCube(width, length, height, _wall, cornerRadius));
   }
@@ -82,18 +88,7 @@ export const base = (params: Params) => {
 
 // 统一应用「散热槽 / 底边倒角 / 卡扣凹槽」等后处理
 const finish = (solid: Geom3, params: Params): Geom3 => {
-  const {
-    width,
-    length,
-    height,
-    wall,
-    cornerRadius,
-    waterProof,
-    insertThickness,
-    insertClearance,
-    baseBedChamfer,
-    baseRimChamfer,
-  } = params;
+  const { width, length, cornerRadius, baseBedChamfer } = params;
   let result = solid;
 
   const vent = ventilationCut(params, 'base');
@@ -108,15 +103,6 @@ const finish = (solid: Geom3, params: Params): Geom3 => {
 
   if (baseBedChamfer > 0) {
     result = subtract(result, bottomChamferTool(width, length, baseBedChamfer, cornerRadius));
-  }
-
-  // 内壁顶端导入倒角：内壁内缩量随是否防水而不同
-  if (baseRimChamfer > 0) {
-    const innerInset = waterProof ? wall * 2 + insertClearance * 2 + insertThickness : wall;
-    result = subtract(
-      result,
-      topRimChamferTool(width, length, innerInset, baseRimChamfer, height, cornerRadius),
-    );
   }
 
   return result;

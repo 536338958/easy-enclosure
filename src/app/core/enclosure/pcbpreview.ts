@@ -6,16 +6,10 @@ import measureVolume from '@jscad/modeling/src/measurements/measureVolume';
 
 import { Params } from '../params';
 import { base } from './base';
+import { cavityFloorZ } from './dimensions';
 import { internalWalls } from './internalwalls';
 
-// 计算基座内腔地板的 Z 高度（PCB 支柱的底部就落在这个平面上）
-const cavityFloorZ = (params: Params): number => {
-  const { wall, floor, waterProof, insertThickness, insertClearance, lidScrews } = params;
-  const innerWall = waterProof ? wall * 2 + insertClearance * 2 + insertThickness : wall;
-  return lidScrews ? floor : innerWall;
-};
-
-// PCB 底面所在的 Z 高度：自动落在底面支柱顶部；若没有底面支柱，则落在内腔地板上
+// 计算 PCB 底面所在的 Z 高度：自动落在底面支柱顶部；若没有底面支柱，则落在内腔地板上
 export const pcbRestZ = (params: Params): number => {
   const floorZ = cavityFloorZ(params);
   const bottomMounts = params.pcbMounts.filter((m) => (m.surface ?? 'bottom') === 'bottom');
@@ -79,10 +73,7 @@ const erodedOccupied = (params: Params): Geom3 => {
 
   const boardT = Math.max(pcbPreview.thickness - s * 2, 0.1);
   parts.push(
-    translate(
-      [cx, cy, restZ + pcbPreview.thickness / 2],
-      cuboid({ size: [w, l, boardT] }),
-    ),
+    translate([cx, cy, restZ + pcbPreview.thickness / 2], cuboid({ size: [w, l, boardT] })),
   );
 
   if (pcbPreview.componentHeight > s * 2) {
@@ -101,14 +92,17 @@ const erodedOccupied = (params: Params): Geom3 => {
 // 碰撞检测：
 // - 与基座壁/内隔板的碰撞用布尔求交后测体积判断
 // - 与盖板顶棚的碰撞用解析法（板顶 + 元件高度是否超过总高度）
-export const pcbCollision = (params: Params): PCBCollisionResult => {
+//
+// baseSolid 可选：渲染管线已经算过一遍基座，传进来即可避免完整重算
+// （基座是最贵的一块几何，含 clover 链）。传入的必须是未平移的本地坐标几何。
+export const pcbCollision = (params: Params, baseSolid?: Geom3): PCBCollisionResult => {
   if (!params.pcbPreview.enabled) {
     return { collides: false, hitsWalls: false, hitsCeiling: false };
   }
 
   const occupied = erodedOccupied(params);
 
-  const obstacles: Geom3[] = [base(params)];
+  const obstacles: Geom3[] = [baseSolid ?? base(params)];
   if (params.internalWalls.length > 0) {
     obstacles.push(internalWalls(params));
   }

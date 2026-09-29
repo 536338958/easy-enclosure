@@ -40,3 +40,6 @@ __screenshots__/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# 几何自检脚本（verify-*.cjs）的临时 CJS 编译产物
+/.verify-build
