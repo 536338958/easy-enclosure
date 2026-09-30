@@ -190,6 +190,16 @@ export const screwPostProtrusion = (params: Params): number => {
 };
 
 /**
+ * 密封圈槽 / 密封圈在四角的让位半径。
+ *
+ * 必须与螺丝柱的凸出量**同源**（`screwPostProtrusion`）——绕的就是同一根柱子。
+ * 早先这里抄了孔位公式 `diameterMax/2 + cornerRadius/4 + wall/2`：贯穿模式下 3.24
+ * 与柱子 3.00 只差 0.24 看不出问题，但螺母模式下它算出 5.04、柱子只有 3.89，
+ * 槽在四角绕行过头，直接把槽切断（表现为「防水槽被打穿」）。
+ */
+export const sealReliefRadius = (params: Params): number => screwPostProtrusion(params);
+
+/**
  * 螺丝孔中心距相邻两边的距离（mm）。
  *
  * `lidScrewOffset = 0` 时走经典公式。**与凸出量彼此独立**：调凸出量只改变

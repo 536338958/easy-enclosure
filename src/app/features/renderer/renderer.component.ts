@@ -111,6 +111,9 @@ const sealDeps = [
   // 螺母模式下密封圈槽的让位缺口要跟着螺丝柱一起变大
   'lidScrewHoleType',
   'lidScrewNutWidth',
+  // 让位半径与螺丝柱凸出量同源（sealReliefRadius = screwPostProtrusion），
+  // 用户自定义凸出量时密封圈也必须重建
+  'lidScrewProtrusion',
 ];
 const mountDeps = [
   'pcbMounts',
