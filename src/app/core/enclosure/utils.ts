@@ -1,36 +1,54 @@
-import { subtract, union, intersect } from '@jscad/modeling/src/operations/booleans';
+import { subtract, intersect } from '@jscad/modeling/src/operations/booleans';
+import { extrudeLinear } from '@jscad/modeling/src/operations/extrusions';
 import { hull } from '@jscad/modeling/src/operations/hulls';
 import { rotateZ, transform, translate } from '@jscad/modeling/src/operations/transforms';
 import type Mat4 from '@jscad/modeling/src/maths/mat4/type';
-import { cuboid, cylinder } from '@jscad/modeling/src/primitives';
+import { circle, cuboid, rectangle } from '@jscad/modeling/src/primitives';
 import { degToRad } from '@jscad/modeling/src/utils';
 import measureBoundingBox from '@jscad/modeling/src/measurements/measureBoundingBox';
 import type { Geom3 } from '@jscad/modeling/src/geometries/types';
 
 /**
- * 圆角/圆柱的默认细分段数。
+ * 圆角/圆弧的默认细分段数。
  *
  * 本机圆角半径多在 3mm 量级，48 段的弦高误差 < 0.02mm（100 段约 0.005mm），
  * 两者都远低于 FDM 打印精度，肉眼与切片结果均不可分辨。
- * 但 JSCAD 的布尔运算开销随面数超线性增长，clover 一条链上就有 20+ 个圆柱，
+ * 但 JSCAD 的布尔运算开销随面数超线性增长，clover 一条链上就有 20+ 个圆弧，
  * 降到 48 段能省掉一半以上的重建耗时。
  */
 const DEFAULT_SEGMENTS = 48;
 
-export const roundedCube = (l: number, w: number, h: number, r = 8, s = DEFAULT_SEGMENTS) => {
-  const c = cylinder({
-    height: h,
+/**
+ * 所有实体轮廓一律走「2D 剖面 → 线性挤出」。
+ *
+ * 早先是直接用 3D 圆柱/长方体做 hull：两个圆柱的侧面在接缝处只是**贴合**而非
+ * **共享顶点**，布尔运算后极易留下非流形边（切片软件会报破面/自交）。
+ * 2D 剖面只有一层多边形环，挤出后侧壁天然是完整闭合的环，接缝问题从根上消失，
+ * 而且挤出比 3D hull 快得多。
+ */
+
+export const roundedCube2d = (l: number, w: number, r = 8, s = DEFAULT_SEGMENTS) => {
+  const c = circle({
     radius: r,
     segments: s,
-    center: [0, 0, h / 2],
   });
 
   return hull(
-    translate([r, r, 0], c),
-    translate([l - r, r, 0], c),
-    translate([r, w - r, 0], c),
-    translate([l - r, w - r, 0], c),
+    translate([r, r], c),
+    translate([l - r, r], c),
+    translate([r, w - r], c),
+    translate([l - r, w - r], c),
   );
+};
+
+export const roundedCube = (l: number, w: number, h: number, r = 8, s = DEFAULT_SEGMENTS) => {
+  return extrudeLinear({ height: h }, roundedCube2d(l, w, r, s));
+};
+
+export const roundedFrame2d = (l: number, w: number, t: number, r = 8, s = DEFAULT_SEGMENTS) => {
+  const outer = roundedCube2d(l, w, r, s);
+  const inner = roundedCube2d(l - t * 2, w - t * 2, r, s);
+  return subtract(outer, translate([t, t], inner));
 };
 
 export const roundedFrame = (
@@ -41,9 +59,7 @@ export const roundedFrame = (
   r = 8,
   s = DEFAULT_SEGMENTS,
 ) => {
-  const outer = roundedCube(l, w, h, r, s);
-  const inner = roundedCube(l - t * 2, w - t * 2, h, r, s);
-  return subtract(outer, translate([t, t, 0], inner));
+  return extrudeLinear({ height: h }, roundedFrame2d(l, w, t, r, s));
 };
 
 export const hollowRoundCube = (
@@ -59,34 +75,46 @@ export const hollowRoundCube = (
   return subtract(outer, translate([t, t, t], inner));
 };
 
-const roundedCorner = (r: number, h: number, s = DEFAULT_SEGMENTS) => {
+/** 2D 的「圆角外补角」：边长 2r 的正方形挖掉一个半径 r 的圆角，剩下的尖角块 */
+const roundedCorner2d = (r: number, s = DEFAULT_SEGMENTS) => {
   return subtract(
-    cuboid({ size: [r * 2, r * 2, h] }),
-    translate([r, r, 0], roundedCube(r, r, h, r, s)),
-    translate([r * 2, 0, 0], cuboid({ size: [r * 2, r * 2, h] })),
+    rectangle({ size: [r * 2, r * 2] }),
+    translate([r, r], roundedCube2d(r, r, r, s)),
+    translate([r * 2, 0], rectangle({ size: [r * 2, r * 2] })),
   );
 };
 
-export const clover = (l: number, w: number, h: number, r = 8, s = DEFAULT_SEGMENTS) => {
+export const clover2d = (l: number, w: number, r = 8, s = DEFAULT_SEGMENTS) => {
   const cornersRemoved = subtract(
-    roundedCube(l, w, h, r, s),
-    roundedCube(r, r, h, r, s),
-    translate([l - r, 0, 0], roundedCube(r, r, h, r, s)),
-    translate([0, w - r, 0], roundedCube(r, r, h, r, s)),
-    translate([l - r, w - r, 0], roundedCube(r, r, h, r, s)),
+    roundedCube2d(l, w, r, s),
+    translate([0, 0], roundedCube2d(r, r, r, s)),
+    translate([l - r, 0], roundedCube2d(r, r, r, s)),
+    translate([0, w - r], roundedCube2d(r, r, r, s)),
+    translate([l - r, w - r], roundedCube2d(r, r, r, s)),
   );
+  const rc = roundedCorner2d(r, s);
   const rounded = subtract(
     cornersRemoved,
-    translate([0, r * 2, 0], roundedCorner(r, h * 2, s)),
-    translate([r * 2, 0, 0], roundedCorner(r, h * 2, s)),
-    translate([l, r * 2, 0], rotateZ(degToRad(90), roundedCorner(r, h * 2, s))),
-    translate([l - r * 2, 0, 0], rotateZ(degToRad(90), roundedCorner(r, h * 2, s))),
-    translate([l, w - r * 2, 0], rotateZ(degToRad(180), roundedCorner(r, h * 2, s))),
-    translate([l - r * 2, w, 0], rotateZ(degToRad(180), roundedCorner(r, h * 2, s))),
-    translate([0, w - r * 2, 0], rotateZ(degToRad(270), roundedCorner(r, h * 2, s))),
-    translate([r * 2, w, 0], rotateZ(degToRad(270), roundedCorner(r, h * 2, s))),
+    translate([0, r * 2], rotateZ(degToRad(0), rc)),
+    translate([r * 2, 0], rotateZ(degToRad(0), rc)),
+    translate([l, r * 2], rotateZ(degToRad(90), rc)),
+    translate([l - r * 2, 0], rotateZ(degToRad(90), rc)),
+    translate([l, w - r * 2], rotateZ(degToRad(180), rc)),
+    translate([l - r * 2, w], rotateZ(degToRad(180), rc)),
+    translate([0, w - r * 2], rotateZ(degToRad(270), rc)),
+    translate([r * 2, w], rotateZ(degToRad(270), rc)),
   );
   return rounded;
+};
+
+export const clover = (l: number, w: number, h: number, r = 8, s = DEFAULT_SEGMENTS) => {
+  return extrudeLinear({ height: h }, clover2d(l, w, r, s));
+};
+
+export const cloverFrame2d = (l: number, w: number, t: number, r = 8, s = DEFAULT_SEGMENTS) => {
+  const outer = clover2d(l, w, r, s);
+  const inner = clover2d(l - t * 2, w - t * 2, r, s);
+  return subtract(outer, translate([t, t], inner));
 };
 
 export const cloverFrame = (
@@ -97,9 +125,7 @@ export const cloverFrame = (
   r = 8,
   s = DEFAULT_SEGMENTS,
 ) => {
-  const outer = clover(l, w, h, r, s);
-  const inner = clover(l - t * 2, w - t * 2, h, r, s);
-  return subtract(outer, translate([t, t, 0], inner));
+  return extrudeLinear({ height: h }, cloverFrame2d(l, w, t, r, s));
 };
 
 // 底边 45° 倒角切割工具（用于消除 3D 打印首层「象脚」）。

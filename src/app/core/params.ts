@@ -83,6 +83,21 @@ export type PcbMountFillet = {
   size: number;
 };
 
+/**
+ * 基座螺丝孔的形式。
+
+ * - `through`（本分支默认）：从基座顶面贯穿到底面，与旧版 `lidScrewThrough = true` 一致
+ * - `blind`：从基座顶面往下钻 `lidScrewHoleDepth`，**最多钻到地板顶面**，
+ *   底板整层留着 —— 孔不穿透，灰尘进不去。上游的盲孔不设这个上限，会从底部打穿
+ * - `nut-pocket`：贯穿孔 + 基座底面的六角螺母槽（嵌入螺母，螺丝从盖板拧进来锁紧）
+ *
+ * 上游默认 `blind`，本分支保留 `through` 以免改变既有预设的默认成品。
+ */
+export type LidScrewHoleType = 'blind' | 'nut-pocket' | 'through';
+
+/** DIN 导轨（TH35）相对外壳的走向 */
+export type DinRailOrientation = 'horizontal' | 'vertical';
+
 export type Params = {
   length: number;
   width: number;
@@ -122,15 +137,22 @@ export type Params = {
    */
   lidScrewOffset: number;
   /**
-   * 基座螺丝孔是否贯穿底板。只作用于**基座**，盖板的孔始终是贯穿的。
-   *
-   * - true（默认）：基座孔从底面贯穿到顶面，保持既有行为
-   * - false：基座孔不打通，底板（厚 floor）整层留作底部余料；
-   *   孔深 = 总厚度 − 底板厚度 = `height − floor`，在底板顶面处终止
-   *
-   * 该开关随预设一起保存 / 读取。
+   * 基座螺丝孔的形式，见 `LidScrewHoleType`。只作用于**基座**，盖板的孔始终贯穿
+   * （盖板外表面是 z = 0，螺丝从那一侧拧入）。
    */
-  lidScrewThrough: boolean;
+  lidScrewHoleType: LidScrewHoleType;
+  /**
+   * 盲孔深度（mm），仅 `lidScrewHoleType = 'blind'` 时生效。
+   * 从基座顶面往下量；实际生效值会被夹到 `height − floor`，不会打通底板。
+   */
+  lidScrewHoleDepth: number;
+  /**
+   * 嵌入螺母的对边宽度（mm，即扳手尺寸），仅 `nut-pocket` 时生效。
+   * 螺母槽按正六边形外接圆 `nutWidth / √3 × 2` 开挖。
+   */
+  lidScrewNutWidth: number;
+  /** 嵌入螺母槽的深度（mm），仅 `nut-pocket` 时生效。 */
+  lidScrewNutDepth: number;
   /**
    * 盖板螺丝孔的沉头倒角（mm）。
    *
@@ -164,6 +186,16 @@ export type Params = {
    * 实际生效值由 lid.ts 按嵌入边高度与圆角半径夹取，不会削穿。
    */
   lidTopChamfer: number;
+  /** 是否生成 DIN 导轨（35mm TH35 / IEC 60715）挂装夹。默认关闭。 */
+  dinRailMount: boolean;
+  /** 导轨走向：horizontal = 导轨横穿外壳长度方向，vertical = 沿宽度方向 */
+  dinRailOrientation: DinRailOrientation;
+  /** 单个挂夹的宽度（沿导轨方向的尺寸），mm */
+  dinRailMountWidth: number;
+  /** 挂夹固定螺丝的直径，mm */
+  dinRailScrewDiameter: number;
+  /** 是否在预览里显示 DIN 挂夹（关掉只是不显示，导出仍然包含） */
+  showDinRailMount: boolean;
 };
 
 export const DEFAULT_PARAMS: Params = {
@@ -306,9 +338,17 @@ export const DEFAULT_PARAMS: Params = {
   wallMountChamferAngle: 60,
   lidScrewOffset: 0,
   lidScrewProtrusion: 0,
-  lidScrewThrough: true,
+  lidScrewHoleType: 'through',
+  lidScrewHoleDepth: 10,
+  lidScrewNutWidth: 5.7,
+  lidScrewNutDepth: 2.5,
   pcbMountFillet: { style: 'round', size: 1 },
   lidScrewCountersink: 0,
+  dinRailMount: false,
+  dinRailOrientation: 'horizontal',
+  dinRailMountWidth: 15,
+  dinRailScrewDiameter: 3.98,
+  showDinRailMount: true,
 };
 
 export const cloneParams = (params: Params): Params => {

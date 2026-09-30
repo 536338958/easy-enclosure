@@ -6,10 +6,17 @@ import { holes } from './holes';
 import { flanges } from './wallmount';
 import { bottomChamferTool, clover, hollowRoundCube, roundedCube } from './utils';
 import { waterProofSealCutout } from './waterproofseal';
-import { screws } from './screws';
+import { screws, nutPockets } from './screws';
 import { ventilationCut } from './ventilation';
 import { baseSnapPockets } from './snapfit';
-import { innerWallInset, screwOffset, screwPostProtrusion } from './dimensions';
+import {
+  innerWallInset,
+  lidScrewBlindDepth,
+  lidScrewNutPocketDepth,
+  screwDiameterMax,
+  screwOffset,
+  screwPostProtrusion,
+} from './dimensions';
 import { translate } from '@jscad/modeling/src/operations/transforms';
 
 const { subtract, union } = booleans;
@@ -32,10 +39,9 @@ export const base = (params: Params) => {
   const _wall = innerWallInset(params);
 
   if (params.lidScrews) {
-    let diameterMax = Math.max(baseLidScrewDiameter, lidScrewDiameter);
     // 螺丝柱（内腔四角凸出的那块实体）用凸出量，螺丝孔位置单独用孔位参数，两者互不影响
     const postProtrusion = screwPostProtrusion(params);
-    const screwCentre = screwOffset(params, diameterMax);
+    const screwCentre = screwOffset(params, screwDiameterMax(params));
     body.push(
       subtract(
         roundedCube(width, length, height, cornerRadius),
@@ -45,19 +51,29 @@ export const base = (params: Params) => {
         ),
       ),
     );
-    // 基座螺丝孔深度取决于「是否穿孔」（该开关只作用于基座，盖板始终贯穿）：
-    // - 穿孔（默认）：从基座底面贯穿到顶面
-    // - 不穿孔：基座底板（厚 floor）整层留作底部余料，
-    //   孔深 = 总厚度 − 底板厚度 = height − floor，在底板顶面（z = floor）处终止
-    if (params.lidScrewThrough) {
+    // 基座螺丝孔的形式（见 LidScrewHoleType）。盖板的孔不受它影响，始终贯穿：
+    // 盖板的外表面是 z = 0，螺丝从那一侧拧入。
+    const holeType = params.lidScrewHoleType;
+    if (holeType === 'blind') {
+      // 从顶面往下钻，孔底停在底板顶面，底板整层留着
+      const depth = lidScrewBlindDepth(params);
+      if (depth > 0) {
+        subtracts.push(screws(length, width, height, screwCentre, baseLidScrewDiameter, depth));
+      }
+    } else if (holeType === 'nut-pocket') {
+      // 贯穿孔 + 底面的六角螺母槽：螺丝从盖板一侧拧进来，锁进嵌在底部的螺母
       subtracts.push(screws(length, width, height, screwCentre, baseLidScrewDiameter));
-    } else if (height > floor) {
       subtracts.push(
-        translate(
-          [0, 0, floor],
-          screws(length, width, height - floor, screwCentre, baseLidScrewDiameter),
+        nutPockets(
+          length,
+          width,
+          screwCentre,
+          params.lidScrewNutWidth,
+          lidScrewNutPocketDepth(params),
         ),
       );
+    } else {
+      subtracts.push(screws(length, width, height, screwCentre, baseLidScrewDiameter));
     }
   } else {
     body.push(hollowRoundCube(width, length, height, _wall, cornerRadius));

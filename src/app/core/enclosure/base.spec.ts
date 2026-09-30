@@ -4,8 +4,8 @@ import { intersect } from '@jscad/modeling/src/operations/booleans';
 import { cuboid } from '@jscad/modeling/src/primitives';
 import { translate } from '@jscad/modeling/src/operations/transforms';
 
-import { DEFAULT_PARAMS, cloneParams, type Params } from '../params';
-import { screwOffset } from './dimensions';
+import { DEFAULT_PARAMS, cloneParams, type LidScrewHoleType, type Params } from '../params';
+import { screwOffset, screwDiameterMax } from './dimensions';
 import { base } from './base';
 
 const materialAt = (solid: ReturnType<typeof base>, at: [number, number, number]): number => {
@@ -19,8 +19,7 @@ const materialAt = (solid: ReturnType<typeof base>, at: [number, number, number]
 };
 
 const holeCornersOf = (params: Params): Array<[number, number]> => {
-  const diameterMax = Math.max(params.baseLidScrewDiameter, params.lidScrewDiameter);
-  const o = screwOffset(params, diameterMax);
+  const o = screwOffset(params, screwDiameterMax(params));
   return [
     [o, o],
     [params.width - o, o],
@@ -84,20 +83,22 @@ describe('base', () => {
     expect(measureVolume(base(large))).toBeGreaterThan(measureVolume(base(small)));
   });
 
-  // 「孔贯穿底板」只作用于基座：勾选贯穿、取消则底板整层留作余料
+  // 螺丝孔形式（LidScrewHoleType）只作用于基座：through 贯穿、blind 在底板顶面止住
   describe('base screw hole depth', () => {
-    const setup = (through: boolean): Params => {
+    const setup = (holeType: LidScrewHoleType): Params => {
       const params = cloneParams(DEFAULT_PARAMS);
       params.wallMounts = false;
       params.height = 30;
       params.floor = 2;
       params.lidScrews = true;
-      params.lidScrewThrough = through;
+      params.lidScrewHoleType = holeType;
+      // 盲孔深度给到上限：孔底应正好停在底板顶面
+      params.lidScrewHoleDepth = 100;
       return params;
     };
 
-    it('drills through the floor when the switch is on', () => {
-      const params = setup(true);
+    it('drills through the floor for through holes', () => {
+      const params = setup('through');
       const solid = base(params);
 
       holeCornersOf(params).forEach(([x, y]) => {
@@ -106,8 +107,8 @@ describe('base', () => {
       });
     });
 
-    it('stops the hole at the floor when the switch is off', () => {
-      const params = setup(false);
+    it('stops the hole at the floor for blind holes', () => {
+      const params = setup('blind');
       const solid = base(params);
 
       holeCornersOf(params).forEach(([x, y]) => {
@@ -119,8 +120,8 @@ describe('base', () => {
     });
 
     it('leaves the base taller in material when the hole stops short', () => {
-      const through = base(setup(true));
-      const stopped = base(setup(false));
+      const through = base(setup('through'));
+      const stopped = base(setup('blind'));
 
       // 不打通就多留一层底板材料
       expect(measureVolume(stopped)).toBeGreaterThan(measureVolume(through));

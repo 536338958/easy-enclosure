@@ -34,6 +34,7 @@ export const ZH = {
   'surface.front': '前面',
   'surface.back': '后面',
   'surface.seal': '密封圈',
+  'surface.dinRail': 'DIN 挂夹',
 
   'sidebar.quickActions': '快捷操作',
   'sidebar.actions': '操作',
@@ -51,9 +52,18 @@ export const ZH = {
   'tools.stl': 'STL',
   'tools.stlTitle': '导出为 STL',
   'tools.closeExport': '关闭导出窗口',
-  'tools.exportDesc': '导出完整外壳，或仅导出 PCB 支柱以便快速试装检查。',
-  'tools.exportPcbMounts': '导出 PCB 支柱',
-  'tools.exportFull': '导出完整外壳',
+  'tools.exportPcbMounts': 'PCB 支柱',
+  'tools.exportTitle': '导出 STL',
+  'tools.exportChecklistHint': '勾选要下载的部件；选择多个会打包成一个 ZIP。',
+  'tools.exportBase': '外壳基座',
+  'tools.exportLid': '外壳盖板',
+  'tools.exportSeal': '密封圈',
+  'tools.exportDinRail': 'DIN 导轨挂夹',
+  'tools.cancel': '取消',
+  'tools.download': '下载',
+  'tools.downloadStl': '下载 STL',
+  'tools.downloadZip': '下载 ZIP',
+  'tools.exporting': '导出中…',
   'tools.loadParseError': '无法解析该文件，请确认是本工具导出的 JSON 预设。',
   'tools.loadReadError': '文件读取失败，请重试。',
 
@@ -134,9 +144,20 @@ export const ZH = {
   'params.lidScrews': '盖板螺丝',
   'params.lidScrewsEnable': '启用盖板螺丝',
   'params.lidScrewsHint': '在四角生成螺丝柱，用螺丝把盖板固定到基座上。防水模式下必须开启。',
-  'params.lidScrewThrough': '基座孔贯穿底板',
-  'params.lidScrewThroughHint':
-    '勾选（默认）：基座螺丝孔从底面贯穿到顶面。取消：基座孔不打通，底板整层留作底部余料，孔深＝总厚度−底板厚度，在底板顶面处终止。此开关只影响基座，盖板的孔始终贯穿。',
+  'params.lidScrewHoleType': '基座孔型',
+  'params.lidScrewHoleTypeHint':
+    '贯穿孔（默认）：基座螺丝孔从顶面贯穿到底面。盲孔：从顶面往下钻指定深度，孔底停在底板顶面，底板整层留着、底部不进灰。螺母槽：贯穿孔 + 基座底面的六角螺母槽，螺丝从盖板一侧拧入、锁进嵌在底部的螺母。只作用于基座，盖板的孔始终贯穿（螺丝从盖板外表面拧入）。',
+  'params.lidScrewHoleType.through': '贯穿孔',
+  'params.lidScrewHoleType.blind': '盲孔（不打通底板）',
+  'params.lidScrewHoleType.nut-pocket': '螺母槽（嵌入螺母）',
+  'params.lidScrewHoleDepth': '盲孔深度 (mm)',
+  'params.lidScrewHoleDepthHint':
+    '从基座顶面往下量的孔深，mm。最大只能到「总高 − 底板厚」，孔底停在底板顶面，不会打通底板。',
+  'params.lidScrewNutWidth': '螺母对边宽 (mm)',
+  'params.lidScrewNutWidthHint':
+    '嵌入螺母的扳手尺寸（六边形对边宽），mm。常见 M3 = 5.5、M4 = 7。螺母槽按外接圆开挖，螺丝柱会相应加粗。',
+  'params.lidScrewNutDepth': '螺母槽深度 (mm)',
+  'params.lidScrewNutDepthHint': '螺母槽从基座底面往上挖的深度，mm，需不小于螺母厚度。',
   'params.lidScrewDiameter': '盖板孔径',
   'params.lidScrewDiameterHint': '盖板一侧的过孔直径（螺丝穿过），mm',
   'params.baseLidScrewDiameter': '底座孔径',
@@ -268,6 +289,21 @@ export const ZH = {
     '坐标轴以基座角点为原点：X 红（指向左面 +X）、Y 绿（指向前面 +Y）、Z 蓝（指向上 +Z），可对照各偏移参数的方向。',
   'params.gridSpacing': '网格间距 (mm)',
   'params.gridSpacingHint': '底部参考网格的小格边长，mm',
+
+  'params.dinRailMount': 'DIN 导轨挂夹',
+  'params.dinRailMountEnable': '启用 DIN 导轨挂夹',
+  'params.dinRailMountHint':
+    '生成一对 35mm 标准 DIN 导轨（TH35 / IEC 60715）挂夹，固定螺丝孔位与壁挂挂耳对齐。默认关闭；启用后导出时可单独下载。',
+  'params.dinRailOrientation': '导轨走向',
+  'params.dinRailOrientationHint': '横向：导轨横穿外壳长度方向；纵向：导轨沿外壳宽度方向。',
+  'params.dinRailOrientation.horizontal': '横向',
+  'params.dinRailOrientation.vertical': '纵向',
+  'params.dinRailMountWidth': '挂夹宽度 (mm)',
+  'params.dinRailMountWidthHint': '单个挂夹沿导轨方向的尺寸，mm，最小 10。',
+  'params.dinRailScrewDiameter': '固定螺丝直径 (mm)',
+  'params.dinRailScrewDiameterHint': '把挂夹固定到外壳上的螺丝直径，mm。默认与壁挂挂耳一致。',
+  'params.showDinRailMount': '显示 DIN 挂夹',
+  'params.showDinRailMountHint': '预览中显示挂夹。关闭只是不显示，导出仍然包含。',
 } as const;
 
 export type TranslationKey = keyof typeof ZH;
@@ -285,6 +321,7 @@ export const EN: Record<TranslationKey, string> = {
   'surface.front': 'Front',
   'surface.back': 'Back',
   'surface.seal': 'Seal',
+  'surface.dinRail': 'DIN mount',
 
   'sidebar.quickActions': 'Quick actions',
   'sidebar.actions': 'Actions',
@@ -302,10 +339,19 @@ export const EN: Record<TranslationKey, string> = {
   'tools.stl': 'STL',
   'tools.stlTitle': 'Export as STL',
   'tools.closeExport': 'Close export dialog',
-  'tools.exportDesc':
-    'Export the complete enclosure, or just the PCB mounts for a quick fit check.',
-  'tools.exportPcbMounts': 'Export PCB mounts',
-  'tools.exportFull': 'Export full enclosure',
+  'tools.exportPcbMounts': 'PCB mounts',
+  'tools.exportTitle': 'Export STL',
+  'tools.exportChecklistHint':
+    'Tick the parts you want to download. Selecting more than one bundles them into a single ZIP.',
+  'tools.exportBase': 'Enclosure base',
+  'tools.exportLid': 'Enclosure lid',
+  'tools.exportSeal': 'Waterproof seal',
+  'tools.exportDinRail': 'DIN rail mount',
+  'tools.cancel': 'Cancel',
+  'tools.download': 'Download',
+  'tools.downloadStl': 'Download STL',
+  'tools.downloadZip': 'Download ZIP',
+  'tools.exporting': 'Exporting...',
   'tools.loadParseError':
     'Could not parse this file. Make sure it is a JSON preset exported by this tool.',
   'tools.loadReadError': 'Failed to read the file. Please try again.',
@@ -396,9 +442,21 @@ export const EN: Record<TranslationKey, string> = {
   'params.lidScrewsEnable': 'Enable lid screws',
   'params.lidScrewsHint':
     'Generates screw posts in the four corners so the lid can be screwed to the base. Required in waterproof mode.',
-  'params.lidScrewThrough': 'Base holes through the floor',
-  'params.lidScrewThroughHint':
-    'Checked (default): the base screw holes run all the way from the bottom face to the top face. Unchecked: the holes stop short, the floor layer is left intact, and the hole depth equals total thickness minus floor thickness, ending at the top of the floor. This switch affects the base only; lid holes are always through-holes.',
+  'params.lidScrewHoleType': 'Base hole type',
+  'params.lidScrewHoleTypeHint':
+    'Through hole (default): the base screw holes run from the top face all the way to the bottom face. Blind hole: drilled down from the top face to the given depth, stopping at the top of the floor so the bottom stays closed and dust cannot get in. Captive nut pocket: a through hole plus a hex nut recess in the underside of the base, so the screw goes in from the lid and threads into a nut captured at the bottom. Affects the base only; lid holes are always through-holes (screws enter from the lid outer face).',
+  'params.lidScrewHoleType.through': 'Through hole',
+  'params.lidScrewHoleType.blind': 'Blind hole (floor left intact)',
+  'params.lidScrewHoleType.nut-pocket': 'Captive nut pocket',
+  'params.lidScrewHoleDepth': 'Blind hole depth (mm)',
+  'params.lidScrewHoleDepthHint':
+    'How far the hole is drilled down from the top face of the base, mm. It is capped at total height minus floor thickness, so the hole always stops at the top of the floor and never breaks through.',
+  'params.lidScrewNutWidth': 'Nut width across flats (mm)',
+  'params.lidScrewNutWidthHint':
+    'Wrench size of the captive nut (hex width across flats), mm. Typical values: M3 = 5.5, M4 = 7. The pocket is cut on the nut circumcircle and the screw posts grow accordingly.',
+  'params.lidScrewNutDepth': 'Nut pocket depth (mm)',
+  'params.lidScrewNutDepthHint':
+    'How deep the nut pocket is cut up from the underside of the base, mm. Must be at least the nut thickness.',
   'params.lidScrewDiameter': 'Lid hole diameter',
   'params.lidScrewDiameterHint':
     'Clearance hole diameter on the lid side (screw passes through), mm',
@@ -539,6 +597,24 @@ export const EN: Record<TranslationKey, string> = {
     'The axes start at the base corner: X red (toward the left face, +X), Y green (toward the front face, +Y), Z blue (up, +Z). Use them to check the direction of each offset parameter.',
   'params.gridSpacing': 'Grid spacing (mm)',
   'params.gridSpacingHint': 'Cell size of the reference grid on the floor, mm',
+
+  'params.dinRailMount': 'DIN rail mounts',
+  'params.dinRailMountEnable': 'Enable DIN rail mounts',
+  'params.dinRailMountHint':
+    'Generates a pair of clips for standard 35mm DIN rail (TH35 / IEC 60715), with fixing holes aligned to the wall mount flanges. Off by default; once enabled the clips can be downloaded on their own.',
+  'params.dinRailOrientation': 'Rail orientation',
+  'params.dinRailOrientationHint':
+    'Horizontal: the rail runs across the enclosure length. Vertical: the rail runs along the enclosure width.',
+  'params.dinRailOrientation.horizontal': 'Horizontal',
+  'params.dinRailOrientation.vertical': 'Vertical',
+  'params.dinRailMountWidth': 'Clip width (mm)',
+  'params.dinRailMountWidthHint': 'Size of a single clip along the rail, mm. Minimum 10.',
+  'params.dinRailScrewDiameter': 'Fixing screw diameter (mm)',
+  'params.dinRailScrewDiameterHint':
+    'Diameter of the screw that fastens the clip to the enclosure, mm. Defaults to the wall mount screw size.',
+  'params.showDinRailMount': 'Show DIN rail mounts',
+  'params.showDinRailMountHint':
+    'Shows the clips in the preview. Hiding them only affects the preview, exports still include them.',
 };
 
 export const DICTIONARIES: Record<Locale, Record<TranslationKey, string>> = {

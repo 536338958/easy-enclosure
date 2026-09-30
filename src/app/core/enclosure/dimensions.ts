@@ -32,6 +32,37 @@ export const cavityFloorZ = (params: Params): number => {
 export const MIN_SCREW_WALL = 0.6;
 
 /**
+ * 参与螺丝孔定位的「最大孔径」。
+ *
+ * 嵌入螺母比螺丝本身粗不少（M3 螺母对边 5.7mm，外接圆 6.58mm），
+ * 而螺丝柱/让位缺口必须能包住螺母，所以螺母模式下要按螺母的外接圆来算，
+ * 否则槽开出来比螺母小、装不进去。
+ */
+export const screwDiameterMax = (params: Params): number => {
+  const nutDiameter =
+    params.lidScrewHoleType === 'nut-pocket' ? (params.lidScrewNutWidth / Math.sqrt(3)) * 2 : 0;
+  return Math.max(params.baseLidScrewDiameter, params.lidScrewDiameter, nutDiameter);
+};
+
+/**
+ * 盲孔的实际深度（mm）：从基座顶面往下量。
+ *
+ * 上限取 `height − floor` —— 孔底停在底板顶面，**不打通底板**。
+ * 这样外壳底部仍然是完整的，不会从底下进灰进水；想打通请改用 `through`。
+ * （上游的盲孔不设这个上限，depth 给大了就会从底部打穿。）
+ */
+export const lidScrewBlindDepth = (params: Params): number => {
+  const upper = Math.max(params.height - params.floor, 0);
+  return Math.min(Math.max(params.lidScrewHoleDepth, 0), upper);
+};
+
+/** 嵌入螺母槽的实际深度（mm）：夹到 `[0.5, height − floor]`，避免薄壳被挖穿 */
+export const lidScrewNutPocketDepth = (params: Params): number => {
+  const upper = Math.max(Math.min(params.height - params.floor, params.height), 0.5);
+  return Math.min(Math.max(params.lidScrewNutDepth, 0.5), upper);
+};
+
+/**
  * 螺丝孔中心距相邻两边的最小安全距离。
  *
  * 直线边处只要求「半径 + 最小壁厚」；但螺丝孔落在圆角区时，外表面是圆弧，
@@ -140,7 +171,8 @@ export const WATERPROOF_PROTRUSION = 3;
  * 自定义为正值时，超出区间会夹到边界。它不参与螺丝孔的定位。
  */
 export const screwPostProtrusion = (params: Params): number => {
-  const diameterMax = Math.max(params.baseLidScrewDiameter, params.lidScrewDiameter);
+  // 螺母模式下螺丝柱要包得住螺母，因此按螺母外接圆算（见 screwDiameterMax）
+  const diameterMax = screwDiameterMax(params);
   const lo = minScrewOffset(params, diameterMax);
   const hi = maxScrewOffset(params, diameterMax);
   const upper = Math.max(hi, lo);

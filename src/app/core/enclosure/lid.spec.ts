@@ -4,14 +4,13 @@ import { intersect } from '@jscad/modeling/src/operations/booleans';
 import { cuboid } from '@jscad/modeling/src/primitives';
 import { translate } from '@jscad/modeling/src/operations/transforms';
 
-import { DEFAULT_PARAMS, cloneParams, type Params } from '../params';
-import { screwOffset } from './dimensions';
+import { DEFAULT_PARAMS, cloneParams, type LidScrewHoleType, type Params } from '../params';
+import { screwOffset, screwDiameterMax } from './dimensions';
 import { lid } from './lid';
 
 // 螺丝孔中心位置（不是螺丝柱凸出量，两者是独立的量）
 const holeAt = (params: Params): number => {
-  const diameterMax = Math.max(params.baseLidScrewDiameter, params.lidScrewDiameter);
-  return screwOffset(params, diameterMax);
+  return screwOffset(params, screwDiameterMax(params));
 };
 
 // 四角螺丝孔的 XY 坐标
@@ -82,14 +81,14 @@ describe('lid', () => {
 
   // 螺丝要穿过盖板拧进基座，盖板的孔必须贯通「本体 + 嵌入边」。
   // 早先孔高用的是 roof * 2，嵌入边比 roof 厚时顶面还封着一层。
-  // 「孔贯穿底板」开关只作用于基座，盖板的孔不受它影响。
-  it('drills through the lid regardless of the through-hole switch', () => {
-    [true, false].forEach((through) => {
+  // 基座螺丝孔形式（LidScrewHoleType）只作用于基座，盖板的孔不受它影响。
+  it('drills through the lid regardless of the base hole type', () => {
+    (['blind', 'nut-pocket', 'through'] as LidScrewHoleType[]).forEach((holeType) => {
       const params = cloneParams(DEFAULT_PARAMS);
       params.roof = 2;
       params.insertHeight = 4;
       params.lidScrews = true;
-      params.lidScrewThrough = through;
+      params.lidScrewHoleType = holeType;
 
       const solid = lid(params);
       const topZ = params.roof + params.insertHeight;

@@ -1,6 +1,6 @@
 {
   "name": "easy-enclosure",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "private": true,
   "homepage": "https://bruceborrett.github.io/easy-enclosure/",
   "prettier": {
@@ -41,6 +41,7 @@
     "@jscad/regl-renderer": "^2.6.15",
     "@jscad/stl-serializer": "^2.1.23",
     "file-saver": "^2.0.5",
+    "jszip": "^3.10.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"

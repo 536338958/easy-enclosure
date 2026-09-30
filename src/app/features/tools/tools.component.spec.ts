@@ -1,8 +1,13 @@
 import { TestBed } from '@angular/core/testing';
+import JSZip from 'jszip';
 
 import { cloneParams } from '../../core/params';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
 import { ToolsComponent } from './tools.component';
+
+/** saveFile 是私有的，断言时用一个最小结构把它暴露出来，避免 spyOn 推成 never */
+type SaveSink = { saveFile: (data: Blob, fileName: string) => void };
+const spyOnSave = (target: ToolsComponent) => spyOn(target as unknown as SaveSink, 'saveFile');
 
 describe('ToolsComponent', () => {
   let component: ToolsComponent;
@@ -120,8 +125,27 @@ describe('ToolsComponent', () => {
     });
   });
 
-  it('exports the expected STL artifacts for a simple waterproof enclosure', () => {
-    const exportGeometrySpy = spyOn(component as never, 'exportGeometry' as never);
+  it('saves a single STL when only one part is selected', async () => {
+    const saveSpy = spyOnSave(component);
+
+    const simple = cloneParams(state.params());
+    simple.pcbMounts = [];
+    simple.internalWalls = [];
+    simple.waterProof = false;
+    state.setParams(simple);
+
+    component.openExportModal();
+    component.exportLid.set(false);
+    await component.exportSelected();
+
+    expect(saveSpy).toHaveBeenCalledWith(
+      jasmine.any(Blob),
+      jasmine.stringMatching(/^enclosure-base-\d+\.stl$/),
+    );
+  });
+
+  it('bundles the whole enclosure into a ZIP when several parts are selected', async () => {
+    const saveSpy = spyOnSave(component);
     const closeSpy = spyOn(component, 'closeExportModal');
 
     const simple = cloneParams(state.params());
@@ -130,68 +154,95 @@ describe('ToolsComponent', () => {
     simple.waterProof = true;
     state.setParams(simple);
 
-    component.exportStl();
+    await component.exportStl();
 
-    const exportedNames = exportGeometrySpy.calls
-      .allArgs()
-      .map((args) => args[0] as string)
-      .join(' ');
-    expect(exportedNames).toContain('enclosure-lid-');
-    expect(exportedNames).toContain('enclosure-base-');
-    expect(exportedNames).toContain('enclosure-waterproof-seal-');
+    expect(saveSpy).toHaveBeenCalledTimes(1);
+    const [blob, name] = saveSpy.calls.mostRecent().args as unknown as [Blob, string];
+    expect(name).toMatch(/^enclosure-\d+\.zip$/);
+
+    const zip = await JSZip.loadAsync(blob);
+    const entries = Object.keys(zip.files).join(' ');
+    expect(entries).toContain('enclosure-lid-');
+    expect(entries).toContain('enclosure-base-');
+    expect(entries).toContain('enclosure-waterproof-seal-');
     expect(closeSpy).toHaveBeenCalled();
   });
 
-  it('exports only base and lid pcb mount STL artifacts', () => {
-    const exportGeometrySpy = spyOn(component as never, 'exportGeometry' as never);
-    const closeSpy = spyOn(component, 'closeExportModal');
+  it('does not duplicate pcb mounts into the bundle by default', async () => {
+    const saveSpy = spyOnSave(component);
 
     const params = cloneParams(state.params());
     params.pcbMounts = [
-      {
-        x: 10,
-        y: 10,
-        height: 8,
-        outerDiameter: 6,
-        screwDiameter: 3,
-        surface: 'bottom',
-      },
-      {
-        x: 20,
-        y: 20,
-        height: 8,
-        outerDiameter: 6,
-        screwDiameter: 3,
-        surface: 'top',
-      },
+      { x: 10, y: 10, height: 8, outerDiameter: 6, screwDiameter: 3, surface: 'bottom' },
     ];
     state.setParams(params);
 
-    component.exportPcbMountsStl();
+    await component.exportStl();
 
-    const exportedNames = exportGeometrySpy.calls
-      .allArgs()
-      .map((args) => args[0] as string)
-      .join(' ');
-    expect(exportedNames).toContain('enclosure-pcb-mounts-base-');
-    expect(exportedNames).toContain('enclosure-pcb-mounts-lid-');
-    expect(exportedNames).not.toContain('enclosure-base-');
-    expect(exportedNames).not.toContain('enclosure-lid-');
-    expect(exportedNames).not.toContain('enclosure-waterproof-seal-');
-    expect(closeSpy).toHaveBeenCalled();
+    const [blob] = saveSpy.calls.mostRecent().args as unknown as [Blob, string];
+    const zip = await JSZip.loadAsync(blob);
+    expect(Object.keys(zip.files).join(' ')).not.toContain('enclosure-pcb-mounts-');
   });
 
-  it('skips pcb mount export when no mounts exist', () => {
-    const exportGeometrySpy = spyOn(component as never, 'exportGeometry' as never);
-    const closeSpy = spyOn(component, 'closeExportModal');
+  it('exports only the pcb mounts when that is the sole selection', async () => {
+    const saveSpy = spyOnSave(component);
+
+    const params = cloneParams(state.params());
+    params.pcbMounts = [
+      { x: 10, y: 10, height: 8, outerDiameter: 6, screwDiameter: 3, surface: 'bottom' },
+      { x: 20, y: 20, height: 8, outerDiameter: 6, screwDiameter: 3, surface: 'top' },
+    ];
+    state.setParams(params);
+
+    await component.exportPcbMountsStl();
+
+    const [blob] = saveSpy.calls.mostRecent().args as unknown as [Blob, string];
+    const zip = await JSZip.loadAsync(blob);
+    const entries = Object.keys(zip.files).join(' ');
+    expect(entries).toContain('enclosure-pcb-mounts-base-');
+    expect(entries).toContain('enclosure-pcb-mounts-lid-');
+    expect(entries).not.toContain('enclosure-waterproof-seal-');
+  });
+
+  it('exports the din rail mount on its own when requested', async () => {
+    const saveSpy = spyOnSave(component);
+
+    const params = cloneParams(state.params());
+    params.dinRailMount = true;
+    state.setParams(params);
+
+    await component.exportDinRailStl();
+
+    expect(saveSpy).toHaveBeenCalledWith(
+      jasmine.any(Blob),
+      jasmine.stringMatching(/^enclosure-din-rail-mount-\d+\.stl$/),
+    );
+  });
+
+  it('skips pcb mount export when no mounts exist', async () => {
+    const saveSpy = spyOnSave(component);
 
     const params = cloneParams(state.params());
     params.pcbMounts = [];
     state.setParams(params);
 
-    component.exportPcbMountsStl();
+    await component.exportPcbMountsStl();
 
-    expect(exportGeometrySpy).not.toHaveBeenCalled();
-    expect(closeSpy).toHaveBeenCalled();
+    expect(saveSpy).not.toHaveBeenCalled();
+  });
+
+  it('migrates a legacy lidScrewThrough preset to lidScrewHoleType', () => {
+    withFileContents('{"lidScrewThrough": false}', () => {
+      component.loadParamsFile({ target: fileInputFor() } as unknown as Event);
+
+      expect(state.params().lidScrewHoleType).toBe('blind');
+      expect(state.params().lidScrewHoleDepth).toBe(state.params().height - state.params().floor);
+    });
+
+    withFileContents('{"lidScrewThrough": true}', () => {
+      component.loadParamsFile({ target: fileInputFor() } as unknown as Event);
+
+      expect(state.params().lidScrewHoleType).toBe('through');
+    });
   });
 });

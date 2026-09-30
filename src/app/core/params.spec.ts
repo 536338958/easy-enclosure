@@ -27,8 +27,9 @@ describe('params defaults', () => {
     expect(DEFAULT_PARAMS.wallMountChamferAngle).toBe(WALL_MOUNT_CHAMFER_DEFAULT);
   });
 
-  it('defaults the lid screw hole to drilling through', () => {
-    expect(DEFAULT_PARAMS.lidScrewThrough).toBeTrue();
+  it('defaults the base lid screw hole to drilling through', () => {
+    // 与上游默认的 'blind' 不同：保留贯穿以免改变既有预设的默认成品
+    expect(DEFAULT_PARAMS.lidScrewHoleType).toBe('through');
   });
 
   it('defaults the pcb mount root transition to a 1mm round fillet', () => {

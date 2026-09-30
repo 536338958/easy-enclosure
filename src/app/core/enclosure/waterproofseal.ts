@@ -1,6 +1,7 @@
 import { Params } from '../params';
 
 import { cloverFrame } from './utils';
+import { screwDiameterMax } from './dimensions';
 
 import { translate } from '@jscad/modeling/src/operations/transforms';
 
@@ -15,11 +16,10 @@ export const waterProofSealCutout = (params: Params) => {
     sealThickness,
     insertClearance,
     cornerRadius,
-    baseLidScrewDiameter,
-    lidScrewDiameter,
   } = params;
 
-  let diameterMax = Math.max(baseLidScrewDiameter, lidScrewDiameter);
+  // 让位缺口的大小必须跟螺丝柱一致：螺母模式下柱子要包住螺母，槽也得跟着变大
+  const diameterMax = screwDiameterMax(params);
   return translate(
     [wall, wall, height - (insertHeight + sealThickness)],
     cloverFrame(
@@ -33,18 +33,9 @@ export const waterProofSealCutout = (params: Params) => {
 };
 
 export const waterProofSeal = (params: Params) => {
-  const {
-    length,
-    width,
-    wall,
-    baseLidScrewDiameter,
-    sealThickness,
-    insertThickness,
-    insertClearance,
-    cornerRadius,
-    lidScrewDiameter,
-  } = params;
-  let diameterMax = Math.max(baseLidScrewDiameter, lidScrewDiameter);
+  const { length, width, wall, sealThickness, insertThickness, insertClearance, cornerRadius } =
+    params;
+  const diameterMax = screwDiameterMax(params);
   return cloverFrame(
     width - wall * 2 - insertClearance * 2,
     length - wall * 2 - insertClearance * 2,

@@ -81,4 +81,37 @@ describe('ParamsFormComponent', () => {
     component.setNumberParam('length', '');
     expect(state.params().length).toBe(before);
   });
+
+  it('switches lid screw hole type through string params', () => {
+    expect(state.params().lidScrewHoleType).toBe('through');
+
+    component.setStringParam('lidScrewHoleType', 'nut-pocket');
+    expect(state.params().lidScrewHoleType).toBe('nut-pocket');
+
+    // 空字符串（下拉框未选中）不应写成 '' 让几何走进未定义分支
+    component.setStringParam('lidScrewHoleType', '');
+    expect(state.params().lidScrewHoleType).toBe('nut-pocket');
+  });
+
+  it('enables din rail mount together with its preview toggle', () => {
+    expect(state.params().dinRailMount).toBeFalse();
+
+    component.onDinRailMountChange(true);
+    expect(state.params().dinRailMount).toBeTrue();
+    expect(state.params().showDinRailMount).toBeTrue();
+
+    // 关闭时只关挂夹，保留用户手动设置的显示开关
+    component.onDinRailMountChange(false);
+    expect(state.params().dinRailMount).toBeFalse();
+    expect(state.params().showDinRailMount).toBeTrue();
+  });
+
+  it('exposes din rail orientation options with translated labels', () => {
+    expect(component.dinRailOrientations).toEqual(['horizontal', 'vertical']);
+
+    component.setStringParam('dinRailOrientation', 'vertical');
+    expect(state.params().dinRailOrientation).toBe('vertical');
+    expect(component.dinRailOrientationLabel('vertical')).toBeTruthy();
+    expect(component.dinRailOrientationLabel('horizontal')).toBeTruthy();
+  });
 });

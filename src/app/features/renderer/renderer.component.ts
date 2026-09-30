@@ -25,6 +25,7 @@ import {
 import type { Entity } from '@jscad/regl-renderer/types/geometry-utils-V2/entity';
 
 import { base } from '../../core/enclosure/base';
+import { dinRailMountsPair } from '../../core/enclosure/dinrailmount';
 import { internalWalls } from '../../core/enclosure/internalwalls';
 import { lid } from '../../core/enclosure/lid';
 import { pcbMountsOnBase, pcbMountsOnLid } from '../../core/enclosure/pcbmount';
@@ -60,6 +61,9 @@ const lidDeps = [
   // 凸出量改动螺丝柱，孔位改动螺丝孔，两者都会改几何，缺一个就「改了不刷新」
   'lidScrewProtrusion',
   'lidScrewOffset',
+  // 螺母模式下螺丝柱与孔位都按螺母外接圆外移，盖板也要跟着重建
+  'lidScrewHoleType',
+  'lidScrewNutWidth',
 ];
 const baseDeps = [
   'length',
@@ -86,8 +90,11 @@ const baseDeps = [
   'wallMountChamferAngle',
   'lidScrewProtrusion',
   'lidScrewOffset',
-  // 穿孔开关只改基座孔深，归 baseDeps
-  'lidScrewThrough',
+  // 孔型/孔深/螺母尺寸只改基座螺丝孔与螺丝柱
+  'lidScrewHoleType',
+  'lidScrewHoleDepth',
+  'lidScrewNutWidth',
+  'lidScrewNutDepth',
 ];
 const sealDeps = [
   'length',
@@ -101,6 +108,9 @@ const sealDeps = [
   'lidScrewDiameter',
   'baseLidScrewDiameter',
   'lidScrews',
+  // 螺母模式下密封圈槽的让位缺口要跟着螺丝柱一起变大
+  'lidScrewHoleType',
+  'lidScrewNutWidth',
 ];
 const mountDeps = [
   'pcbMounts',
@@ -118,6 +128,19 @@ const mountDeps = [
   'pcbMountFillet',
 ];
 const internalWallDeps = ['internalWalls', 'length', 'width', 'waterProof', 'floor'];
+// DIN 挂夹的孔位沿用壁挂挂耳的几何，所以挂耳参数一变它也要重建
+const dinRailDeps = [
+  'dinRailMount',
+  'dinRailOrientation',
+  'dinRailMountWidth',
+  'dinRailScrewDiameter',
+  'length',
+  'width',
+  'cornerRadius',
+  'wallMountScrewDiameter',
+  'wallMountCount',
+  'showDinRailMount',
+];
 const gridDeps = [
   'showGrid',
   'gridSpacing',
@@ -325,6 +348,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
   private baseMountsModel: Geom3 | null = null;
   private lidMountsModel: Geom3 | null = null;
   private internalWallsModel: Geom3 | null = null;
+  private dinRailModel: Geom3 | null = null;
 
   private model: Geom3 | null = null;
   private renderOptions: RenderOptions | null = null;
@@ -337,6 +361,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
   private baseOrigin: Vec3Tuple = [0, 0, 0];
   private lidOrigin: Vec3Tuple = [0, 0, 0];
   private sealOrigin: Vec3Tuple = [0, 0, 0];
+  private dinRailOrigin: Vec3Tuple = [0, 0, 0];
   private wheelInteracting = false;
   private wheelInteractionHandle: ReturnType<typeof setTimeout> | null = null;
 
@@ -730,6 +755,19 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       });
     }
 
+    if (
+      this.dinRailModel &&
+      this.state.params().dinRailMount &&
+      this.state.params().showDinRailMount
+    ) {
+      const [dinX, dinY, dinZ] = this.dinRailOrigin;
+      anchors.push({
+        key: 'surface.dinRail',
+        point: [dinX, dinY, dinZ + 16],
+        normal: [0, 0, 1],
+      });
+    }
+
     const projected = anchors
       .filter((anchor) => this.isFacingCamera(anchor.point, anchor.normal))
       .map((anchor) => {
@@ -865,6 +903,8 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       waterProof,
       pcbMounts: pcbMountParams,
       internalWalls: internalWallParams,
+      dinRailMount: dinMountEnabled,
+      showDinRailMount,
     } = params;
 
     if (this.checkDeps(diff, lidDeps)) {
@@ -888,6 +928,19 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       this.sealModel = translate(sealPos, waterProofSeal(params));
     } else if (this.checkDeps(diff, sealDeps) && !waterProof) {
       this.sealModel = null;
+    }
+
+    if (this.checkDeps(diff, dinRailDeps) && dinMountEnabled && showDinRailMount) {
+      // 摆在盖板右侧，整体左边缘贴着「盖板右边缘 + SPACING」
+      const lidX = waterProof ? width / 2 + SPACING : SPACING / 2;
+      const rawDin = dinRailMountsPair(params);
+      const dinBounds = measureBoundingBox(rawDin) as [Vec3Tuple, Vec3Tuple];
+      const minX = dinBounds[0][0];
+      const dinRailPos: Vec3 = [lidX + width + SPACING - minX, 0, 0];
+      this.dinRailOrigin = dinRailPos;
+      this.dinRailModel = translate(dinRailPos, rawDin);
+    } else if (this.checkDeps(diff, dinRailDeps) && (!dinMountEnabled || !showDinRailMount)) {
+      this.dinRailModel = null;
     }
 
     if (this.checkDeps(diff, mountDeps) && pcbMountParams.length > 0) {
@@ -934,6 +987,9 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     if (this.internalWallsModel && internalWallParams.length > 0 && params.showBase) {
       result.push(this.internalWallsModel);
     }
+    if (this.dinRailModel && dinMountEnabled && showDinRailMount) {
+      result.push(this.dinRailModel);
+    }
 
     if (result.length === 0) {
       // 两部分都被隐藏时不能沿用上一帧的模型，否则开关看起来像失灵
@@ -975,7 +1031,11 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     // Re-frame the camera when the grid becomes visible (so it lands in view)
     // or when its size-affecting inputs change while it is on. Leave the user's
     // manual orbit alone when the grid is simply toggled off.
-    if (gridEntity && this.checkDeps(diff, gridDeps)) {
+    // 挂夹在盖板右侧另起一列，出现/消失会明显改变整体包络，重新取景一次
+    if (
+      (gridEntity && this.checkDeps(diff, gridDeps)) ||
+      this.checkDeps(diff, ['dinRailMount', 'showDinRailMount'])
+    ) {
       this.zoomToFit = true;
     }
 

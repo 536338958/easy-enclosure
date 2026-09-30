@@ -16,6 +16,7 @@ import {
   insertRimRadius,
   lidScrewCountersinkSize,
   lidTopChamferSize,
+  screwDiameterMax,
   screwOffset,
   screwPostProtrusion,
 } from './dimensions';
@@ -37,7 +38,6 @@ export const lid = (params: Params) => {
     insertThickness,
     insertHeight,
     insertClearance,
-    baseLidScrewDiameter,
     lidScrewDiameter,
   } = params;
 
@@ -52,10 +52,9 @@ export const lid = (params: Params) => {
   entities.push(roundedCube(width, length, roof, cornerRadius));
 
   if (params.lidScrews) {
-    let diameterMax = Math.max(baseLidScrewDiameter, lidScrewDiameter);
-    // 螺丝柱（内腔四角凸出的那块实体）用凸出量，螺丝孔位置单独用孔位参数
     const postProtrusion = screwPostProtrusion(params);
-    const screwCentre = screwOffset(params, diameterMax);
+    // 螺母模式下孔位同样按螺母外接圆外移，盖板孔与基座螺母槽才会对齐
+    const screwCentre = screwOffset(params, screwDiameterMax(params));
     entities.push(
       translate(
         [rimInset, rimInset, roof],

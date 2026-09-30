@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import type {
+  DinRailOrientation,
   Hole,
   InternalWall,
   PCBMount,
@@ -10,7 +11,11 @@ import type {
   Ventilation,
 } from '../../core/params';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
-import { screwOffset, screwPostProtrusion } from '../../core/enclosure/dimensions';
+import {
+  screwDiameterMax,
+  screwOffset,
+  screwPostProtrusion,
+} from '../../core/enclosure/dimensions';
 import { mountFilletSize } from '../../core/enclosure/pcbmount';
 import { WALL_MOUNT_CHAMFER_MAX, WALL_MOUNT_CHAMFER_MIN } from '../../core/enclosure/wallmount';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -53,11 +58,11 @@ export class ParamsFormComponent {
     return Math.round(screwPostProtrusion(this.params()) * 100) / 100;
   }
 
-  // 螺丝孔中心距边距离的实际生效值。默认跟随内缩量，可单独覆盖
+  // 螺丝孔中心距边距离的实际生效值。默认跟随内缩量，可单独覆盖。
+  // 上限用 screwDiameterMax：螺母槽模式下要按螺母外接圆留出余量，否则孔会啃到槽壁
   effectiveScrewOffset(): number {
     const params = this.params();
-    const diameterMax = Math.max(params.baseLidScrewDiameter, params.lidScrewDiameter);
-    return Math.round(screwOffset(params, diameterMax) * 100) / 100;
+    return Math.round(screwOffset(params, screwDiameterMax(params)) * 100) / 100;
   }
 
   /**
@@ -136,6 +141,27 @@ export class ParamsFormComponent {
 
   setBooleanParam<K extends keyof Params>(key: K, checked: boolean): void {
     this.state.updateParam(key, checked as Params[K]);
+  }
+
+  /** 下拉框之类的字符串型参数（几何里用联合类型收窄，这里只做透传） */
+  setStringParam<K extends keyof Params>(key: K, rawValue: string): void {
+    if (!rawValue) {
+      return;
+    }
+    this.state.updateParam(key, rawValue as Params[K]);
+  }
+
+  dinRailOrientations: DinRailOrientation[] = ['horizontal', 'vertical'];
+
+  dinRailOrientationLabel(orientation: DinRailOrientation): string {
+    return this.t(`params.dinRailOrientation.${orientation}`);
+  }
+
+  // 开启挂夹时顺手把预览显示打开，避免「生成了却看不见」
+  onDinRailMountChange(checked: boolean): void {
+    this.state.patchParams(
+      checked ? { dinRailMount: true, showDinRailMount: true } : { dinRailMount: false },
+    );
   }
 
   addHole(): void {
