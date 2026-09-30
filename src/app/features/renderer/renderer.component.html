@@ -1,13 +1,13 @@
 <div id="jscad" #container class="absolute inset-0 h-full w-full">
   <div class="pointer-events-none absolute inset-0 select-none">
-    @for (label of surfaceLabels(); track label.name) {
+    @for (label of surfaceLabels(); track label.key) {
       <div
         class="absolute rounded-full border border-slate-200/80 bg-slate-900/70 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white shadow-[0_6px_18px_rgba(15,23,42,0.35)]"
         [style.left.px]="label.x"
         [style.top.px]="label.y"
         style="transform: translate(-50%, -50%)"
       >
-        {{ label.name }}
+        {{ t(label.key) }}
       </div>
     }
   </div>
@@ -19,7 +19,7 @@
       <span
         class="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"
       ></span>
-      生成中…
+      {{ t('renderer.generating') }}
     </div>
   }
 
@@ -27,15 +27,15 @@
     <div
       class="pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-lg border border-red-300 bg-red-600/90 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(127,29,29,0.45)]"
     >
-      ⚠ PCB 与外壳发生碰撞：
+      {{ t('renderer.collision') }}
       @if (pcbCollision().hitsWalls) {
-        <span>板体/元件超出内腔（撞到侧壁或内隔板）</span>
+        <span>{{ t('renderer.collisionWalls') }}</span>
       }
       @if (pcbCollision().hitsWalls && pcbCollision().hitsCeiling) {
         <span> · </span>
       }
       @if (pcbCollision().hitsCeiling) {
-        <span>元件顶部顶到盖板</span>
+        <span>{{ t('renderer.collisionCeiling') }}</span>
       }
     </div>
   }

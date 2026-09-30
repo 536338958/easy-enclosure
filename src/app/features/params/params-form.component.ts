@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import type {
   Hole,
@@ -13,8 +13,13 @@ import { EnclosureStateService } from '../../core/state/enclosure-state.service'
 import { screwOffset, screwPostProtrusion } from '../../core/enclosure/dimensions';
 import { mountFilletSize } from '../../core/enclosure/pcbmount';
 import { WALL_MOUNT_CHAMFER_MAX, WALL_MOUNT_CHAMFER_MIN } from '../../core/enclosure/wallmount';
+import { I18nService } from '../../core/i18n/i18n.service';
+import type { TranslationKey } from '../../core/i18n/translations';
 
 type Surface = 'top' | 'bottom' | 'left' | 'right' | 'front' | 'back';
+
+/** 错误提示只存 key + 插值变量，切换语言后已显示的提示同样会跟着变 */
+type MessageState = { key: TranslationKey; vars: Record<string, string | number> };
 
 @Component({
   selector: 'app-params-form',
@@ -24,6 +29,7 @@ type Surface = 'top' | 'bottom' | 'left' | 'right' | 'front' | 'back';
 })
 export class ParamsFormComponent {
   private readonly state = inject(EnclosureStateService);
+  private readonly i18n = inject(I18nService);
 
   readonly activeTab = signal<number | null>(null);
 
@@ -31,7 +37,16 @@ export class ParamsFormComponent {
 
   readonly chamferAngleMin = WALL_MOUNT_CHAMFER_MIN;
   readonly chamferAngleMax = WALL_MOUNT_CHAMFER_MAX;
-  readonly chamferAngleError = signal<string | null>(null);
+
+  private readonly chamferAngleErrorState = signal<MessageState | null>(null);
+  readonly chamferAngleError = computed(() => {
+    const state = this.chamferAngleErrorState();
+    return state ? this.i18n.t(state.key, state.vars) : null;
+  });
+
+  t(key: TranslationKey, vars?: Record<string, string | number>): string {
+    return this.i18n.t(key, vars);
+  }
 
   // 螺丝柱凸出量的实际生效值（自定义值会被夹到允许区间，这里回显结果）
   effectiveScrewProtrusion(): number {
@@ -51,55 +66,49 @@ export class ParamsFormComponent {
    */
   setChamferAngle(rawValue: string): void {
     const current = this.params().wallMountChamferAngle;
+    const range = { min: this.chamferAngleMin, max: this.chamferAngleMax };
 
     if (!rawValue) {
-      this.chamferAngleError.set(null);
+      this.chamferAngleErrorState.set(null);
       return;
     }
 
     const parsed = parseFloat(rawValue);
     if (Number.isNaN(parsed)) {
-      this.chamferAngleError.set('请输入数字。');
+      this.chamferAngleErrorState.set({ key: 'params.wallMountChamferNotNumber', vars: {} });
       return;
     }
 
     if (parsed < this.chamferAngleMin || parsed > this.chamferAngleMax) {
-      this.chamferAngleError.set(
-        `切角角度需在 ${this.chamferAngleMin}–${this.chamferAngleMax}° 之间，已保持 ${current}°。`,
-      );
+      this.chamferAngleErrorState.set({
+        key: 'params.wallMountChamferError',
+        vars: { ...range, current },
+      });
       return;
     }
 
-    this.chamferAngleError.set(null);
+    this.chamferAngleErrorState.set(null);
     this.state.updateParam('wallMountChamferAngle', parsed);
   }
 
   surfaceLabel(surface: Surface): string {
-    const labels: Record<Surface, string> = {
-      top: '盖板',
-      bottom: '底面',
-      left: '左面',
-      right: '右面',
-      front: '前面',
-      back: '后面',
-    };
-    return labels[surface];
+    return this.t(`surface.${surface}`);
   }
 
   // 面内「水平」偏移标签：前/后面沿宽度(左右)，左/右面沿长度(前后)，顶/底面沿宽度(左右)
   offsetHLabel(surface: Surface): string {
     if (surface === 'left' || surface === 'right') {
-      return '水平偏移 X（+ 向前面）';
+      return this.t('params.offsetHSide');
     }
-    return '左右偏移 X（+ 向左面）';
+    return this.t('params.offsetXLeft');
   }
 
   // 面内「垂直/纵向」偏移标签：墙面为高度方向(上下)，顶/底面为长度方向(前后)
   offsetVLabel(surface: Surface): string {
     if (surface === 'top' || surface === 'bottom') {
-      return '前后偏移 Y（+ 向前面）';
+      return this.t('params.offsetYFront');
     }
-    return '垂直偏移 Y（+ 向上）';
+    return this.t('params.offsetVSide');
   }
 
   params(): Params {

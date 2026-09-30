@@ -1,15 +1,18 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { APP_VERSION } from '../../app-version';
 import { innerWallInset } from '../../core/enclosure/dimensions';
+import { I18nService } from '../../core/i18n/i18n.service';
+import type { TranslationKey } from '../../core/i18n/translations';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
 import { FundingComponent } from '../../shared/funding/funding.component';
+import { LanguageSwitcherComponent } from '../../shared/language-switcher/language-switcher.component';
 import { ParamsFormComponent } from '../params/params-form.component';
 import { ToolsComponent } from '../tools/tools.component';
 
 @Component({
   selector: 'app-sidebar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ToolsComponent, ParamsFormComponent, FundingComponent],
+  imports: [LanguageSwitcherComponent, ToolsComponent, ParamsFormComponent, FundingComponent],
   host: {
     class: 'block h-full min-h-0',
   },
@@ -27,6 +30,7 @@ import { ToolsComponent } from '../tools/tools.component';
 })
 export class SidebarComponent {
   private readonly state = inject(EnclosureStateService);
+  private readonly i18n = inject(I18nService);
 
   readonly appVersion = APP_VERSION.trim().length > 0 ? APP_VERSION : 'dev';
 
@@ -54,6 +58,10 @@ export class SidebarComponent {
       screwToScrew,
     };
   });
+
+  t(key: TranslationKey, vars?: Record<string, string | number>): string {
+    return this.i18n.t(key, vars);
+  }
 
   formatMm(value: number): string {
     return `${value.toFixed(2)} mm`;

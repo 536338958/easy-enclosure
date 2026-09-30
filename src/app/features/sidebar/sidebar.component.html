@@ -9,32 +9,41 @@
           <img src="easy-enclosure-logo.svg" alt="Easy Enclosure logo" class="h-14 w-14" />
         </div>
         <hr class="border-slate-200" />
+        <div class="mt-3">
+          <app-language-switcher />
+        </div>
       </section>
 
-      <section aria-label="快捷操作">
-        <h2 class="mb-3 text-xs font-extrabold uppercase tracking-wider text-slate-600">操作</h2>
+      <section [attr.aria-label]="t('sidebar.quickActions')">
+        <h2 class="mb-3 text-xs font-extrabold uppercase tracking-wider text-slate-600">
+          {{ t('sidebar.actions') }}
+        </h2>
         <app-tools />
       </section>
 
       <section aria-live="polite">
         <h2 class="mb-3 text-xs font-extrabold uppercase tracking-wider text-slate-600">
-          内部尺寸
+          {{ t('sidebar.internal') }}
         </h2>
         <div class="space-y-2 border border-slate-200 bg-white px-3 py-3">
           <div class="flex items-baseline justify-between gap-3">
-            <span class="text-[11px] font-medium text-slate-600">内壁间距</span>
+            <span class="text-[11px] font-medium text-slate-600">{{
+              t('sidebar.wallToWall')
+            }}</span>
             <strong class="text-right text-[11px] font-semibold text-slate-800">
               {{ formatMm(enclosureMeasurements().wallToWall.width) }} x
               {{ formatMm(enclosureMeasurements().wallToWall.length) }}
             </strong>
           </div>
           <div class="flex items-baseline justify-between gap-3">
-            <span class="text-[11px] font-medium text-slate-600">螺柱间距</span>
+            <span class="text-[11px] font-medium text-slate-600">
+              {{ t('sidebar.screwToScrew') }}
+            </span>
             <strong class="text-right text-[11px] font-semibold text-slate-800">
               @if (enclosureMeasurements().screwToScrew; as screwToScrew) {
                 {{ formatMm(screwToScrew.width) }} x {{ formatMm(screwToScrew.length) }}
               } @else {
-                无
+                {{ t('sidebar.none') }}
               }
             </strong>
           </div>
@@ -42,13 +51,15 @@
       </section>
 
       <section>
-        <h2 class="mb-3 text-xs font-extrabold uppercase tracking-wider text-slate-600">参数</h2>
+        <h2 class="mb-3 text-xs font-extrabold uppercase tracking-wider text-slate-600">
+          {{ t('sidebar.params') }}
+        </h2>
         <app-params-form />
       </section>
 
       <section>
         <h2 class="mb-3 text-xs font-extrabold uppercase tracking-wider text-slate-600">
-          支持本项目
+          {{ t('sidebar.support') }}
         </h2>
         <app-funding />
       </section>

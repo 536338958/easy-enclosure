@@ -1,10 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   ElementRef,
-  ViewChild,
   inject,
   signal,
+  ViewChild,
 } from '@angular/core';
 import type { Geom3 } from '@jscad/modeling/src/geometries/types';
 import { union } from '@jscad/modeling/src/operations/booleans';
@@ -16,6 +17,8 @@ import { internalWalls } from '../../core/enclosure/internalwalls';
 import { lid } from '../../core/enclosure/lid';
 import { pcbMountsOnBase, pcbMountsOnLid } from '../../core/enclosure/pcbmount';
 import { waterProofSeal } from '../../core/enclosure/waterproofseal';
+import { I18nService } from '../../core/i18n/i18n.service';
+import type { TranslationKey } from '../../core/i18n/translations';
 import type { Params } from '../../core/params';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
 import { ActionButtonComponent } from '../../shared/action-button/action-button.component';
@@ -34,9 +37,20 @@ export class ToolsComponent {
   exportDialog?: ElementRef<HTMLDialogElement>;
 
   private readonly state = inject(EnclosureStateService);
+  private readonly i18n = inject(I18nService);
 
   readonly isExportModalOpen = signal(false);
-  readonly loadError = signal<string | null>(null);
+
+  // 存的是文案 key 而不是成品字符串：切换语言时已显示的错误提示要跟着变
+  private readonly loadErrorKey = signal<TranslationKey | null>(null);
+  readonly loadError = computed(() => {
+    const key = this.loadErrorKey();
+    return key ? this.i18n.t(key) : null;
+  });
+
+  t(key: TranslationKey): string {
+    return this.i18n.t(key);
+  }
 
   openFilePicker(): void {
     this.fileInput?.nativeElement.click();
@@ -73,7 +87,7 @@ export class ToolsComponent {
 
     const fileReader = new FileReader();
     fileReader.onload = () => {
-      this.loadError.set(null);
+      this.loadErrorKey.set(null);
       try {
         const data = JSON.parse(fileReader.result as string) as Partial<Params>;
         const current = this.state.params();
@@ -86,11 +100,11 @@ export class ToolsComponent {
           pcbPreview: { ...current.pcbPreview, ...(data.pcbPreview ?? {}) },
         });
       } catch {
-        this.loadError.set('无法解析该文件，请确认是本工具导出的 JSON 预设。');
+        this.loadErrorKey.set('tools.loadParseError');
       }
     };
     fileReader.onerror = () => {
-      this.loadError.set('文件读取失败，请重试。');
+      this.loadErrorKey.set('tools.loadReadError');
     };
     fileReader.readAsText(input.files[0], 'UTF-8');
 

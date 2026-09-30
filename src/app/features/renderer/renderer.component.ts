@@ -30,6 +30,8 @@ import { lid } from '../../core/enclosure/lid';
 import { pcbMountsOnBase, pcbMountsOnLid } from '../../core/enclosure/pcbmount';
 import { pcbBoard, pcbComponentZone, pcbCollision } from '../../core/enclosure/pcbpreview';
 import { waterProofSeal } from '../../core/enclosure/waterproofseal';
+import { I18nService } from '../../core/i18n/i18n.service';
+import type { TranslationKey } from '../../core/i18n/translations';
 import type { Params } from '../../core/params';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
 
@@ -259,14 +261,15 @@ type RenderOptions = {
 
 type Vec3Tuple = [number, number, number];
 
+// 存翻译 key 而不是成品文案：切换语言时已投影出来的面标签要跟着变
 type SurfaceLabel = {
-  name: string;
+  key: TranslationKey;
   x: number;
   y: number;
 };
 
 type SurfaceAnchor = {
-  name: SurfaceLabel['name'];
+  key: SurfaceLabel['key'];
   point: Vec3Tuple;
   normal: Vec3Tuple;
 };
@@ -290,6 +293,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
   private resizeObserver: ResizeObserver | null = null;
 
   private readonly state = inject(EnclosureStateService);
+  private readonly i18n = inject(I18nService);
 
   private readonly perspectiveCamera = cameras.perspective;
   private readonly orbitControls = controls.orbit;
@@ -357,6 +361,10 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     this.isViewReady = true;
     this.observeContainerSize();
     this.scheduleModelRender(this.state.params());
+  }
+
+  t(key: TranslationKey): string {
+    return this.i18n.t(key);
   }
 
   ngOnDestroy(): void {
@@ -679,27 +687,27 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
 
     const anchors: SurfaceAnchor[] = [
       {
-        name: '前面',
+        key: 'surface.front',
         point: [originX + width / 2, originY + length, originZ + height / 2],
         normal: [0, 1, 0],
       },
       {
-        name: '后面',
+        key: 'surface.back',
         point: [originX + width / 2, originY, originZ + height / 2],
         normal: [0, -1, 0],
       },
       {
-        name: '左面',
+        key: 'surface.left',
         point: [originX + width, originY + length / 2, originZ + height / 2],
         normal: [1, 0, 0],
       },
       {
-        name: '右面',
+        key: 'surface.right',
         point: [originX, originY + length / 2, originZ + height / 2],
         normal: [-1, 0, 0],
       },
       {
-        name: '底面',
+        key: 'surface.bottom',
         point: [originX + width / 2, originY + length / 2, originZ],
         normal: [0, 0, -1],
       },
@@ -707,7 +715,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
 
     if (this.lidModel) {
       anchors.push({
-        name: '盖板',
+        key: 'surface.top',
         point: [lidX + width / 2, lidY + length / 2, lidZ + roof + insertHeight],
         normal: [0, 0, 1],
       });
@@ -716,7 +724,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     if (this.sealModel) {
       const [sealX, sealY, sealZ] = this.sealOrigin;
       anchors.push({
-        name: '密封圈',
+        key: 'surface.seal',
         point: [sealX + width / 2, sealY + length / 2, sealZ + Math.max(1, roof) / 2],
         normal: [0, 0, 1],
       });
@@ -728,7 +736,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
         const screenPos = this.projectWorldToScreen(anchor.point, container);
         return screenPos
           ? {
-              name: anchor.name,
+              key: anchor.key,
               x: screenPos[0],
               y: screenPos[1],
             }

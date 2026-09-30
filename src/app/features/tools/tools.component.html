@@ -1,12 +1,16 @@
 <div class="grid grid-cols-3 gap-2">
-  <app-action-button variant="toolbar" [title]="'从文件加载设置'" (click)="openFilePicker()">
-    加载
+  <app-action-button variant="toolbar" [title]="t('tools.loadTitle')" (click)="openFilePicker()">
+    {{ t('tools.load') }}
   </app-action-button>
-  <app-action-button variant="toolbar" [title]="'保存设置到文件'" (click)="saveParamsFile()">
-    保存
+  <app-action-button variant="toolbar" [title]="t('tools.saveTitle')" (click)="saveParamsFile()">
+    {{ t('tools.save') }}
   </app-action-button>
-  <app-action-button variant="toolbar-primary" [title]="'导出为 STL'" (click)="openExportModal()">
-    STL
+  <app-action-button
+    variant="toolbar-primary"
+    [title]="t('tools.stlTitle')"
+    (click)="openExportModal()"
+  >
+    {{ t('tools.stl') }}
   </app-action-button>
 
   <input #fileInput type="file" accept=".json" class="hidden" (change)="loadParamsFile($event)" />
@@ -27,19 +31,19 @@
       class="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-transparent bg-transparent text-xl text-slate-500 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/30"
       type="button"
       (click)="closeExportModal()"
-      aria-label="关闭导出窗口"
+      [attr.aria-label]="t('tools.closeExport')"
     >
       &times;
     </button>
     <p class="mx-auto mb-5 max-w-88 text-sm leading-relaxed text-slate-600">
-      导出完整外壳，或仅导出 PCB 支柱以便快速试装检查。
+      {{ t('tools.exportDesc') }}
     </p>
     <div class="flex flex-wrap items-center justify-center gap-2">
       <app-action-button variant="dialog" (click)="exportPcbMountsStl()">
-        导出 PCB 支柱
+        {{ t('tools.exportPcbMounts') }}
       </app-action-button>
       <app-action-button variant="dialog-primary" (click)="exportStl()">
-        导出完整外壳
+        {{ t('tools.exportFull') }}
       </app-action-button>
     </div>
   </div>

@@ -1,16 +1,16 @@
 <form id="param-form" (submit)="$event.preventDefault()">
   <button type="button" class="simple-reset-btn" (click)="resetToSimpleEnclosure()">
-    从头开始
+    {{ t('params.startOver') }}
   </button>
 
   <div class="accordian" [class.active]="activeTab() === 1">
     <p class="accordian-header" (click)="setActiveTab(1)">
-      常规
+      {{ t('params.general') }}
       <span class="accordian-icon">{{ activeTab() === 1 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       <div class="input-group">
-        <label>长度</label>
+        <label>{{ t('params.length') }}</label>
         <input
           type="number"
           min="1"
@@ -18,10 +18,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('length', $any($event.target).value)"
         />
-        <small class="hint">沿 Y 轴（前后）方向的外部尺寸，mm</small>
+        <small class="hint">{{ t('params.lengthHint') }}</small>
       </div>
       <div class="input-group">
-        <label>宽度</label>
+        <label>{{ t('params.width') }}</label>
         <input
           type="number"
           min="1"
@@ -29,10 +29,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('width', $any($event.target).value)"
         />
-        <small class="hint">沿 X 轴（左右）方向的外部尺寸，mm</small>
+        <small class="hint">{{ t('params.widthHint') }}</small>
       </div>
       <div class="input-group">
-        <label>高度</label>
+        <label>{{ t('params.height') }}</label>
         <input
           type="number"
           min="1"
@@ -40,10 +40,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('height', $any($event.target).value)"
         />
-        <small class="hint">沿 Z 轴（上下）方向的外部总高，mm</small>
+        <small class="hint">{{ t('params.heightHint') }}</small>
       </div>
       <div class="input-group">
-        <label>底板厚度</label>
+        <label>{{ t('params.floor') }}</label>
         <input
           type="number"
           min="1"
@@ -51,10 +51,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('floor', $any($event.target).value)"
         />
-        <small class="hint">基座底板的厚度，mm</small>
+        <small class="hint">{{ t('params.floorHint') }}</small>
       </div>
       <div class="input-group">
-        <label>壁厚</label>
+        <label>{{ t('params.wall') }}</label>
         <input
           type="number"
           min="1"
@@ -62,10 +62,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('wall', $any($event.target).value)"
         />
-        <small class="hint">四周侧壁的厚度，mm</small>
+        <small class="hint">{{ t('params.wallHint') }}</small>
       </div>
       <div class="input-group">
-        <label>盖板厚度</label>
+        <label>{{ t('params.roof') }}</label>
         <input
           type="number"
           min="1"
@@ -73,10 +73,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('roof', $any($event.target).value)"
         />
-        <small class="hint">顶盖板的厚度，mm</small>
+        <small class="hint">{{ t('params.roofHint') }}</small>
       </div>
       <div class="input-group">
-        <label>圆角半径</label>
+        <label>{{ t('params.cornerRadius') }}</label>
         <input
           type="number"
           min="1"
@@ -84,18 +84,18 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('cornerRadius', $any($event.target).value)"
         />
-        <small class="hint">四条竖直棱边的圆角半径，mm</small>
+        <small class="hint">{{ t('params.cornerRadiusHint') }}</small>
       </div>
     </div>
   </div>
   <div class="accordian" [class.active]="activeTab() === 2">
     <p class="accordian-header" (click)="setActiveTab(2)">
-      PCB 预览
+      {{ t('params.pcbPreview') }}
       <span class="accordian-icon">{{ activeTab() === 2 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       <div class="input-group grid-toggle-group input-group-full">
-        <label>启用预览</label>
+        <label>{{ t('params.pcbEnable') }}</label>
         <input
           type="checkbox"
           [checked]="params().pcbPreview.enabled"
@@ -103,7 +103,7 @@
         />
       </div>
       <div class="input-group">
-        <label>宽度 (mm)</label>
+        <label>{{ t('params.pcbWidth') }}</label>
         <input
           type="number"
           min="1"
@@ -112,10 +112,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setPcbPreviewNumber('width', $any($event.target).value)"
         />
-        <small class="hint">PCB 沿 X（左右）方向的尺寸，mm</small>
+        <small class="hint">{{ t('params.pcbWidthHint') }}</small>
       </div>
       <div class="input-group">
-        <label>长度 (mm)</label>
+        <label>{{ t('params.pcbLength') }}</label>
         <input
           type="number"
           min="1"
@@ -124,10 +124,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setPcbPreviewNumber('length', $any($event.target).value)"
         />
-        <small class="hint">PCB 沿 Y（前后）方向的尺寸，mm</small>
+        <small class="hint">{{ t('params.pcbLengthHint') }}</small>
       </div>
       <div class="input-group">
-        <label>厚度 (mm)</label>
+        <label>{{ t('params.pcbThickness') }}</label>
         <input
           type="number"
           min="0.1"
@@ -136,10 +136,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setPcbPreviewNumber('thickness', $any($event.target).value)"
         />
-        <small class="hint">PCB 板本身的厚度，mm</small>
+        <small class="hint">{{ t('params.pcbThicknessHint') }}</small>
       </div>
       <div class="input-group">
-        <label>元件高度 (mm)</label>
+        <label>{{ t('params.pcbComponentHeight') }}</label>
         <input
           type="number"
           min="0"
@@ -148,10 +148,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setPcbPreviewNumber('componentHeight', $any($event.target).value)"
         />
-        <small class="hint">板上方元件占用的净空高度，用于碰撞检测，mm</small>
+        <small class="hint">{{ t('params.pcbComponentHeightHint') }}</small>
       </div>
       <div class="input-group">
-        <label>左右偏移 X（+ 向左面）</label>
+        <label>{{ t('params.offsetXLeft') }}</label>
         <input
           type="number"
           step="0.1"
@@ -159,10 +159,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setPcbPreviewNumber('x', $any($event.target).value)"
         />
-        <small class="hint">以底座中心为 0，正值向左面（+X）移动，mm</small>
+        <small class="hint">{{ t('params.offsetXLeftBaseHint') }}</small>
       </div>
       <div class="input-group">
-        <label>前后偏移 Y（+ 向前面）</label>
+        <label>{{ t('params.offsetYFront') }}</label>
         <input
           type="number"
           step="0.1"
@@ -170,25 +170,23 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setPcbPreviewNumber('y', $any($event.target).value)"
         />
-        <small class="hint">以底座中心为 0，正值向前面（+Y）移动，mm</small>
+        <small class="hint">{{ t('params.offsetYFrontBaseHint') }}</small>
       </div>
-      <p class="input-group-full hint">
-        PCB
-        底面自动落在底面支柱顶部（无支柱时落在内腔地板）。绿色表示未碰撞，红色表示与侧壁、内隔板或盖板发生碰撞。X
-        / Y 以底座中心为原点。
-      </p>
+      <p class="input-group-full hint">{{ t('params.pcbPreviewHint') }}</p>
     </div>
   </div>
   <div class="accordian" [class.active]="activeTab() === 3">
     <p class="accordian-header" (click)="setActiveTab(3)">
-      盖板
+      {{ t('params.lid') }}
       <span class="accordian-icon">{{ activeTab() === 3 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       <div class="sub-params">
-        <p><b>盖板嵌入边</b></p>
+        <p>
+          <b>{{ t('params.lidInsert') }}</b>
+        </p>
         <div class="input-group">
-          <label>嵌入边厚度</label>
+          <label>{{ t('params.insertThickness') }}</label>
           <input
             type="number"
             min="1"
@@ -197,10 +195,10 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setNumberParam('insertThickness', $any($event.target).value)"
           />
-          <small class="hint">盖板向下伸入基座的那圈内唇的壁厚，mm</small>
+          <small class="hint">{{ t('params.insertThicknessHint') }}</small>
         </div>
         <div class="input-group">
-          <label>嵌入边高度</label>
+          <label>{{ t('params.insertHeight') }}</label>
           <input
             type="number"
             min="1"
@@ -209,10 +207,10 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setNumberParam('insertHeight', $any($event.target).value)"
           />
-          <small class="hint">内唇伸入基座的深度，越大扣合越牢，mm</small>
+          <small class="hint">{{ t('params.insertHeightHint') }}</small>
         </div>
         <div class="input-group">
-          <label>嵌入间隙</label>
+          <label>{{ t('params.insertClearance') }}</label>
           <input
             type="number"
             min="0.01"
@@ -221,14 +219,16 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setNumberParam('insertClearance', $any($event.target).value)"
           />
-          <small class="hint">内唇与基座内壁的配合间隙，越大越松，mm</small>
+          <small class="hint">{{ t('params.insertClearanceHint') }}</small>
         </div>
       </div>
 
       <div class="sub-params">
-        <p><b>卡扣盖 Snap-Fit</b></p>
+        <p>
+          <b>{{ t('params.snapFit') }}</b>
+        </p>
         <div class="input-group grid-toggle-group input-group-full">
-          <label>启用卡扣</label>
+          <label>{{ t('params.snapFitEnable') }}</label>
           <input
             type="checkbox"
             [checked]="params().snapFit.enabled"
@@ -236,21 +236,25 @@
           />
         </div>
         <div class="input-group">
-          <label>卡扣数量预设</label>
+          <label>{{ t('params.snapFitPreset') }}</label>
           <select
             [value]="params().snapFit.preset"
             (change)="setSnapFitPreset($any($event.target).value)"
           >
-            <option value="4" [selected]="params().snapFit.preset === 4">4 个（长边两端）</option>
-            <option value="6" [selected]="params().snapFit.preset === 6">
-              6 个（长边×4 + 短边中点×2）
+            <option value="4" [selected]="params().snapFit.preset === 4">
+              {{ t('params.snapFitPreset4') }}
             </option>
-            <option value="8" [selected]="params().snapFit.preset === 8">8 个（长短边各 4）</option>
+            <option value="6" [selected]="params().snapFit.preset === 6">
+              {{ t('params.snapFitPreset6') }}
+            </option>
+            <option value="8" [selected]="params().snapFit.preset === 8">
+              {{ t('params.snapFitPreset8') }}
+            </option>
           </select>
-          <small class="hint">卡扣的总数与分布位置的预设</small>
+          <small class="hint">{{ t('params.snapFitPresetHint') }}</small>
         </div>
         <div class="input-group">
-          <label>距端部百分比 (%)</label>
+          <label>{{ t('params.snapFitEndPercent') }}</label>
           <input
             type="number"
             min="0"
@@ -260,10 +264,10 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setSnapFitNumber('endPercent', $any($event.target).value)"
           />
-          <small class="hint">卡扣离边两端的距离占该边长的百分比；越小越靠端部、彼此越远</small>
+          <small class="hint">{{ t('params.snapFitEndPercentHint') }}</small>
         </div>
         <div class="input-group">
-          <label>卡扣宽度 (mm)</label>
+          <label>{{ t('params.snapFitWidth') }}</label>
           <input
             type="number"
             min="1"
@@ -272,10 +276,10 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setSnapFitNumber('width', $any($event.target).value)"
           />
-          <small class="hint">单个卡扣沿边方向的宽度，mm</small>
+          <small class="hint">{{ t('params.snapFitWidthHint') }}</small>
         </div>
         <div class="input-group">
-          <label>凸起深度 (mm)</label>
+          <label>{{ t('params.snapFitDepth') }}</label>
           <input
             type="number"
             min="0.2"
@@ -284,10 +288,10 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setSnapFitNumber('depth', $any($event.target).value)"
           />
-          <small class="hint">卡珠凸出墙面的高度（扣合量），mm</small>
+          <small class="hint">{{ t('params.snapFitDepthHint') }}</small>
         </div>
         <div class="input-group">
-          <label>凸起高度 (mm)</label>
+          <label>{{ t('params.snapFitHeight') }}</label>
           <input
             type="number"
             min="0.4"
@@ -296,10 +300,10 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setSnapFitNumber('height', $any($event.target).value)"
           />
-          <small class="hint">卡珠沿竖直方向的高度，mm</small>
+          <small class="hint">{{ t('params.snapFitHeightHint') }}</small>
         </div>
         <div class="input-group">
-          <label>配合间隙 (mm)</label>
+          <label>{{ t('params.snapFitClearance') }}</label>
           <input
             type="number"
             min="0"
@@ -308,43 +312,38 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setSnapFitNumber('clearance', $any($event.target).value)"
           />
-          <small class="hint">基座凹槽比卡珠放大的间隙，越大越松，mm</small>
+          <small class="hint">{{ t('params.snapFitClearanceHint') }}</small>
         </div>
-        <p class="input-group-full hint">
-          预设决定数量与所在边（长边优先）；距端部百分比越小，同一条边上两卡扣离两端越近、彼此间距越大。切换预设会重置为默认值（4→10%，6/8→20%），之后可自行微调。盖板插入边加圆润凸点、基座内壁开对应凹槽，适合免螺丝闭合；防水模式下建议仍保留螺丝或减小凸起。
-        </p>
+        <p class="input-group-full hint">{{ t('params.snapFitHint') }}</p>
       </div>
 
       <div class="sub-params">
-        <p><b>盖板螺丝</b></p>
+        <p>
+          <b>{{ t('params.lidScrews') }}</b>
+        </p>
         <div class="input-group grid-toggle-group input-group-full">
-          <label>启用盖板螺丝</label>
+          <label>{{ t('params.lidScrewsEnable') }}</label>
           <input
             type="checkbox"
             [checked]="params().lidScrews"
             (change)="onLidScrewsChange($any($event.target).checked)"
           />
         </div>
-        <p class="input-group-full hint">
-          在四角生成螺丝柱，用螺丝把盖板固定到基座上。防水模式下必须开启。
-        </p>
+        <p class="input-group-full hint">{{ t('params.lidScrewsHint') }}</p>
 
         @if (params().lidScrews) {
           <div class="input-group grid-toggle-group input-group-full">
-            <label>基座孔贯穿底板</label>
+            <label>{{ t('params.lidScrewThrough') }}</label>
             <input
               type="checkbox"
               [checked]="params().lidScrewThrough"
               (change)="setBooleanParam('lidScrewThrough', $any($event.target).checked)"
             />
           </div>
-          <p class="input-group-full hint">
-            勾选（默认）：基座螺丝孔从底面贯穿到顶面。取消：基座孔不打通，底板整层留作底部余料，
-            孔深＝总厚度−底板厚度，在底板顶面处终止。此开关只影响基座，盖板的孔始终贯穿。
-          </p>
+          <p class="input-group-full hint">{{ t('params.lidScrewThroughHint') }}</p>
 
           <div class="input-group">
-            <label>盖板孔径</label>
+            <label>{{ t('params.lidScrewDiameter') }}</label>
             <input
               type="number"
               min="1"
@@ -353,11 +352,11 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="setNumberParam('lidScrewDiameter', $any($event.target).value)"
             />
-            <small class="hint">盖板一侧的过孔直径（螺丝穿过），mm</small>
+            <small class="hint">{{ t('params.lidScrewDiameterHint') }}</small>
           </div>
 
           <div class="input-group">
-            <label>底座孔径</label>
+            <label>{{ t('params.baseLidScrewDiameter') }}</label>
             <input
               type="number"
               min="1"
@@ -366,11 +365,11 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="setNumberParam('baseLidScrewDiameter', $any($event.target).value)"
             />
-            <small class="hint">基座螺丝柱的孔径（自攻咬合，略小），mm</small>
+            <small class="hint">{{ t('params.baseLidScrewDiameterHint') }}</small>
           </div>
 
           <div class="input-group">
-            <label>孔位距边</label>
+            <label>{{ t('params.lidScrewOffset') }}</label>
             <input
               type="number"
               min="0"
@@ -380,14 +379,12 @@
               (blur)="setNumberParam('lidScrewOffset', $any($event.target).value)"
             />
             <small class="hint">
-              螺丝孔中心到相邻两边的距离，mm。0＝自动（由圆角与孔径推算）。
-              与螺丝柱凸出量互不影响：改凸出量只改变内腔角落那块实体的大小，孔位纹丝不动。当前生效
-              {{ effectiveScrewOffset() }} mm。
+              {{ t('params.lidScrewOffsetHint', { value: effectiveScrewOffset() }) }}
             </small>
           </div>
 
           <div class="input-group">
-            <label>螺丝柱凸出量</label>
+            <label>{{ t('params.lidScrewProtrusion') }}</label>
             <input
               type="number"
               min="0"
@@ -397,31 +394,29 @@
               (blur)="setNumberParam('lidScrewProtrusion', $any($event.target).value)"
             />
             <small class="hint">
-              开启盖板螺丝后内腔四角凸出的那块实体，向腔内凸出多少，mm。0＝自动（直接取安全区间的最小值，
-              够用即可、尽量少占内腔）；正值按该值凸出，超限自动夹紧。当前生效
-              {{ effectiveScrewProtrusion() }} mm。只改变这块实体的大小，不影响螺丝孔位置。
+              {{ t('params.lidScrewProtrusionHint', { value: effectiveScrewProtrusion() }) }}
             </small>
           </div>
         }
       </div>
 
       <div class="sub-params">
-        <p><b>防水</b></p>
+        <p>
+          <b>{{ t('params.waterproof') }}</b>
+        </p>
         <div class="input-group grid-toggle-group input-group-full">
-          <label>启用防水</label>
+          <label>{{ t('params.waterproofEnable') }}</label>
           <input
             type="checkbox"
             [checked]="params().waterProof"
             (change)="onWaterproofChange($any($event.target).checked)"
           />
         </div>
-        <p class="input-group-full hint">
-          开启后使用双层壁 + 密封圈槽结构，并强制启用盖板螺丝以压紧密封圈。
-        </p>
+        <p class="input-group-full hint">{{ t('params.waterproofHint') }}</p>
 
         @if (params().waterProof) {
           <div class="input-group">
-            <label>密封圈厚度</label>
+            <label>{{ t('params.sealThickness') }}</label>
             <input
               type="number"
               min="1"
@@ -430,7 +425,7 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="setNumberParam('sealThickness', $any($event.target).value)"
             />
-            <small class="hint">密封圈（O 型条）截面厚度，mm</small>
+            <small class="hint">{{ t('params.sealThicknessHint') }}</small>
           </div>
         }
       </div>
@@ -438,39 +433,46 @@
   </div>
   <div class="accordian" [class.active]="activeTab() === 4">
     <p class="accordian-header" (click)="setActiveTab(4)">
-      内隔板
+      {{ t('params.internalWalls') }}
       <span class="accordian-icon">{{ activeTab() === 4 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       @for (wallItem of params().internalWalls; track $index) {
         <div class="sub-params">
-          <button class="remove-btn" type="button" (click)="removeInternalWall($index)">X</button>
+          <button
+            class="remove-btn"
+            type="button"
+            [attr.aria-label]="t('params.remove')"
+            (click)="removeInternalWall($index)"
+          >
+            X
+          </button>
           <p>
-            <b>内隔板 {{ $index + 1 }}</b>
+            <b>{{ t('params.internalWallItem', { n: $index + 1 }) }}</b>
           </p>
 
           <div class="input-group">
-            <label>左右偏移 X（+ 向左面）</label>
+            <label>{{ t('params.offsetXLeft') }}</label>
             <input
               type="number"
               [value]="wallItem.x"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateInternalWall($index, { x: +$any($event.target).value })"
             />
-            <small class="hint">以底面中心为 0，正值向左面（+X）移动，mm</small>
+            <small class="hint">{{ t('params.offsetXFloorHint') }}</small>
           </div>
           <div class="input-group">
-            <label>前后偏移 Y（+ 向前面）</label>
+            <label>{{ t('params.offsetYFront') }}</label>
             <input
               type="number"
               [value]="wallItem.y"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateInternalWall($index, { y: +$any($event.target).value })"
             />
-            <small class="hint">以底面中心为 0，正值向前面（+Y）移动，mm</small>
+            <small class="hint">{{ t('params.offsetYFloorHint') }}</small>
           </div>
           <div class="input-group">
-            <label>高度</label>
+            <label>{{ t('params.wallHeight') }}</label>
             <input
               type="number"
               min="0.1"
@@ -479,10 +481,10 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateInternalWall($index, { height: +$any($event.target).value })"
             />
-            <small class="hint">隔板从底面向上的高度，mm</small>
+            <small class="hint">{{ t('params.wallHeightHint') }}</small>
           </div>
           <div class="input-group">
-            <label>长度</label>
+            <label>{{ t('params.wallLength') }}</label>
             <input
               type="number"
               min="0.1"
@@ -491,10 +493,10 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateInternalWall($index, { length: +$any($event.target).value })"
             />
-            <small class="hint">隔板延伸方向的长度（0° 时沿 Y），mm</small>
+            <small class="hint">{{ t('params.wallLengthHint') }}</small>
           </div>
           <div class="input-group">
-            <label>厚度</label>
+            <label>{{ t('params.wallThickness') }}</label>
             <input
               type="number"
               min="0.1"
@@ -503,10 +505,10 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateInternalWall($index, { thickness: +$any($event.target).value })"
             />
-            <small class="hint">隔板的厚度，mm</small>
+            <small class="hint">{{ t('params.wallThicknessHint') }}</small>
           </div>
           <div class="input-group">
-            <label>旋转角度</label>
+            <label>{{ t('params.wallRotation') }}</label>
             <input
               type="number"
               step="1"
@@ -514,34 +516,36 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateInternalWall($index, { rotation: +$any($event.target).value })"
             />
-            <small class="hint">绕竖直轴旋转，0° 沿 Y、90° 沿 X，度</small>
+            <small class="hint">{{ t('params.wallRotationHint') }}</small>
           </div>
         </div>
       }
-      <button type="button" class="add-btn" (click)="addInternalWall()">添加内隔板</button>
+      <button type="button" class="add-btn" (click)="addInternalWall()">
+        {{ t('params.addInternalWall') }}
+      </button>
     </div>
   </div>
   <div class="accordian" [class.active]="activeTab() === 5">
     <p class="accordian-header" (click)="setActiveTab(5)">
-      PCB 支柱
+      {{ t('params.pcbMounts') }}
       <span class="accordian-icon">{{ activeTab() === 5 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       <div class="input-group">
-        <label>根部过渡</label>
+        <label>{{ t('params.mountFillet') }}</label>
         <select
           [value]="params().pcbMountFillet.style"
           (change)="setPcbMountFilletStyle($any($event.target).value)"
         >
-          <option value="none">无</option>
-          <option value="round">圆角</option>
-          <option value="chamfer">斜角</option>
+          <option value="none">{{ t('params.mountFilletNone') }}</option>
+          <option value="round">{{ t('params.mountFilletRound') }}</option>
+          <option value="chamfer">{{ t('params.mountFilletChamfer') }}</option>
         </select>
-        <small class="hint">支柱根部与底板的过渡形式，用来降低根部应力集中</small>
+        <small class="hint">{{ t('params.mountFilletHint') }}</small>
       </div>
       @if (params().pcbMountFillet.style !== 'none') {
         <div class="input-group">
-          <label>过渡尺寸 (mm)</label>
+          <label>{{ t('params.mountFilletSize') }}</label>
           <input
             type="number"
             min="0"
@@ -551,22 +555,27 @@
             (blur)="setPcbMountFilletSize($any($event.target).value)"
           />
           <small class="hint">
-            圆角半径 / 斜角尺寸，mm；0＝关闭。会被自动夹到 0.4–1.5mm， 且不超过支柱高度的 40%
-            与外径的一半。当前生效
-            {{ effectiveMountFillet() }} mm。
+            {{ t('params.mountFilletSizeHint', { value: effectiveMountFillet() }) }}
           </small>
         </div>
       }
 
       @for (mount of params().pcbMounts; track $index) {
         <div class="sub-params">
-          <button class="remove-btn" type="button" (click)="removePcbMount($index)">X</button>
+          <button
+            class="remove-btn"
+            type="button"
+            [attr.aria-label]="t('params.remove')"
+            (click)="removePcbMount($index)"
+          >
+            X
+          </button>
           <p>
-            <b>支柱 {{ $index + 1 }}</b>
+            <b>{{ t('params.mountItem', { n: $index + 1 }) }}</b>
           </p>
 
           <div class="input-group">
-            <label>所在面</label>
+            <label>{{ t('params.mountSurface') }}</label>
             <select
               [value]="mount.surface || 'bottom'"
               (change)="updatePcbMount($index, { surface: $any($event.target).value })"
@@ -577,7 +586,7 @@
                 </option>
               }
             </select>
-            <small class="hint">支柱立在哪个面上</small>
+            <small class="hint">{{ t('params.mountSurfaceHint') }}</small>
           </div>
           <div class="input-group">
             <label>{{ offsetHLabel(mount.surface || 'bottom') }}</label>
@@ -587,7 +596,7 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updatePcbMount($index, { x: +$any($event.target).value })"
             />
-            <small class="hint">以该面中心为 0，正值按标签方向移动，mm</small>
+            <small class="hint">{{ t('params.offsetFaceHint') }}</small>
           </div>
           <div class="input-group">
             <label>{{ offsetVLabel(mount.surface || 'bottom') }}</label>
@@ -597,71 +606,80 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updatePcbMount($index, { y: +$any($event.target).value })"
             />
-            <small class="hint">以该面中心为 0，正值按标签方向移动，mm</small>
+            <small class="hint">{{ t('params.offsetFaceHint') }}</small>
           </div>
           <div class="input-group">
-            <label>高度</label>
+            <label>{{ t('params.mountHeight') }}</label>
             <input
               type="number"
               [value]="mount.height"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updatePcbMount($index, { height: +$any($event.target).value })"
             />
-            <small class="hint">支柱高度（决定 PCB 离底面的距离），mm</small>
+            <small class="hint">{{ t('params.mountHeightHint') }}</small>
           </div>
           <div class="input-group">
-            <label>外径</label>
+            <label>{{ t('params.mountOuterDiameter') }}</label>
             <input
               type="number"
               [value]="mount.outerDiameter"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updatePcbMount($index, { outerDiameter: +$any($event.target).value })"
             />
-            <small class="hint">支柱柱体的外径，mm</small>
+            <small class="hint">{{ t('params.mountOuterDiameterHint') }}</small>
           </div>
           <div class="input-group">
-            <label>螺丝孔径</label>
+            <label>{{ t('params.mountScrewDiameter') }}</label>
             <input
               type="number"
               [value]="mount.screwDiameter"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updatePcbMount($index, { screwDiameter: +$any($event.target).value })"
             />
-            <small class="hint">支柱中心自攻螺丝孔直径，mm</small>
+            <small class="hint">{{ t('params.mountScrewDiameterHint') }}</small>
           </div>
         </div>
       }
-      <button type="button" class="add-btn" (click)="addPcbMount()">添加支柱</button>
+      <button type="button" class="add-btn" (click)="addPcbMount()">
+        {{ t('params.addMount') }}
+      </button>
     </div>
   </div>
   <div class="accordian" [class.active]="activeTab() === 6">
     <p class="accordian-header" (click)="setActiveTab(6)">
-      开孔
+      {{ t('params.holes') }}
       <span class="accordian-icon">{{ activeTab() === 6 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       @for (hole of params().holes; track $index) {
         <div class="sub-params">
-          <button class="remove-btn" type="button" (click)="removeHole($index)">X</button>
+          <button
+            class="remove-btn"
+            type="button"
+            [attr.aria-label]="t('params.remove')"
+            (click)="removeHole($index)"
+          >
+            X
+          </button>
           <p>
-            <b>开孔 {{ $index + 1 }}</b>
+            <b>{{ t('params.holeItem', { n: $index + 1 }) }}</b>
           </p>
 
           <div class="input-group">
-            <label>形状</label>
+            <label>{{ t('params.holeShape') }}</label>
             <select
               [value]="hole.shape"
               (change)="updateHole($index, { shape: $any($event.target).value })"
             >
-              <option value="circle">圆形</option>
-              <option value="square">正方形</option>
-              <option value="rectangle">长方形</option>
+              <option value="circle">{{ t('params.holeShapeCircle') }}</option>
+              <option value="square">{{ t('params.holeShapeSquare') }}</option>
+              <option value="rectangle">{{ t('params.holeShapeRectangle') }}</option>
             </select>
-            <small class="hint">开孔的轮廓形状</small>
+            <small class="hint">{{ t('params.holeShapeHint') }}</small>
           </div>
 
           <div class="input-group">
-            <label>所在面</label>
+            <label>{{ t('params.holeSurface') }}</label>
             <select
               [value]="hole.surface"
               (change)="updateHole($index, { surface: $any($event.target).value })"
@@ -672,7 +690,7 @@
                 </option>
               }
             </select>
-            <small class="hint">开孔开在哪个面上</small>
+            <small class="hint">{{ t('params.holeSurfaceHint') }}</small>
           </div>
 
           <div class="input-group">
@@ -683,7 +701,7 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateHole($index, { x: +$any($event.target).value })"
             />
-            <small class="hint">以该面中心为 0，正值按标签方向移动，mm</small>
+            <small class="hint">{{ t('params.offsetFaceHint') }}</small>
           </div>
 
           <div class="input-group">
@@ -694,98 +712,116 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateHole($index, { y: +$any($event.target).value })"
             />
-            <small class="hint">以该面中心为 0，正值按标签方向移动，mm</small>
+            <small class="hint">{{ t('params.offsetFaceHint') }}</small>
           </div>
 
           @if (hole.shape === 'rectangle' || hole.shape === 'square') {
             <div class="input-group">
-              <label>宽度</label>
+              <label>{{ t('params.holeWidth') }}</label>
               <input
                 type="number"
                 [value]="hole.width"
                 (keydown.enter)="$any($event.target).blur()"
                 (blur)="updateHole($index, { width: +$any($event.target).value })"
               />
-              <small class="hint">方/矩形孔的边长（水平方向），mm</small>
+              <small class="hint">{{ t('params.holeWidthHint') }}</small>
             </div>
           }
 
           @if (hole.shape === 'rectangle') {
             <div class="input-group">
-              <label>长度</label>
+              <label>{{ t('params.holeLength') }}</label>
               <input
                 type="number"
                 [value]="hole.length"
                 (keydown.enter)="$any($event.target).blur()"
                 (blur)="updateHole($index, { length: +$any($event.target).value })"
               />
-              <small class="hint">矩形孔的另一边长，mm</small>
+              <small class="hint">{{ t('params.holeLengthHint') }}</small>
             </div>
           }
 
           @if (hole.shape === 'circle') {
             <div class="input-group">
-              <label>直径</label>
+              <label>{{ t('params.holeDiameter') }}</label>
               <input
                 type="number"
                 [value]="hole.diameter"
                 (keydown.enter)="$any($event.target).blur()"
                 (blur)="updateHole($index, { diameter: +$any($event.target).value })"
               />
-              <small class="hint">圆孔直径，mm</small>
+              <small class="hint">{{ t('params.holeDiameterHint') }}</small>
             </div>
           }
         </div>
       }
 
-      <button class="add-btn" type="button" (click)="addHole()">添加开孔</button>
-      <p class="input-group-full hint">
-        X / Y 均以所在面的中心为原点：正值方向见每个输入框的标签，可开启「网格 → 显示坐标轴」对照
-        X/Y/Z 方向。
-      </p>
+      <button class="add-btn" type="button" (click)="addHole()">{{ t('params.addHole') }}</button>
+      <p class="input-group-full hint">{{ t('params.holesHint') }}</p>
     </div>
   </div>
   <div class="accordian" [class.active]="activeTab() === 7">
     <p class="accordian-header" (click)="setActiveTab(7)">
-      散热通风
+      {{ t('params.ventilation') }}
       <span class="accordian-icon">{{ activeTab() === 7 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       @for (vent of params().ventilation; track $index) {
         <div class="sub-params">
-          <button class="remove-btn" type="button" (click)="removeVentilation($index)">X</button>
+          <button
+            class="remove-btn"
+            type="button"
+            [attr.aria-label]="t('params.remove')"
+            (click)="removeVentilation($index)"
+          >
+            X
+          </button>
           <p>
-            <b>通风槽 {{ $index + 1 }}</b>
+            <b>{{ t('params.ventItem', { n: $index + 1 }) }}</b>
           </p>
 
           <div class="input-group">
-            <label>所在面</label>
+            <label>{{ t('params.ventSurface') }}</label>
             <select
               [value]="vent.surface"
               (change)="updateVentilation($index, { surface: $any($event.target).value })"
             >
-              <option value="top" [selected]="vent.surface === 'top'">盖板</option>
-              <option value="bottom" [selected]="vent.surface === 'bottom'">底面</option>
-              <option value="front" [selected]="vent.surface === 'front'">前面</option>
-              <option value="back" [selected]="vent.surface === 'back'">后面</option>
-              <option value="left" [selected]="vent.surface === 'left'">左面</option>
-              <option value="right" [selected]="vent.surface === 'right'">右面</option>
+              <option value="top" [selected]="vent.surface === 'top'">
+                {{ t('surface.top') }}
+              </option>
+              <option value="bottom" [selected]="vent.surface === 'bottom'">
+                {{ t('surface.bottom') }}
+              </option>
+              <option value="front" [selected]="vent.surface === 'front'">
+                {{ t('surface.front') }}
+              </option>
+              <option value="back" [selected]="vent.surface === 'back'">
+                {{ t('surface.back') }}
+              </option>
+              <option value="left" [selected]="vent.surface === 'left'">
+                {{ t('surface.left') }}
+              </option>
+              <option value="right" [selected]="vent.surface === 'right'">
+                {{ t('surface.right') }}
+              </option>
             </select>
-            <small class="hint">通风槽开在哪个面上</small>
+            <small class="hint">{{ t('params.ventSurfaceHint') }}</small>
           </div>
 
           <div class="input-group">
-            <label>切槽方向</label>
+            <label>{{ t('params.ventOrientation') }}</label>
             <select
               [value]="vent.orientation"
               (change)="updateVentilation($index, { orientation: $any($event.target).value })"
             >
               <option value="horizontal" [selected]="vent.orientation === 'horizontal'">
-                横切
+                {{ t('params.ventOrientationHorizontal') }}
               </option>
-              <option value="vertical" [selected]="vent.orientation === 'vertical'">竖切</option>
+              <option value="vertical" [selected]="vent.orientation === 'vertical'">
+                {{ t('params.ventOrientationVertical') }}
+              </option>
             </select>
-            <small class="hint">横切＝槽横向排列；竖切＝槽竖向排列</small>
+            <small class="hint">{{ t('params.ventOrientationHint') }}</small>
           </div>
 
           <div class="input-group">
@@ -797,7 +833,7 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { x: +$any($event.target).value })"
             />
-            <small class="hint">以该面中心为 0，正值按标签方向移动，mm</small>
+            <small class="hint">{{ t('params.offsetFaceHint') }}</small>
           </div>
 
           <div class="input-group">
@@ -809,11 +845,11 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { y: +$any($event.target).value })"
             />
-            <small class="hint">以该面中心为 0，正值按标签方向移动，mm</small>
+            <small class="hint">{{ t('params.offsetFaceHint') }}</small>
           </div>
 
           <div class="input-group">
-            <label>槽宽 (mm)</label>
+            <label>{{ t('params.ventSlotWidth') }}</label>
             <input
               type="number"
               min="0.4"
@@ -822,11 +858,11 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { slotWidth: +$any($event.target).value })"
             />
-            <small class="hint">单条槽的宽度（短边），mm</small>
+            <small class="hint">{{ t('params.ventSlotWidthHint') }}</small>
           </div>
 
           <div class="input-group">
-            <label>槽长 (mm，0=自动)</label>
+            <label>{{ t('params.ventSlotLength') }}</label>
             <input
               type="number"
               min="0"
@@ -835,11 +871,11 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { slotLength: +$any($event.target).value })"
             />
-            <small class="hint">单条槽的长度；0＝按面尺寸自动取 60%，mm</small>
+            <small class="hint">{{ t('params.ventSlotLengthHint') }}</small>
           </div>
 
           <div class="input-group">
-            <label>槽间距 (mm)</label>
+            <label>{{ t('params.ventSlotGap') }}</label>
             <input
               type="number"
               min="0.4"
@@ -848,11 +884,11 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { slotGap: +$any($event.target).value })"
             />
-            <small class="hint">相邻两条槽之间的间隙，mm</small>
+            <small class="hint">{{ t('params.ventSlotGapHint') }}</small>
           </div>
 
           <div class="input-group">
-            <label>槽数量</label>
+            <label>{{ t('params.ventSlotCount') }}</label>
             <input
               type="number"
               min="1"
@@ -861,37 +897,36 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { slotCount: +$any($event.target).value })"
             />
-            <small class="hint">这组通风槽的条数</small>
+            <small class="hint">{{ t('params.ventSlotCountHint') }}</small>
           </div>
         </div>
       }
 
-      <button class="add-btn" type="button" (click)="addVentilation()">添加通风槽</button>
-      <p class="input-group-full hint">
-        横切/竖切决定槽的长轴方向；X 为该面水平偏移、Y
-        为竖直或纵向偏移（均以面中心为原点）。可添加多组，分布在不同面。
-      </p>
+      <button class="add-btn" type="button" (click)="addVentilation()">
+        {{ t('params.addVent') }}
+      </button>
+      <p class="input-group-full hint">{{ t('params.ventilationHint') }}</p>
     </div>
   </div>
   <div class="accordian" [class.active]="activeTab() === 8">
     <p class="accordian-header" (click)="setActiveTab(8)">
-      壁挂
+      {{ t('params.wallMount') }}
       <span class="accordian-icon">{{ activeTab() === 8 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       <div class="input-group grid-toggle-group input-group-full">
-        <label>启用壁挂</label>
+        <label>{{ t('params.wallMountEnable') }}</label>
         <input
           type="checkbox"
           [checked]="params().wallMounts"
           (change)="setBooleanParam('wallMounts', $any($event.target).checked)"
         />
       </div>
-      <p class="input-group-full hint">在基座左右两侧伸出带螺丝孔的挂耳，便于把盒子固定到墙面。</p>
+      <p class="input-group-full hint">{{ t('params.wallMountHint') }}</p>
 
       @if (params().wallMounts) {
         <div class="input-group">
-          <label>挂耳数量</label>
+          <label>{{ t('params.wallMountCount') }}</label>
           <select
             [value]="params().wallMountCount"
             (change)="setNumberParam('wallMountCount', $any($event.target).value)"
@@ -899,11 +934,11 @@
             <option [value]="2">2</option>
             <option [value]="4">4</option>
           </select>
-          <small class="hint">2＝每侧 1 个（居中）；4＝每侧 2 个（靠两端）</small>
+          <small class="hint">{{ t('params.wallMountCountHint') }}</small>
         </div>
 
         <div class="input-group">
-          <label>螺丝孔径</label>
+          <label>{{ t('params.wallMountScrewDiameter') }}</label>
           <input
             type="number"
             min="1"
@@ -912,11 +947,11 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setNumberParam('wallMountScrewDiameter', $any($event.target).value)"
           />
-          <small class="hint">挂耳上的螺丝孔直径，mm</small>
+          <small class="hint">{{ t('params.wallMountScrewDiameterHint') }}</small>
         </div>
 
         <div class="input-group">
-          <label>切角角度 (°)</label>
+          <label>{{ t('params.wallMountChamfer') }}</label>
           <input
             type="number"
             [min]="chamferAngleMin"
@@ -933,8 +968,7 @@
             <small class="hint text-red-600">{{ chamferAngleError() }}</small>
           }
           <small class="hint">
-            挂耳外侧斜切角，单位度，默认 60，取值 {{ chamferAngleMin }}–{{ chamferAngleMax }}。
-            超出范围会被拒绝并保留原值。实测角度越小切掉的实体越多。
+            {{ t('params.wallMountChamferHint', { min: chamferAngleMin, max: chamferAngleMax }) }}
           </small>
         </div>
       }
@@ -942,12 +976,12 @@
   </div>
   <div class="accordian" [class.active]="activeTab() === 9">
     <p class="accordian-header" (click)="setActiveTab(9)">
-      倒角
+      {{ t('params.chamfer') }}
       <span class="accordian-icon">{{ activeTab() === 9 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       <div class="input-group">
-        <label>基座底边倒角 (mm)</label>
+        <label>{{ t('params.baseBedChamfer') }}</label>
         <input
           type="number"
           min="0"
@@ -956,10 +990,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('baseBedChamfer', $any($event.target).value)"
         />
-        <small class="hint">基座与打印床接触的底边 45° 倒角，防象脚；0＝关闭，mm</small>
+        <small class="hint">{{ t('params.baseBedChamferHint') }}</small>
       </div>
       <div class="input-group">
-        <label>盖板底边倒角 (mm)</label>
+        <label>{{ t('params.lidBedChamfer') }}</label>
         <input
           type="number"
           min="0"
@@ -968,10 +1002,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('lidBedChamfer', $any($event.target).value)"
         />
-        <small class="hint">盖板与打印床接触的底边 45° 倒角，防象脚；0＝关闭，mm</small>
+        <small class="hint">{{ t('params.lidBedChamferHint') }}</small>
       </div>
       <div class="input-group">
-        <label>嵌入边顶端倒角 (mm)</label>
+        <label>{{ t('params.lidTopChamfer') }}</label>
         <input
           type="number"
           min="0"
@@ -980,12 +1014,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('lidTopChamfer', $any($event.target).value)"
         />
-        <small class="hint"
-          >盖板上那圈插进基座的嵌入边，其顶端外缘的 45° 斜面，便于对准滑入；0＝关闭，mm</small
-        >
+        <small class="hint">{{ t('params.lidTopChamferHint') }}</small>
       </div>
       <div class="input-group">
-        <label>螺丝沉头倒角 (mm)</label>
+        <label>{{ t('params.lidScrewCountersink') }}</label>
         <input
           type="number"
           min="0"
@@ -994,25 +1026,19 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('lidScrewCountersink', $any($event.target).value)"
         />
-        <small class="hint">
-          盖板顶面螺丝孔口的 45° 锥坑，让沉头螺丝的螺帽沉进去、不凸出表面；0＝关闭。
-          取值是径向扩展量、深度与之相等，会被夹到 0.2–2.5mm。仅对盖板螺丝生效。
-        </small>
+        <small class="hint">{{ t('params.lidScrewCountersinkHint') }}</small>
       </div>
-      <p class="input-group-full hint">
-        底边倒角在与打印床接触的底边做 45°
-        倒角，缓解首层「象脚」溢出。基座底边倒角开启时，壁挂挂耳沿自身轮廓同步倒角，与主体底边连续。嵌入边顶端倒角会按嵌入边高度与圆角半径自动限制，不会削穿。
-      </p>
+      <p class="input-group-full hint">{{ t('params.chamferHint') }}</p>
     </div>
   </div>
   <div class="accordian" [class.active]="activeTab() === 10">
     <p class="accordian-header" (click)="setActiveTab(10)">
-      显示
+      {{ t('params.display') }}
       <span class="accordian-icon">{{ activeTab() === 10 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       <div class="input-group grid-toggle-group input-group-full">
-        <label>显示基座</label>
+        <label>{{ t('params.showBase') }}</label>
         <input
           type="checkbox"
           [checked]="params().showBase"
@@ -1020,18 +1046,16 @@
         />
       </div>
       <div class="input-group grid-toggle-group input-group-full">
-        <label>显示盖板</label>
+        <label>{{ t('params.showLid') }}</label>
         <input
           type="checkbox"
           [checked]="params().showLid"
           (change)="setBooleanParam('showLid', $any($event.target).checked)"
         />
       </div>
-      <p class="input-group-full hint">
-        单独查看某一部件时隐藏另一件。防水模式下密封圈随盖板一起显隐；PCB 预览与内隔板属于基座。
-      </p>
+      <p class="input-group-full hint">{{ t('params.showLidBaseHint') }}</p>
       <div class="input-group grid-toggle-group input-group-full">
-        <label>显示网格</label>
+        <label>{{ t('params.showGrid') }}</label>
         <input
           type="checkbox"
           [checked]="params().showGrid"
@@ -1039,19 +1063,16 @@
         />
       </div>
       <div class="input-group grid-toggle-group input-group-full">
-        <label>显示坐标轴</label>
+        <label>{{ t('params.showAxes') }}</label>
         <input
           type="checkbox"
           [checked]="params().showAxes"
           (change)="setBooleanParam('showAxes', $any($event.target).checked)"
         />
       </div>
-      <p class="input-group-full hint">
-        坐标轴以基座角点为原点：X 红（指向左面 +X）、Y 绿（指向前面 +Y）、Z 蓝（指向上
-        +Z），可对照各偏移参数的方向。
-      </p>
+      <p class="input-group-full hint">{{ t('params.showAxesHint') }}</p>
       <div class="input-group input-group-full">
-        <label>网格间距 (mm)</label>
+        <label>{{ t('params.gridSpacing') }}</label>
         <input
           type="number"
           min="1"
@@ -1060,7 +1081,7 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('gridSpacing', $any($event.target).value)"
         />
-        <small class="hint">底部参考网格的小格边长，mm</small>
+        <small class="hint">{{ t('params.gridSpacingHint') }}</small>
       </div>
     </div>
   </div>
