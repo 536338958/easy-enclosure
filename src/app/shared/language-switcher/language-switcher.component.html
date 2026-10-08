@@ -1,0 +1,46 @@
+<div class="flex items-center gap-2">
+  <span
+    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500"
+  >
+    <svg
+      viewBox="0 0 24 24"
+      class="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.7"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z" />
+    </svg>
+  </span>
+
+  <div class="relative min-w-0 flex-1">
+    <select
+      class="w-full cursor-pointer appearance-none rounded-lg border border-slate-300 bg-white py-1.5 pl-2 pr-7 text-[11px] font-bold tracking-wide text-slate-700 transition hover:border-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
+      [attr.aria-label]="selectLabel()"
+      (change)="select($any($event.target).value)"
+    >
+      @for (option of options(); track option.value) {
+        <option [value]="option.value" [selected]="option.value === preference()">
+          {{ option.label }}
+        </option>
+      }
+    </select>
+    <svg
+      viewBox="0 0 24 24"
+      class="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  </div>
+</div>
