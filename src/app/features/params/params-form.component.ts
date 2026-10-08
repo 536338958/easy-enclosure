@@ -8,9 +8,12 @@ import type {
   Params,
   PCBPreview,
   SnapFit,
+  Ventilation,
 } from '../../core/params';
-import { DEFAULT_CABLE_CLAMP } from '../../core/params';
+import { DEFAULT_CABLE_CLAMP, DEFAULT_VENTILATION } from '../../core/params';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
+import { I18nService } from '../../core/i18n/i18n.service';
+import type { TranslationKey } from '../../core/i18n/translations';
 
 type Surface = 'top' | 'bottom' | 'left' | 'right' | 'front' | 'back';
 
@@ -22,6 +25,7 @@ type Surface = 'top' | 'bottom' | 'left' | 'right' | 'front' | 'back';
 })
 export class ParamsFormComponent {
   private readonly state = inject(EnclosureStateService);
+  private readonly i18n = inject(I18nService);
 
   readonly activeTab = signal<number | null>(null);
 
@@ -32,6 +36,50 @@ export class ParamsFormComponent {
       return 'Lid';
     }
     return surface[0].toUpperCase() + surface.slice(1);
+  }
+
+  t(key: TranslationKey, vars?: Record<string, string | number>): string {
+    return this.i18n.t(key, vars);
+  }
+
+  /** 所在面的名称（跟随当前语言） */
+  ventSurfaceLabel(surface: Surface): string {
+    switch (surface) {
+      case 'top':
+        return this.t('surface.top');
+      case 'bottom':
+        return this.t('surface.bottom');
+      case 'left':
+        return this.t('surface.left');
+      case 'right':
+        return this.t('surface.right');
+      case 'front':
+        return this.t('surface.front');
+      default:
+        return this.t('surface.back');
+    }
+  }
+
+  addVentilation(): void {
+    const current = this.params();
+    const next: Ventilation = { ...DEFAULT_VENTILATION };
+    this.state.patchParams({ ventilation: [...(current.ventilation ?? []), next] });
+  }
+
+  removeVentilation(index: number): void {
+    const current = this.params();
+    this.state.patchParams({
+      ventilation: (current.ventilation ?? []).filter((_, i) => i !== index),
+    });
+  }
+
+  updateVentilation(index: number, patch: Partial<Ventilation>): void {
+    const current = this.params();
+    this.state.patchParams({
+      ventilation: (current.ventilation ?? []).map((item, i) =>
+        i === index ? { ...item, ...patch } : item,
+      ),
+    });
   }
 
   params(): Params {

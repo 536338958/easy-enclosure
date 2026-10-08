@@ -64,6 +64,7 @@ const lidDeps = [
   'snapFit',
   'lidBedChamfer',
   'lidTopChamfer',
+  'ventilation',
 ];
 const baseDeps = [
   'length',
@@ -93,6 +94,7 @@ const baseDeps = [
   'insertClearance',
   'snapFit',
   'baseBedChamfer',
+  'ventilation',
 ];
 const sealDeps = [
   'length',

@@ -53,6 +53,35 @@ export type PCBPreview = {
   y: number;
 };
 
+/**
+ * 散热通风槽（本 fork 独有，上游没有对应模块）。
+ * - vertical：槽的长轴沿竖直 / 纵向
+ * - horizontal：槽的长轴沿水平 / 横向
+ * 偏移沿用本分支约定：x = 面内水平偏移，y = 竖直 / 纵向偏移，+ 指向 +世界轴。
+ */
+export type Ventilation = {
+  surface: Surface;
+  orientation: 'vertical' | 'horizontal';
+  slotWidth: number;
+  /** 0 表示按所在面的 60% 自动取值 */
+  slotLength: number;
+  slotGap: number;
+  slotCount: number;
+  x: number;
+  y: number;
+};
+
+export const DEFAULT_VENTILATION: Ventilation = {
+  surface: 'top',
+  orientation: 'horizontal',
+  slotWidth: 2,
+  slotLength: 0,
+  slotGap: 3,
+  slotCount: 5,
+  x: 0,
+  y: 0,
+};
+
 export type CableClamp = {
   surface?: Surface;
   x: number;
@@ -107,6 +136,8 @@ export type Params = {
   holes: Hole[];
   pcbMounts: PCBMount[];
   internalWalls: InternalWall[];
+  /** 散热通风槽（fork 独有，上游无此模块） */
+  ventilation: Ventilation[];
   cableClamps: CableClamp[];
   wallMounts: boolean;
   wallMountCount: number;
@@ -241,6 +272,7 @@ export const DEFAULT_PARAMS: Params = {
       rotation: 0,
     },
   ],
+  ventilation: [],
   cableClamps: [],
   wallMounts: true,
   wallMountCount: 4,

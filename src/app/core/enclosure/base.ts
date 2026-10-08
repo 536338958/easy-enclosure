@@ -8,6 +8,7 @@ import { bottomChamferTool } from './chamfer';
 import { waterProofSealCutout } from './waterproofseal';
 import { getScrewOffset, nutPockets, screws } from './screws';
 import { baseSnapPockets } from './snapfit';
+import { ventilationCut } from './ventilation';
 import { translate } from '@jscad/modeling/src/operations/transforms';
 
 const { subtract, union } = booleans;
@@ -82,12 +83,19 @@ export const base = (params: Params) => {
     subtracts.push(snapPockets);
   }
 
+  const vent = ventilationCut(params, 'base');
+  if (vent) {
+    subtracts.push(vent);
+  }
+
   let result = subtracts.length > 0 ? subtract(union(body), union(subtracts)) : union(body);
 
   if (params.baseBedChamfer > 0) {
-    result = subtract(result, bottomChamferTool(width, length, params.baseBedChamfer, cornerRadius));
+    result = subtract(
+      result,
+      bottomChamferTool(width, length, params.baseBedChamfer, cornerRadius),
+    );
   }
 
   return result;
 };
-

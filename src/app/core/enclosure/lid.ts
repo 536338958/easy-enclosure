@@ -13,6 +13,7 @@ import { getScrewOffset, lidScrewRecesses, screws } from './screws';
 import { subtract } from '@jscad/modeling/src/operations/booleans';
 import { holes } from './holes';
 import { lidSnapBumps } from './snapfit';
+import { ventilationCut } from './ventilation';
 
 const { union } = booleans;
 const { translate } = transforms;
@@ -88,6 +89,11 @@ export const lid = (params: Params) => {
     entities.push(bumps);
   }
 
+  const vent = ventilationCut(params, 'lid');
+  if (vent) {
+    subtracts.push(vent);
+  }
+
   let result = subtracts.length > 0 ? subtract(union(entities), union(subtracts)) : union(entities);
 
   if (params.lidBedChamfer > 0) {
@@ -111,4 +117,3 @@ export const lid = (params: Params) => {
 
   return result;
 };
-
