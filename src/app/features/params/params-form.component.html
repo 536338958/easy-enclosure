@@ -527,7 +527,7 @@
             >
               @for (surface of surfaces; track surface) {
                 <option [value]="surface" [selected]="surface === hole.surface">
-                  {{ surfaceLabel(surface) }}
+                  {{ ventSurfaceLabel(surface) }}
                 </option>
               }
             </select>
@@ -618,7 +618,7 @@
             >
               @for (surface of surfaces; track surface) {
                 <option [value]="surface" [selected]="surface === (mount.surface || 'bottom')">
-                  {{ surfaceLabel(surface) }}
+                  {{ ventSurfaceLabel(surface) }}
                 </option>
               }
             </select>

@@ -7,7 +7,7 @@
         [style.top.px]="label.y"
         style="transform: translate(-50%, -50%)"
       >
-        {{ label.name }}
+        {{ surfaceLabel(label.name) }}
       </div>
     }
   </div>
@@ -16,15 +16,19 @@
     <div
       class="pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-lg border border-red-300 bg-red-600/90 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(127,29,29,0.45)]"
     >
-      ⚠ PCB Collision:
+      {{ t('renderer.collision') }}
       @if (pcbCollision().hitsWalls) {
-        <span>Collides with enclosure walls / partitions ({{ pcbCollision().overlapVolume }} mm³)</span>
+        <span
+          >{{ t('renderer.collisionWalls') }} ({{
+            t('renderer.overlapVolume', { v: pcbCollision().overlapVolume })
+          }})</span
+        >
       }
       @if (pcbCollision().hitsWalls && pcbCollision().hitsCeiling) {
         <span> · </span>
       }
       @if (pcbCollision().hitsCeiling) {
-        <span>Components exceed ceiling height</span>
+        <span>{{ t('renderer.collisionCeiling') }}</span>
       }
     </div>
   }

@@ -270,7 +270,7 @@ describe('RendererComponent', () => {
       fixture.detectChanges();
       const alertEl = fixture.nativeElement.querySelector('.border-red-300');
       expect(alertEl).not.toBeNull();
-      expect(alertEl.textContent).toContain('PCB Collision');
+      expect(alertEl.textContent).toContain(component.t('renderer.collision'));
       expect(alertEl.textContent).toContain('42.5 mm³');
     });
   });

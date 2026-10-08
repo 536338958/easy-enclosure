@@ -1,14 +1,10 @@
 <div class="grid grid-cols-3 gap-2">
   <app-action-button
     variant="toolbar"
-    [title]="'Load settings from file'"
+    [title]="t('tools.loadTitle')"
     (click)="openFilePicker()"
-  >
-    Load
-  </app-action-button>
-  <app-action-button variant="toolbar" [title]="'Save settings to file'" (click)="saveParamsFile()">
-    Save
-  </app-action-button>
+  >{{ t('tools.load') }}</app-action-button>
+  <app-action-button variant="toolbar" [title]="t('tools.saveTitle')" (click)="saveParamsFile()">{{ t('tools.save') }}</app-action-button>
   <app-action-button
     variant="toolbar-primary"
     [title]="exportButtonTitle()"
@@ -35,9 +31,7 @@
       &times;
     </button>
     <h3 class="text-base font-bold text-slate-900">{{ t('tools.exportModal') }}</h3>
-    <p class="mt-1 mb-3 text-xs leading-relaxed text-slate-600">
-      Select format and components to download. Multiple items will be bundled as a ZIP archive.
-    </p>
+    <p class="dialog-hint">{{ t('tools.exportChecklistHint') }}</p>
     <div
       class="mb-4 flex flex-wrap items-center justify-center gap-6 rounded-xl border border-slate-200/90 bg-slate-50/70 px-3 py-2 text-xs font-semibold text-slate-700"
     >
@@ -144,7 +138,7 @@
       }
     </div>
     <div class="flex items-center justify-end gap-2">
-      <app-action-button variant="dialog" (click)="closeExportModal()"> Cancel </app-action-button>
+      <app-action-button variant="dialog" (click)="closeExportModal()"> {{ t('tools.cancel') }} </app-action-button>
       <app-action-button
         variant="dialog-primary"
         [disabled]="selectedCount() === 0 || isExporting()"

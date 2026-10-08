@@ -38,6 +38,8 @@ import {
 } from '../../core/enclosure/pcbpreview';
 import { waterProofSeal } from '../../core/enclosure/waterproofseal';
 import type { Params } from '../../core/params';
+import { I18nService } from '../../core/i18n/i18n.service';
+import type { TranslationKey } from '../../core/i18n/translations';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
 
 const SPACING = 20;
@@ -339,6 +341,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
   private resizeObserver: ResizeObserver | null = null;
 
   private readonly state = inject(EnclosureStateService);
+  private readonly i18n = inject(I18nService);
 
   private readonly perspectiveCamera = cameras.perspective;
   private readonly orbitControls = controls.orbit;
@@ -393,6 +396,34 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
   private wheelInteractionHandle: ReturnType<typeof setTimeout> | null = null;
 
   readonly surfaceLabels = signal<SurfaceLabel[]>([]);
+
+  t(key: TranslationKey, vars?: Record<string, string | number>): string {
+    return this.i18n.t(key, vars);
+  }
+
+  /** 视口投影的面名标签走 i18n，跟随语言下拉即时切换 */
+  surfaceLabel(name: SurfaceLabel['name']): string {
+    switch (name) {
+      case 'Front':
+        return this.t('surface.front');
+      case 'Back':
+        return this.t('surface.back');
+      case 'Left':
+        return this.t('surface.left');
+      case 'Right':
+        return this.t('surface.right');
+      case 'Lid':
+        return this.t('surface.top');
+      case 'Bottom':
+        return this.t('surface.bottom');
+      case 'Seal':
+        return this.t('surface.seal');
+      case 'DIN Mount':
+        return this.t('surface.dinRail');
+      default:
+        return name;
+    }
+  }
 
   constructor() {
     effect(() => {
