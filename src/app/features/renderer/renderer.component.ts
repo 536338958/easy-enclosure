@@ -58,6 +58,7 @@ const lidDeps = [
   'lidScrewRecessDiameter',
   'lidScrewRecessDepth',
   'lidScrewOffset',
+  'lidScrewProtrusion',
   'insertThickness',
   'insertHeight',
   'insertClearance',
@@ -94,6 +95,8 @@ const baseDeps = [
   'wallMountCount',
   'wallMountChamferAngle',
   'insertClearance',
+  'lidScrewOffset',
+  'lidScrewProtrusion',
   'snapFit',
   'baseBedChamfer',
   'ventilation',
@@ -114,6 +117,7 @@ const sealDeps = [
   'lidScrewRecessType',
   'lidScrewRecessDiameter',
   'lidScrewOffset',
+  'lidScrewProtrusion',
   'lidScrews',
 ];
 const mountDeps = [

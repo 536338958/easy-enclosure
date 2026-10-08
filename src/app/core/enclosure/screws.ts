@@ -47,6 +47,48 @@ const maxScrewOffset = (params: Params, screwDiameter: number): number => {
 };
 
 /**
+ * 防水开启时螺丝柱凸出量的自动取值（mm）。
+ *
+ * 防水结构里盖板要压着密封圈拧紧，螺丝柱需要更厚实才咬得住自攻螺丝，
+ * 所以自动值比「最小值」更大。用户仍可用 `lidScrewProtrusion` 覆盖。
+ */
+export const WATERPROOF_PROTRUSION = 3;
+
+/**
+ * 螺丝柱向腔内凸出的量（mm）—— 也就是内腔四角那块凸出实体的半径，
+ * 对应 clover 让位缺口的大小。
+ *
+ * **它与螺丝孔位是两回事**：孔位决定孔打在哪，凸出量决定角落那块实体多大。
+ * 上游原本让两者共用 `getScrewOffset()`，螺母模式下该值会算到 5.04 而实际
+ * 柱体只有 3.89，密封圈槽在四角绕行过头、直接把槽切断（表现为「防水槽被打穿」）。
+ * 这里把凸出量拆成独立量，并让密封圈让位半径与它同源，绕的是同一根柱子。
+ *
+ * `lidScrewProtrusion = 0`（默认）时：防水取 `WATERPROOF_PROTRUSION`(3mm)，
+ * 非防水取允许区间的最小值（够用即可、尽量少占内腔）；给正值则按用户指定，
+ * 超出区间会夹到边界。
+ */
+export const screwPostProtrusion = (params: Params): number => {
+  const diameterMax = getScrewDiameterMax(params);
+  const lo = minScrewOffset(params, diameterMax);
+  const hi = maxScrewOffset(params, diameterMax);
+  const upper = Math.max(hi, lo);
+
+  if (params.lidScrewProtrusion > 0) {
+    return Math.min(Math.max(params.lidScrewProtrusion, lo), upper);
+  }
+
+  const auto = params.waterProof ? WATERPROOF_PROTRUSION : lo;
+  return Math.min(Math.max(auto, lo), upper);
+};
+
+/**
+ * 盖板嵌入边的外形圆角半径：开盖板螺丝时嵌入边走 clover，其外形由螺丝柱
+ * 半径决定；否则是普通圆角矩形。嵌入边顶端倒角必须按这个轮廓来，否则斜面对不上边。
+ */
+export const insertRimRadius = (params: Params): number =>
+  params.lidScrews ? screwPostProtrusion(params) : params.cornerRadius;
+
+/**
  * 螺丝孔中心距相邻两边的距离（mm）。
  *
  * `lidScrewOffset = 0` 时走经典公式（与既有默认行为一致）；给正值则按用户

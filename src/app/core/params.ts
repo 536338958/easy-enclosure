@@ -164,6 +164,12 @@ export type Params = {
    * 正值按用户给定值，并夹紧到保证螺丝孔与外壁之间留有最小壁厚的区间内。
    */
   lidScrewOffset: number;
+  /**
+   * 螺丝柱向腔内凸出的量（mm），0 表示自动（防水取 3mm，非防水取区间最小值）。
+   * 只改变内腔四角那块凸出实体的大小，**不改变螺丝孔位置**（孔位由 lidScrewOffset 控制）。
+   * 密封圈槽在四角的让位半径与它同源，绕的是同一根柱子。
+   */
+  lidScrewProtrusion: number;
   dinRailMount: boolean;
   dinRailOrientation: 'horizontal' | 'vertical';
   dinRailMountWidth: number;
@@ -302,6 +308,7 @@ export const DEFAULT_PARAMS: Params = {
   lidScrewRecessDiameter: 6.2,
   lidScrewRecessDepth: 3.0,
   lidScrewOffset: 0,
+  lidScrewProtrusion: 0,
   dinRailMount: false,
   dinRailOrientation: 'horizontal',
   dinRailMountWidth: 15,

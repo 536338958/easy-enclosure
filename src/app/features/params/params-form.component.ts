@@ -15,7 +15,7 @@ import { EnclosureStateService } from '../../core/state/enclosure-state.service'
 import { I18nService } from '../../core/i18n/i18n.service';
 import type { TranslationKey } from '../../core/i18n/translations';
 import { WALL_MOUNT_CHAMFER_MAX, WALL_MOUNT_CHAMFER_MIN } from '../../core/enclosure/wallmount';
-import { getScrewOffset } from '../../core/enclosure/screws';
+import { getScrewOffset, screwPostProtrusion } from '../../core/enclosure/screws';
 
 type Surface = 'top' | 'bottom' | 'left' | 'right' | 'front' | 'back';
 
@@ -56,6 +56,11 @@ export class ParamsFormComponent {
   /** 孔位距边的实际生效值（夹紧之后），用于提示文案里的对照 */
   effectiveScrewOffset(): number {
     return Math.round(getScrewOffset(this.params()) * 100) / 100;
+  }
+
+  /** 螺丝柱凸出量的实际生效值（自动 / 夹紧之后），用于提示文案里的对照 */
+  effectiveScrewProtrusion(): number {
+    return Math.round(screwPostProtrusion(this.params()) * 100) / 100;
   }
 
   setChamferAngle(rawValue: string): void {

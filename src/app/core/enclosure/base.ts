@@ -6,7 +6,7 @@ import { flanges } from './wallmount';
 import { clover, hollowRoundCube, roundedCube } from './utils';
 import { bottomChamferTool } from './chamfer';
 import { waterProofSealCutout } from './waterproofseal';
-import { getScrewOffset, nutPockets, screws } from './screws';
+import { getScrewOffset, nutPockets, screwPostProtrusion, screws } from './screws';
 import { baseSnapPockets } from './snapfit';
 import { ventilationCut } from './ventilation';
 import { translate } from '@jscad/modeling/src/operations/transforms';
@@ -40,12 +40,15 @@ export const base = (params: Params) => {
 
   if (params.lidScrews) {
     const screwOffset = getScrewOffset(params);
+    // 内腔四角螺丝柱的大小走凸出量，与孔位解耦：孔位决定孔打在哪，
+    // 凸出量决定角落这块实体多大，密封圈槽的让位半径必须跟它同源
+    const postProtrusion = screwPostProtrusion(params);
     body.push(
       subtract(
         roundedCube(width, length, height, cornerRadius),
         translate(
           [_wall, _wall, floor],
-          clover(width - _wall * 2, length - _wall * 2, height, screwOffset),
+          clover(width - _wall * 2, length - _wall * 2, height, postProtrusion),
         ),
       ),
     );

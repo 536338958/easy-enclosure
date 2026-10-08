@@ -9,7 +9,13 @@ import {
 } from './chamfer';
 
 import { Params } from '../params';
-import { getScrewOffset, lidScrewRecesses, screws } from './screws';
+import {
+  getScrewOffset,
+  insertRimRadius,
+  lidScrewRecesses,
+  screwPostProtrusion,
+  screws,
+} from './screws';
 import { subtract } from '@jscad/modeling/src/operations/booleans';
 import { holes } from './holes';
 import { lidSnapBumps } from './snapfit';
@@ -39,6 +45,8 @@ export const lid = (params: Params) => {
 
   if (params.lidScrews) {
     const screwOffset = getScrewOffset(params);
+    // 嵌入边四角的让位缺口跟螺丝柱对齐（同源），孔位另行决定
+    const postProtrusion = screwPostProtrusion(params);
 
     entities.push(
       translate(
@@ -48,7 +56,7 @@ export const lid = (params: Params) => {
           length - wall * 2 - insertClearance * 2,
           insertHeight,
           insertThickness,
-          screwOffset,
+          postProtrusion,
         ),
       ),
     );
@@ -104,7 +112,9 @@ export const lid = (params: Params) => {
   if (rimChamfer > 0) {
     const rimInset = wall + insertClearance;
     const rimTopZ = roof + insertHeight;
-    const rimRadius = params.lidScrews ? getScrewOffset(params) : cornerRadius;
+    // 轮廓必须跟嵌入边自身的形状一致：开盖板螺丝时嵌入边走 clover，四角被螺丝柱
+    // 让位缺口切掉好几毫米，若按圆角矩形做楔环，角上会切在实体之外、倒角断成四段
+    const rimRadius = insertRimRadius(params);
     const outline = params.lidScrews ? cloverOutline(rimRadius) : roundedOutline(cornerRadius);
     result = subtract(
       result,
