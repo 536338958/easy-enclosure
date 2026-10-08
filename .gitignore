@@ -40,3 +40,6 @@ __screenshots__/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# 几何验证脚本的 tsc 产物
+/.verify-build

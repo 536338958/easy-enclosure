@@ -16,11 +16,11 @@ export type PCBCollisionResult = {
   overlapVolume: number;
 };
 
-export const cavityFloorZ = (params: Params): number => {
-  const { wall, waterProof, insertThickness, insertClearance, lidScrews, floor } = params;
-  const innerWall = waterProof ? wall * 2 + insertClearance * 2 + insertThickness : wall;
-  return lidScrews ? floor : innerWall;
-};
+// 内腔地板基准已下沉到 utils（internalwalls 要用，留这里会与 pcbpreview 成环）。
+// 这里同时导入并再导出：内部 pcbRestZ 要用，既有 `from './pcbpreview'` 的 import 也不受影响。
+import { cavityFloorZ } from './utils';
+
+export { cavityFloorZ };
 
 export const pcbRestZ = (params: Params): number => {
   const floorZ = cavityFloorZ(params);

@@ -15,6 +15,26 @@ export const innerWallInset = (params: {
   return waterProof ? wall * 2 + insertClearance * 2 + insertThickness : wall;
 };
 
+/**
+ * 内腔地板所在高度 z —— 腔内所有立式结构（内隔板、PCB 支柱…）的共同落座基准。
+ *
+ * 与 base() 的两种挖腔方式一一对应，必须与它保持同源：
+ * - 启用盖板螺丝：base 用 clover(...) 平移到 z = floor 挖腔 → 地板在 floor
+ * - 关闭盖板螺丝：base 走 hollowRoundCube，内腔平移到 [_wall, _wall, _wall]
+ *   → 地板在 innerWallInset（防水时还要含嵌入边与间隙）
+ *
+ * 放在 utils 而非 pcbpreview，是因为 internalwalls 要用它、而 pcbpreview 反过来
+ * import 了 internalwalls —— 留在 pcbpreview 会形成循环依赖。
+ */
+export const cavityFloorZ = (params: {
+  wall: number;
+  waterProof: boolean;
+  insertThickness: number;
+  insertClearance: number;
+  lidScrews: boolean;
+  floor: number;
+}): number => (params.lidScrews ? params.floor : innerWallInset(params));
+
 export const roundedCube2d = (l: number, w: number, r = 8, s = 48) => {
   const c = circle({
     radius: r,
@@ -103,4 +123,3 @@ export {
   topChamferTool,
   type OutlineBuilder,
 } from './chamfer';
-

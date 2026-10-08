@@ -31,11 +31,7 @@ export const WALL_MOUNT_CHAMFER_DEFAULT = 60;
 const earProfile = (outerWidth: number, inset: number, h: number): Geom3 =>
   hull(
     cuboid({
-      size: [
-        Math.max(outerWidth / 2 - inset * 2, 0.1),
-        Math.max(outerWidth - inset * 2, 0.1),
-        h,
-      ],
+      size: [Math.max(outerWidth / 2 - inset * 2, 0.1), Math.max(outerWidth - inset * 2, 0.1), h],
     }),
     translate(
       [-(outerWidth / 2), 0, 0],
