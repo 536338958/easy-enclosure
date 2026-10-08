@@ -13,9 +13,8 @@
     variant="toolbar-primary"
     [title]="exportButtonTitle()"
     (click)="openExportModal()"
+    >{{ t('tools.exportModal') }}</app-action-button
   >
-    Export
-  </app-action-button>
 
   <input #fileInput type="file" accept=".json" class="hidden" (change)="loadParamsFile($event)" />
 </div>
@@ -31,18 +30,18 @@
       class="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-transparent bg-transparent text-xl text-slate-500 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/30"
       type="button"
       (click)="closeExportModal()"
-      aria-label="Close export modal"
+      [attr.aria-label]="t('tools.closeExport')"
     >
       &times;
     </button>
-    <h3 class="text-base font-bold text-slate-900">Export</h3>
+    <h3 class="text-base font-bold text-slate-900">{{ t('tools.exportModal') }}</h3>
     <p class="mt-1 mb-3 text-xs leading-relaxed text-slate-600">
       Select format and components to download. Multiple items will be bundled as a ZIP archive.
     </p>
     <div
       class="mb-4 flex flex-wrap items-center justify-center gap-6 rounded-xl border border-slate-200/90 bg-slate-50/70 px-3 py-2 text-xs font-semibold text-slate-700"
     >
-      <span class="text-slate-500">Format:</span>
+      <span class="text-slate-500">{{ t('tools.exportFormat') }}</span>
       @for (fmt of supportedFormats(); track fmt.id) {
         <label
           class="flex cursor-pointer items-center gap-1.5 select-none"
@@ -73,7 +72,7 @@
           [checked]="exportBase()"
           (change)="exportBase.set($any($event.target).checked)"
         />
-        <span>Enclosure base</span>
+        <span>{{ t('tools.exportBase') }}</span>
       </label>
       <label
         class="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100/70 hover:text-slate-900 select-none"
@@ -85,7 +84,7 @@
           [checked]="exportLid()"
           (change)="exportLid.set($any($event.target).checked)"
         />
-        <span>Enclosure lid</span>
+        <span>{{ t('tools.exportLid') }}</span>
       </label>
       @if (hasSeal()) {
         <label
@@ -98,7 +97,7 @@
             [checked]="exportSeal()"
             (change)="exportSeal.set($any($event.target).checked)"
           />
-          <span>Enclosure seal</span>
+          <span>{{ t('tools.exportSeal') }}</span>
         </label>
       }
       @if (hasPcbMounts()) {
@@ -112,7 +111,7 @@
             [checked]="exportPcbMounts()"
             (change)="exportPcbMounts.set($any($event.target).checked)"
           />
-          <span>PCB mounts only</span>
+          <span>{{ t('tools.exportPcbMounts') }}</span>
         </label>
       }
       @if (hasDinRailMount()) {
@@ -126,7 +125,7 @@
             [checked]="exportDinRail()"
             (change)="exportDinRail.set($any($event.target).checked)"
           />
-          <span>DIN rail mount</span>
+          <span>{{ t('tools.exportDinRail') }}</span>
         </label>
       }
       @if (hasCableClamps()) {
@@ -140,7 +139,7 @@
             [checked]="exportCableClamps()"
             (change)="exportCableClamps.set($any($event.target).checked)"
           />
-          <span>Cable clamp straps</span>
+          <span>{{ t('tools.exportClampTops') }}</span>
         </label>
       }
     </div>

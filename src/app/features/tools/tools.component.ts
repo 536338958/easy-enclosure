@@ -25,6 +25,8 @@ import {
   STL_FORMAT,
 } from '../../core/export/export-format';
 import { ExportFormatService } from '../../core/export/export-format.service';
+import { I18nService } from '../../core/i18n/i18n.service';
+import type { TranslationKey } from '../../core/i18n/translations';
 import type { Params } from '../../core/params';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
 import { ActionButtonComponent } from '../../shared/action-button/action-button.component';
@@ -46,6 +48,11 @@ export class ToolsComponent {
 
   private readonly state = inject(EnclosureStateService);
   private readonly exportFormatService = inject(ExportFormatService);
+  private readonly i18n = inject(I18nService);
+
+  t(key: TranslationKey, vars?: Record<string, string | number>): string {
+    return this.i18n.t(key, vars);
+  }
 
   readonly supportedFormats = this.exportFormatService.formats;
   readonly isExportModalOpen = signal(false);

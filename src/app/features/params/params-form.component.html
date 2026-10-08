@@ -1,16 +1,16 @@
 <form id="param-form" (submit)="$event.preventDefault()">
   <button type="button" class="simple-reset-btn" (click)="resetToSimpleEnclosure()">
-    START FROM SCRATCH
+    {{ t('params.startOver') }}
   </button>
 
   <div class="accordian" [class.active]="activeTab() === 1">
     <p class="accordian-header" (click)="setActiveTab(1)">
-      General
-      <span class="accordian-icon">{{ activeTab() === 1 ? '-' : '+' }}</span>
+      {{ t('params.general')
+      }}<span class="accordian-icon">{{ activeTab() === 1 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       <div class="input-group">
-        <label>Length</label>
+        <label>{{ t('params.length') }}</label>
         <input
           type="number"
           min="1"
@@ -20,7 +20,7 @@
         />
       </div>
       <div class="input-group">
-        <label>Width</label>
+        <label>{{ t('params.width') }}</label>
         <input
           type="number"
           min="1"
@@ -30,7 +30,7 @@
         />
       </div>
       <div class="input-group">
-        <label>Height</label>
+        <label>{{ t('params.height') }}</label>
         <input
           type="number"
           min="1"
@@ -40,7 +40,7 @@
         />
       </div>
       <div class="input-group">
-        <label>Floor Thickness</label>
+        <label>{{ t('params.floor') }}</label>
         <input
           type="number"
           min="1"
@@ -50,7 +50,7 @@
         />
       </div>
       <div class="input-group">
-        <label>Wall Thickness</label>
+        <label>{{ t('params.wall') }}</label>
         <input
           type="number"
           min="1"
@@ -60,7 +60,7 @@
         />
       </div>
       <div class="input-group">
-        <label>Lid Thickness</label>
+        <label>{{ t('params.roof') }}</label>
         <input
           type="number"
           min="1"
@@ -70,7 +70,7 @@
         />
       </div>
       <div class="input-group">
-        <label>Corner Radius</label>
+        <label>{{ t('params.cornerRadius') }}</label>
         <input
           type="number"
           min="1"
@@ -84,13 +84,12 @@
 
   <div class="accordian" [class.active]="activeTab() === 2">
     <p class="accordian-header" (click)="setActiveTab(2)">
-      Lid
-      <span class="accordian-icon">{{ activeTab() === 2 ? '-' : '+' }}</span>
+      {{ t('params.lid') }}<span class="accordian-icon">{{ activeTab() === 2 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
-      <div class="sub-section-title">Insert Rim</div>
+      <div class="sub-section-title">{{ t('params.lidInsert') }}</div>
       <div class="input-group">
-        <label>Insert Thickness</label>
+        <label>{{ t('params.insertThickness') }}</label>
         <input
           type="number"
           min="1"
@@ -101,7 +100,7 @@
         />
       </div>
       <div class="input-group">
-        <label>Insert Height</label>
+        <label>{{ t('params.insertHeight') }}</label>
         <input
           type="number"
           min="1"
@@ -112,7 +111,7 @@
         />
       </div>
       <div class="input-group">
-        <label>Insert Clearance</label>
+        <label>{{ t('params.insertClearance') }}</label>
         <input
           type="number"
           min="0.01"
@@ -123,9 +122,9 @@
         />
       </div>
 
-      <div class="sub-section-title">Snap Fit</div>
+      <div class="sub-section-title">{{ t('params.snapFit') }}</div>
       <div class="input-group checkbox-group">
-        <label>Enable Snap Fit</label>
+        <label>{{ t('params.snapFitEnable') }}</label>
         <input
           type="checkbox"
           [checked]="params().snapFit.enabled"
@@ -135,21 +134,21 @@
 
       @if (params().snapFit.enabled) {
         <div class="input-group">
-          <label>Snap Points Preset</label>
+          <label>{{ t('params.snapFitPreset') }}</label>
           <select
             [value]="params().snapFit.preset"
             (change)="setSnapFitPreset($any($event.target).value)"
           >
-            <option value="4">4 Points (2 per long side)</option>
-            <option value="6">6 Points (2 long + 1 short)</option>
-            <option value="8">8 Points (2 per all 4 sides)</option>
+            <option value="4">{{ t('params.snapFitPreset4') }}</option>
+            <option value="6">{{ t('params.snapFitPreset6') }}</option>
+            <option value="8">{{ t('params.snapFitPreset8') }}</option>
           </select>
         </div>
 
         <div class="input-group">
-          <label>
-            Corner Offset
-            <span class="help-tip help-tip-right" tabindex="0">
+          <label
+            >{{ t('params.snapFitEndPercent')
+            }}<span class="help-tip help-tip-right" tabindex="0">
               <svg
                 class="help-icon"
                 viewBox="0 0 16 16"
@@ -163,9 +162,9 @@
                 <circle cx="8" cy="8" r="6.75" />
                 <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
               </svg>
-              <span class="help-tooltip" role="tooltip"
-                >Distance from wall corners along the rim (%)</span
-              >
+              <span class="help-tooltip" role="tooltip">{{
+                t('params.snapFitEndPercentHint')
+              }}</span>
             </span>
           </label>
           <input
@@ -180,9 +179,9 @@
         </div>
 
         <div class="input-group">
-          <label>
-            Bead Width
-            <span class="help-tip" tabindex="0">
+          <label
+            >{{ t('params.snapFitWidth')
+            }}<span class="help-tip" tabindex="0">
               <svg
                 class="help-icon"
                 viewBox="0 0 16 16"
@@ -196,9 +195,7 @@
                 <circle cx="8" cy="8" r="6.75" />
                 <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
               </svg>
-              <span class="help-tooltip" role="tooltip"
-                >Length of snap bead along the rim (mm)</span
-              >
+              <span class="help-tooltip" role="tooltip">{{ t('params.snapFitWidthHint') }}</span>
             </span>
           </label>
           <input
@@ -213,9 +210,9 @@
         </div>
 
         <div class="input-group">
-          <label>
-            Engagement Depth
-            <span class="help-tip help-tip-right" tabindex="0">
+          <label
+            >{{ t('params.snapFitDepth')
+            }}<span class="help-tip help-tip-right" tabindex="0">
               <svg
                 class="help-icon"
                 viewBox="0 0 16 16"
@@ -229,9 +226,7 @@
                 <circle cx="8" cy="8" r="6.75" />
                 <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
               </svg>
-              <span class="help-tooltip" role="tooltip"
-                >Bead protrusion depth into wall pocket (mm)</span
-              >
+              <span class="help-tooltip" role="tooltip">{{ t('params.snapFitDepthHint') }}</span>
             </span>
           </label>
           <input
@@ -246,9 +241,9 @@
         </div>
 
         <div class="input-group">
-          <label>
-            Bead Height
-            <span class="help-tip" tabindex="0">
+          <label
+            >{{ t('params.snapFitHeight')
+            }}<span class="help-tip" tabindex="0">
               <svg
                 class="help-icon"
                 viewBox="0 0 16 16"
@@ -262,9 +257,7 @@
                 <circle cx="8" cy="8" r="6.75" />
                 <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
               </svg>
-              <span class="help-tooltip" role="tooltip"
-                >Vertical height of the bead profile (mm)</span
-              >
+              <span class="help-tooltip" role="tooltip">{{ t('params.snapFitHeightHint') }}</span>
             </span>
           </label>
           <input
@@ -279,9 +272,9 @@
         </div>
 
         <div class="input-group">
-          <label>
-            Pocket Clearance
-            <span class="help-tip help-tip-right" tabindex="0">
+          <label
+            >{{ t('params.snapFitClearance')
+            }}<span class="help-tip help-tip-right" tabindex="0">
               <svg
                 class="help-icon"
                 viewBox="0 0 16 16"
@@ -295,9 +288,9 @@
                 <circle cx="8" cy="8" r="6.75" />
                 <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
               </svg>
-              <span class="help-tooltip" role="tooltip"
-                >Fit tolerance gap around the bead (mm)</span
-              >
+              <span class="help-tooltip" role="tooltip">{{
+                t('params.snapFitClearanceHint')
+              }}</span>
             </span>
           </label>
           <input
@@ -312,9 +305,9 @@
         </div>
       }
 
-      <div class="sub-section-title">Lid Screws</div>
+      <div class="sub-section-title">{{ t('params.lidScrews') }}</div>
       <div class="input-group checkbox-group">
-        <label>Include Lid Screws</label>
+        <label>{{ t('params.lidScrewsEnable') }}</label>
         <input
           type="checkbox"
           [checked]="params().lidScrews"
@@ -324,7 +317,7 @@
 
       @if (params().lidScrews) {
         <div class="input-group">
-          <label>Lid Hole Diameter</label>
+          <label>{{ t('params.lidScrewDiameter') }}</label>
           <input
             type="number"
             min="1"
@@ -336,7 +329,7 @@
         </div>
 
         <div class="input-group">
-          <label>Base Hole Diameter</label>
+          <label>{{ t('params.baseLidScrewDiameter') }}</label>
           <input
             type="number"
             min="1"
@@ -348,14 +341,14 @@
         </div>
 
         <div class="input-group">
-          <label>Screw Head Recess</label>
+          <label>{{ t('params.lidScrewRecess') }}</label>
           <select
             [value]="params().lidScrewRecessType"
             (change)="setStringParam('lidScrewRecessType', $any($event.target).value)"
           >
-            <option value="none">None (Flush Top Hole)</option>
-            <option value="counterbore">Counterbore</option>
-            <option value="countersunk">Countersunk</option>
+            <option value="none">{{ t('params.lidScrewRecessNone') }}</option>
+            <option value="counterbore">{{ t('params.lidScrewRecessCounterbore') }}</option>
+            <option value="countersunk">{{ t('params.lidScrewRecessCountersunk') }}</option>
           </select>
         </div>
 
@@ -364,7 +357,7 @@
           params().lidScrewRecessType === 'countersunk'
         ) {
           <div class="input-group">
-            <label>Recess Diameter</label>
+            <label>{{ t('params.lidScrewRecessDiameter') }}</label>
             <input
               type="number"
               min="1"
@@ -378,7 +371,7 @@
 
         @if (params().lidScrewRecessType === 'counterbore') {
           <div class="input-group">
-            <label>Recess Depth</label>
+            <label>{{ t('params.lidScrewRecessDepth') }}</label>
             <input
               type="number"
               min="0.5"
@@ -391,14 +384,14 @@
         }
 
         <div class="input-group">
-          <label>Hole Type</label>
+          <label>{{ t('params.lidScrewHoleType') }}</label>
           <select
             [value]="params().lidScrewHoleType"
             (change)="setStringParam('lidScrewHoleType', $any($event.target).value)"
           >
-            <option value="blind">Blind Hole</option>
-            <option value="nut-pocket">Captive Nut Pocket</option>
-            <option value="through">Through Hole</option>
+            <option value="blind">{{ t('params.lidScrewHoleType.blind') }}</option>
+            <option value="nut-pocket">{{ t('params.lidScrewHoleType.nutPocket') }}</option>
+            <option value="through">{{ t('params.lidScrewHoleType.through') }}</option>
           </select>
         </div>
 
@@ -434,7 +427,7 @@
 
         @if (params().lidScrewHoleType === 'blind') {
           <div class="input-group">
-            <label>Base Hole Depth</label>
+            <label>{{ t('params.lidScrewHoleDepth') }}</label>
             <input
               type="number"
               min="1"
@@ -449,7 +442,7 @@
 
         @if (params().lidScrewHoleType === 'nut-pocket') {
           <div class="input-group">
-            <label>Nut Width (Flats)</label>
+            <label>{{ t('params.lidScrewNutWidth') }}</label>
             <input
               type="number"
               min="1"
@@ -461,7 +454,7 @@
           </div>
 
           <div class="input-group">
-            <label>Nut Depth</label>
+            <label>{{ t('params.lidScrewNutDepth') }}</label>
             <input
               type="number"
               min="0.5"
@@ -474,9 +467,9 @@
         }
       }
 
-      <div class="sub-section-title">Waterproofing</div>
+      <div class="sub-section-title">{{ t('params.waterproof') }}</div>
       <div class="input-group checkbox-group">
-        <label>Waterproof</label>
+        <label>{{ t('params.waterproofEnable') }}</label>
         <input
           type="checkbox"
           [checked]="params().waterProof"
@@ -486,7 +479,7 @@
 
       @if (params().waterProof) {
         <div class="input-group">
-          <label>Seal Thickness</label>
+          <label>{{ t('params.sealThickness') }}</label>
           <input
             type="number"
             min="1"
@@ -502,31 +495,32 @@
 
   <div class="accordian" [class.active]="activeTab() === 3">
     <p class="accordian-header" (click)="setActiveTab(3)">
-      Holes
-      <span class="accordian-icon">{{ activeTab() === 3 ? '-' : '+' }}</span>
+      {{ t('params.holes') }}<span class="accordian-icon">{{ activeTab() === 3 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       @for (hole of params().holes; track $index) {
         <div class="sub-params">
-          <button class="remove-btn" type="button" (click)="removeHole($index)">X</button>
+          <button class="remove-btn" type="button" (click)="removeHole($index)">
+            {{ t('params.remove') }}
+          </button>
           <p>
             <b>Hole {{ $index + 1 }}</b>
           </p>
 
           <div class="input-group">
-            <label>Shape</label>
+            <label>{{ t('params.holeShape') }}</label>
             <select
               [value]="hole.shape"
               (change)="updateHole($index, { shape: $any($event.target).value })"
             >
-              <option value="circle">Circle</option>
-              <option value="square">Square</option>
-              <option value="rectangle">Rectangle</option>
+              <option value="circle">{{ t('params.holeShapeCircle') }}</option>
+              <option value="square">{{ t('params.holeShapeSquare') }}</option>
+              <option value="rectangle">{{ t('params.holeShapeRectangle') }}</option>
             </select>
           </div>
 
           <div class="input-group">
-            <label>Surface</label>
+            <label>{{ t('params.holeSurface') }}</label>
             <select
               [value]="hole.surface"
               (change)="updateHole($index, { surface: $any($event.target).value })"
@@ -540,7 +534,7 @@
           </div>
 
           <div class="input-group">
-            <label>X</label>
+            <label>{{ t('params.offsetX') }}</label>
             <input
               type="number"
               [value]="hole.x"
@@ -550,7 +544,7 @@
           </div>
 
           <div class="input-group">
-            <label>Y</label>
+            <label>{{ t('params.offsetY') }}</label>
             <input
               type="number"
               [value]="hole.y"
@@ -561,7 +555,7 @@
 
           @if (hole.shape === 'rectangle' || hole.shape === 'square') {
             <div class="input-group">
-              <label>Width</label>
+              <label>{{ t('params.holeWidth') }}</label>
               <input
                 type="number"
                 [value]="hole.width"
@@ -573,7 +567,7 @@
 
           @if (hole.shape === 'rectangle') {
             <div class="input-group">
-              <label>Length</label>
+              <label>{{ t('params.holeLength') }}</label>
               <input
                 type="number"
                 [value]="hole.length"
@@ -585,7 +579,7 @@
 
           @if (hole.shape === 'circle') {
             <div class="input-group">
-              <label>Diameter</label>
+              <label>{{ t('params.holeDiameter') }}</label>
               <input
                 type="number"
                 [value]="hole.diameter"
@@ -597,25 +591,27 @@
         </div>
       }
 
-      <button class="add-btn" type="button" (click)="addHole()">Add Hole</button>
+      <button class="add-btn" type="button" (click)="addHole()">{{ t('params.addHole') }}</button>
     </div>
   </div>
 
   <div class="accordian" [class.active]="activeTab() === 4">
     <p class="accordian-header" (click)="setActiveTab(4)">
-      PCB Mounts
-      <span class="accordian-icon">{{ activeTab() === 4 ? '-' : '+' }}</span>
+      {{ t('params.pcbMounts')
+      }}<span class="accordian-icon">{{ activeTab() === 4 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       @for (mount of params().pcbMounts; track $index) {
         <div class="sub-params">
-          <button class="remove-btn" type="button" (click)="removePcbMount($index)">X</button>
+          <button class="remove-btn" type="button" (click)="removePcbMount($index)">
+            {{ t('params.remove') }}
+          </button>
           <p>
             <b>Mount {{ $index + 1 }}</b>
           </p>
 
           <div class="input-group">
-            <label>Surface</label>
+            <label>{{ t('params.mountSurface') }}</label>
             <select
               [value]="mount.surface || 'bottom'"
               (change)="updatePcbMount($index, { surface: $any($event.target).value })"
@@ -628,7 +624,7 @@
             </select>
           </div>
           <div class="input-group">
-            <label>X</label>
+            <label>{{ t('params.offsetX') }}</label>
             <input
               type="number"
               [value]="mount.x"
@@ -637,7 +633,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Y</label>
+            <label>{{ t('params.offsetY') }}</label>
             <input
               type="number"
               [value]="mount.y"
@@ -646,7 +642,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Height</label>
+            <label>{{ t('params.mountHeight') }}</label>
             <input
               type="number"
               [value]="mount.height"
@@ -655,7 +651,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Outer Diameter</label>
+            <label>{{ t('params.mountOuterDiameter') }}</label>
             <input
               type="number"
               [value]="mount.outerDiameter"
@@ -664,7 +660,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Screw Diameter</label>
+            <label>{{ t('params.mountScrewDiameter') }}</label>
             <input
               type="number"
               [value]="mount.screwDiameter"
@@ -674,20 +670,22 @@
           </div>
         </div>
       }
-      <button type="button" class="add-btn" (click)="addPcbMount()">ADD NEW MOUNT</button>
+      <button type="button" class="add-btn" (click)="addPcbMount()">
+        {{ t('params.addMount') }}
+      </button>
     </div>
   </div>
 
   <div class="accordian" [class.active]="activeTab() === 5">
     <p class="accordian-header" (click)="setActiveTab(5)">
-      PCB Preview
-      <span class="accordian-icon">{{ activeTab() === 5 ? '-' : '+' }}</span>
+      {{ t('params.pcbPreview')
+      }}<span class="accordian-icon">{{ activeTab() === 5 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       <div class="input-group checkbox-group input-group-full">
-        <label>
-          Enable PCB Preview
-          <span class="help-tip" tabindex="0">
+        <label
+          >{{ t('params.pcbEnable')
+          }}<span class="help-tip" tabindex="0">
             <svg
               class="help-icon"
               viewBox="0 0 16 16"
@@ -701,9 +699,7 @@
               <circle cx="8" cy="8" r="6.75" />
               <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
             </svg>
-            <span class="help-tooltip" role="tooltip"
-              >Simulates PCB in 3D viewport. Green = clearance, red = collision with enclosure</span
-            >
+            <span class="help-tooltip" role="tooltip">{{ t('params.pcbPreviewHint') }}</span>
           </span>
         </label>
         <input
@@ -713,9 +709,9 @@
         />
       </div>
       <div class="input-group">
-        <label>
-          Width
-          <span class="help-tip" tabindex="0">
+        <label
+          >{{ t('params.pcbWidth')
+          }}<span class="help-tip" tabindex="0">
             <svg
               class="help-icon"
               viewBox="0 0 16 16"
@@ -729,9 +725,7 @@
               <circle cx="8" cy="8" r="6.75" />
               <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
             </svg>
-            <span class="help-tooltip" role="tooltip"
-              >Board dimension along X (left/right, mm)</span
-            >
+            <span class="help-tooltip" role="tooltip">{{ t('params.pcbWidthHint') }}</span>
           </span>
         </label>
         <input
@@ -744,9 +738,9 @@
         />
       </div>
       <div class="input-group">
-        <label>
-          Length
-          <span class="help-tip help-tip-right" tabindex="0">
+        <label
+          >{{ t('params.pcbLength')
+          }}<span class="help-tip help-tip-right" tabindex="0">
             <svg
               class="help-icon"
               viewBox="0 0 16 16"
@@ -760,9 +754,7 @@
               <circle cx="8" cy="8" r="6.75" />
               <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
             </svg>
-            <span class="help-tooltip" role="tooltip"
-              >Board dimension along Y (front/back, mm)</span
-            >
+            <span class="help-tooltip" role="tooltip">{{ t('params.pcbLengthHint') }}</span>
           </span>
         </label>
         <input
@@ -775,9 +767,9 @@
         />
       </div>
       <div class="input-group">
-        <label>
-          Thickness
-          <span class="help-tip" tabindex="0">
+        <label
+          >{{ t('params.pcbThickness')
+          }}<span class="help-tip" tabindex="0">
             <svg
               class="help-icon"
               viewBox="0 0 16 16"
@@ -791,7 +783,7 @@
               <circle cx="8" cy="8" r="6.75" />
               <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
             </svg>
-            <span class="help-tooltip" role="tooltip">Thickness of the PCB board (mm)</span>
+            <span class="help-tooltip" role="tooltip">{{ t('params.pcbThicknessHint') }}</span>
           </span>
         </label>
         <input
@@ -804,9 +796,9 @@
         />
       </div>
       <div class="input-group">
-        <label>
-          Component Height
-          <span class="help-tip help-tip-right" tabindex="0">
+        <label
+          >{{ t('params.pcbComponentHeight')
+          }}<span class="help-tip help-tip-right" tabindex="0">
             <svg
               class="help-icon"
               viewBox="0 0 16 16"
@@ -820,9 +812,9 @@
               <circle cx="8" cy="8" r="6.75" />
               <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
             </svg>
-            <span class="help-tooltip" role="tooltip"
-              >Height of components above the board (mm)</span
-            >
+            <span class="help-tooltip" role="tooltip">{{
+              t('params.pcbComponentHeightHint')
+            }}</span>
           </span>
         </label>
         <input
@@ -835,9 +827,9 @@
         />
       </div>
       <div class="input-group">
-        <label>
-          Offset X
-          <span class="help-tip" tabindex="0">
+        <label
+          >{{ t('params.pcbOffsetX')
+          }}<span class="help-tip" tabindex="0">
             <svg
               class="help-icon"
               viewBox="0 0 16 16"
@@ -851,9 +843,7 @@
               <circle cx="8" cy="8" r="6.75" />
               <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
             </svg>
-            <span class="help-tooltip" role="tooltip"
-              >Offset from enclosure center along X (mm)</span
-            >
+            <span class="help-tooltip" role="tooltip">{{ t('params.pcbOffsetXHint') }}</span>
           </span>
         </label>
         <input
@@ -865,9 +855,9 @@
         />
       </div>
       <div class="input-group">
-        <label>
-          Offset Y
-          <span class="help-tip help-tip-right" tabindex="0">
+        <label
+          >{{ t('params.pcbOffsetY')
+          }}<span class="help-tip help-tip-right" tabindex="0">
             <svg
               class="help-icon"
               viewBox="0 0 16 16"
@@ -881,9 +871,7 @@
               <circle cx="8" cy="8" r="6.75" />
               <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
             </svg>
-            <span class="help-tooltip" role="tooltip"
-              >Offset from enclosure center along Y (mm)</span
-            >
+            <span class="help-tooltip" role="tooltip">{{ t('params.pcbOffsetYHint') }}</span>
           </span>
         </label>
         <input
@@ -899,13 +887,15 @@
 
   <div class="accordian" [class.active]="activeTab() === 6">
     <p class="accordian-header" (click)="setActiveTab(6)">
-      Internal Walls
-      <span class="accordian-icon">{{ activeTab() === 6 ? '-' : '+' }}</span>
+      {{ t('params.internalWalls')
+      }}<span class="accordian-icon">{{ activeTab() === 6 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       @for (wallItem of params().internalWalls; track $index) {
         <div class="sub-params">
-          <button class="remove-btn" type="button" (click)="removeInternalWall($index)">X</button>
+          <button class="remove-btn" type="button" (click)="removeInternalWall($index)">
+            {{ t('params.remove') }}
+          </button>
           <p>
             <b>Internal Wall {{ $index + 1 }}</b>
           </p>
@@ -929,7 +919,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Height</label>
+            <label>{{ t('params.wallHeight') }}</label>
             <input
               type="number"
               min="0.1"
@@ -940,7 +930,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Length</label>
+            <label>{{ t('params.wallLength') }}</label>
             <input
               type="number"
               min="0.1"
@@ -951,7 +941,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Thickness</label>
+            <label>{{ t('params.wallThickness') }}</label>
             <input
               type="number"
               min="0.1"
@@ -962,7 +952,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Rotation</label>
+            <label>{{ t('params.wallRotation') }}</label>
             <input
               type="number"
               step="1"
@@ -974,32 +964,34 @@
         </div>
       }
       <button type="button" class="add-btn" (click)="addInternalWall()">
-        ADD NEW INTERNAL WALL
+        {{ t('params.addInternalWall') }}
       </button>
     </div>
   </div>
 
   <div class="accordian" [class.active]="activeTab() === 7">
     <p class="accordian-header" (click)="setActiveTab(7)">
-      Cable Clamps
-      <span class="accordian-icon">{{ activeTab() === 7 ? '-' : '+' }}</span>
+      {{ t('params.clamps')
+      }}<span class="accordian-icon">{{ activeTab() === 7 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       @for (clamp of params().cableClamps; track $index) {
         <div class="sub-params">
-          <button class="remove-btn" type="button" (click)="removeCableClamp($index)">X</button>
+          <button class="remove-btn" type="button" (click)="removeCableClamp($index)">
+            {{ t('params.remove') }}
+          </button>
           <p>
             <b>Clamp {{ $index + 1 }}</b>
           </p>
 
           <div class="input-group">
-            <label>Surface</label>
+            <label>{{ t('params.mountSurface') }}</label>
             <select
               [value]="clamp.surface || 'bottom'"
               (change)="updateCableClamp($index, { surface: $any($event.target).value })"
             >
-              <option value="bottom">Base (Bottom)</option>
-              <option value="top">Lid (Top)</option>
+              <option value="bottom">{{ t('surface.bottom') }}</option>
+              <option value="top">{{ t('surface.top') }}</option>
             </select>
           </div>
           <div class="input-group">
@@ -1012,7 +1004,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Y</label>
+            <label>{{ t('params.offsetY') }}</label>
             <input
               type="number"
               [value]="clamp.y"
@@ -1021,7 +1013,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Post Distance (Span)</label>
+            <label>{{ t('params.clampLength') }}</label>
             <input
               type="number"
               min="5"
@@ -1032,7 +1024,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Post Height</label>
+            <label>{{ t('params.clampMountHeight') }}</label>
             <input
               type="number"
               min="1"
@@ -1043,7 +1035,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Saddle Height</label>
+            <label>{{ t('params.clampWallHeight') }}</label>
             <input
               type="number"
               min="0.5"
@@ -1054,7 +1046,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Clamp Depth (Thickness)</label>
+            <label>{{ t('params.clampWallThickness') }}</label>
             <input
               type="number"
               min="1"
@@ -1065,7 +1057,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Post Outer Diameter</label>
+            <label>{{ t('params.clampOuterDiameter') }}</label>
             <input
               type="number"
               min="2"
@@ -1076,7 +1068,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Base Screw Diameter (Pilot)</label>
+            <label>{{ t('params.clampScrewDiameter') }}</label>
             <input
               type="number"
               min="0.5"
@@ -1087,7 +1079,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Top Strap Thickness</label>
+            <label>{{ t('params.clampTopHeight') }}</label>
             <input
               type="number"
               min="0.5"
@@ -1098,7 +1090,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Top Screw Diameter (Clearance)</label>
+            <label>{{ t('params.clampTopScrewDiameter') }}</label>
             <input
               type="number"
               min="0.5"
@@ -1109,7 +1101,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Rotation</label>
+            <label>{{ t('params.wallRotation') }}</label>
             <input
               type="number"
               step="1"
@@ -1119,7 +1111,7 @@
             />
           </div>
           <div class="input-group checkbox-group">
-            <label>Grip Ridges</label>
+            <label>{{ t('params.clampRidges') }}</label>
             <input
               type="checkbox"
               [checked]="clamp.ridges !== false"
@@ -1128,18 +1120,20 @@
           </div>
         </div>
       }
-      <button type="button" class="add-btn" (click)="addCableClamp()">ADD NEW CABLE CLAMP</button>
+      <button type="button" class="add-btn" (click)="addCableClamp()">
+        {{ t('params.addClamp') }}
+      </button>
     </div>
   </div>
 
   <div class="accordian" [class.active]="activeTab() === 8">
     <p class="accordian-header" (click)="setActiveTab(8)">
-      Wall Mounts
-      <span class="accordian-icon">{{ activeTab() === 8 ? '-' : '+' }}</span>
+      {{ t('params.wallMount')
+      }}<span class="accordian-icon">{{ activeTab() === 8 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       <div class="input-group checkbox-group">
-        <label>Wall Mounts</label>
+        <label>{{ t('params.wallMountEnable') }}</label>
         <input
           type="checkbox"
           [checked]="params().wallMounts"
@@ -1149,7 +1143,7 @@
 
       @if (params().wallMounts) {
         <div class="input-group">
-          <label>Mount Count</label>
+          <label>{{ t('params.wallMountCount') }}</label>
           <select
             [value]="params().wallMountCount"
             (change)="setNumberParam('wallMountCount', $any($event.target).value)"
@@ -1160,7 +1154,7 @@
         </div>
 
         <div class="input-group">
-          <label>Screw Diameter</label>
+          <label>{{ t('params.wallMountScrewDiameter') }}</label>
           <input
             type="number"
             min="1"
@@ -1196,12 +1190,12 @@
 
   <div class="accordian" [class.active]="activeTab() === 9">
     <p class="accordian-header" (click)="setActiveTab(9)">
-      DIN Rail Mounts
-      <span class="accordian-icon">{{ activeTab() === 9 ? '-' : '+' }}</span>
+      {{ t('params.dinRailMount')
+      }}<span class="accordian-icon">{{ activeTab() === 9 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       <div class="input-group checkbox-group">
-        <label>DIN Rail Mounts</label>
+        <label>{{ t('params.dinRailMountEnable') }}</label>
         <input
           type="checkbox"
           [checked]="params().dinRailMount"
@@ -1211,18 +1205,18 @@
 
       @if (params().dinRailMount) {
         <div class="input-group">
-          <label>Orientation</label>
+          <label>{{ t('params.dinRailOrientation') }}</label>
           <select
             [value]="params().dinRailOrientation"
             (change)="setStringParam('dinRailOrientation', $any($event.target).value)"
           >
-            <option value="horizontal">Horizontal Rail</option>
-            <option value="vertical">Vertical Rail</option>
+            <option value="horizontal">{{ t('params.dinRailOrientation.horizontal') }}</option>
+            <option value="vertical">{{ t('params.dinRailOrientation.vertical') }}</option>
           </select>
         </div>
 
         <div class="input-group">
-          <label>Mount Width</label>
+          <label>{{ t('params.dinRailMountWidth') }}</label>
           <input
             type="number"
             min="10"
@@ -1235,7 +1229,7 @@
         </div>
 
         <div class="input-group">
-          <label>Screw Diameter</label>
+          <label>{{ t('params.dinRailScrewDiameter') }}</label>
           <input
             type="number"
             min="1"
@@ -1251,14 +1245,14 @@
 
   <div class="accordian" [class.active]="activeTab() === 10">
     <p class="accordian-header" (click)="setActiveTab(10)">
-      Edge Chamfers
-      <span class="accordian-icon">{{ activeTab() === 10 ? '-' : '+' }}</span>
+      {{ t('params.chamfer')
+      }}<span class="accordian-icon">{{ activeTab() === 10 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       <div class="input-group">
-        <label>
-          Base Bottom
-          <span class="help-tip" tabindex="0">
+        <label
+          >{{ t('params.baseBedChamfer')
+          }}<span class="help-tip" tabindex="0">
             <svg
               class="help-icon"
               viewBox="0 0 16 16"
@@ -1272,9 +1266,7 @@
               <circle cx="8" cy="8" r="6.75" />
               <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
             </svg>
-            <span class="help-tooltip" role="tooltip"
-              >45° bevel on base bed edge to prevent 1st-layer elephant foot (0 = off, mm)</span
-            >
+            <span class="help-tooltip" role="tooltip">{{ t('params.baseBedChamferHint') }}</span>
           </span>
         </label>
         <input
@@ -1287,9 +1279,9 @@
         />
       </div>
       <div class="input-group">
-        <label>
-          Lid Top
-          <span class="help-tip help-tip-right" tabindex="0">
+        <label
+          >{{ t('params.lidBedChamfer')
+          }}<span class="help-tip help-tip-right" tabindex="0">
             <svg
               class="help-icon"
               viewBox="0 0 16 16"
@@ -1303,10 +1295,7 @@
               <circle cx="8" cy="8" r="6.75" />
               <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
             </svg>
-            <span class="help-tooltip" role="tooltip"
-              >45° bevel on lid exterior bed edge; matches base &amp; suppresses elephant foot (0 =
-              off, mm)</span
-            >
+            <span class="help-tooltip" role="tooltip">{{ t('params.lidBedChamferHint') }}</span>
           </span>
         </label>
         <input
@@ -1319,9 +1308,9 @@
         />
       </div>
       <div class="input-group">
-        <label>
-          Insert Lip
-          <span class="help-tip" tabindex="0">
+        <label
+          >{{ t('params.lidTopChamfer')
+          }}<span class="help-tip" tabindex="0">
             <svg
               class="help-icon"
               viewBox="0 0 16 16"
@@ -1335,10 +1324,7 @@
               <circle cx="8" cy="8" r="6.75" />
               <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
             </svg>
-            <span class="help-tooltip" role="tooltip"
-              >45° lead-in bevel on top of lid insert lip for smooth sliding/alignment (0 = off,
-              mm)</span
-            >
+            <span class="help-tooltip" role="tooltip">{{ t('params.lidTopChamferHint') }}</span>
           </span>
         </label>
         <input
@@ -1355,12 +1341,12 @@
 
   <div class="accordian" [class.active]="activeTab() === 11">
     <p class="accordian-header" (click)="setActiveTab(11)">
-      Grid
-      <span class="accordian-icon">{{ activeTab() === 11 ? '-' : '+' }}</span>
+      {{ t('params.display')
+      }}<span class="accordian-icon">{{ activeTab() === 11 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       <div class="input-group checkbox-group">
-        <label>Show Grid</label>
+        <label>{{ t('params.showGrid') }}</label>
         <input
           type="checkbox"
           [checked]="params().showGrid"
@@ -1377,7 +1363,7 @@
       </div>
       <p class="input-group-full hint">{{ t('params.showAxesHint') }}</p>
       <div class="input-group input-group-full">
-        <label>Grid Spacing</label>
+        <label>{{ t('params.gridSpacing') }}</label>
         <input
           type="number"
           min="1"
@@ -1398,7 +1384,9 @@
     <div class="accordian-body">
       @for (vent of params().ventilation; track $index) {
         <div class="sub-params">
-          <button class="remove-btn" type="button" (click)="removeVentilation($index)">X</button>
+          <button class="remove-btn" type="button" (click)="removeVentilation($index)">
+            {{ t('params.remove') }}
+          </button>
           <p>
             <b>{{ t('params.ventItem', { n: $index + 1 }) }}</b>
           </p>
@@ -1427,7 +1415,7 @@
           </div>
 
           <div class="input-group">
-            <label>X</label>
+            <label>{{ t('params.offsetX') }}</label>
             <input
               type="number"
               step="0.5"
@@ -1437,7 +1425,7 @@
             />
           </div>
           <div class="input-group">
-            <label>Y</label>
+            <label>{{ t('params.offsetY') }}</label>
             <input
               type="number"
               step="0.5"
