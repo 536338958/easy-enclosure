@@ -11,7 +11,23 @@ const SCREWCLEARANCE = 2;
 const RIDGEWIDTH = 2;
 const FLOOR = 2;
 
-export const flange = (screwDiameter: number) => {
+/**
+ * 挂耳外侧切角角度（°）的取值范围。
+ *
+ * - 下限 45：45° 是标准倒角，再小挂耳几乎不被削减、切角失去意义
+ * - 上限 70：再大挂耳根部剩余截面过薄，且切面会朝螺丝孔方向推进、削弱孔壁
+ *
+ * 超出区间的值一律夹取，UI 与几何两侧共用这组常量。
+ */
+export const WALL_MOUNT_CHAMFER_MIN = 45;
+export const WALL_MOUNT_CHAMFER_MAX = 70;
+export const WALL_MOUNT_CHAMFER_DEFAULT = 60;
+
+export const flange = (
+  screwDiameter: number,
+  chamferAngle: number = WALL_MOUNT_CHAMFER_DEFAULT,
+) => {
+  const angle = Math.min(Math.max(chamferAngle, WALL_MOUNT_CHAMFER_MIN), WALL_MOUNT_CHAMFER_MAX);
   const outerWidth = screwDiameter + SCREWCLEARANCE * 2 + RIDGEWIDTH * 2;
   const innerWidth = screwDiameter + SCREWCLEARANCE * 2;
 
@@ -44,7 +60,11 @@ export const flange = (screwDiameter: number) => {
   return subtract(
     outer,
     translate([RIDGEWIDTH, 0, FLOOR], inner),
-    translate([-outerWidth, 0, outerWidth], rotateY(degToRad(45), cube({ size: outerWidth * 2 }))),
+    // 挂耳外侧切角，角度可配置。rotateY 接受弧度，必须经 degToRad 转换
+    translate(
+      [-outerWidth, 0, outerWidth],
+      rotateY(degToRad(angle), cube({ size: outerWidth * 2 })),
+    ),
     translate([-outerWidth / 2, 0, 0], cylinder({ height: outerWidth, radius: screwDiameter / 2 })),
   );
 };
@@ -59,16 +79,14 @@ export const flanges = (params: Params) => {
 
   const ear =
     params.baseBedChamfer > 0
-      ? chamferSolidBottom(flange(wallMountScrewDiameter), params.baseBedChamfer)
-      : flange(wallMountScrewDiameter);
+      ? chamferSolidBottom(
+          flange(wallMountScrewDiameter, params.wallMountChamferAngle),
+          params.baseBedChamfer,
+        )
+      : flange(wallMountScrewDiameter, params.wallMountChamferAngle);
 
-  const left = yPositions.map((y) =>
-    translate([-RIDGEWIDTH, y, z], ear),
-  );
-  const right = yPositions.map((y) =>
-    translate([width + RIDGEWIDTH, y, z], mirrorX(ear)),
-  );
+  const left = yPositions.map((y) => translate([-RIDGEWIDTH, y, z], ear));
+  const right = yPositions.map((y) => translate([width + RIDGEWIDTH, y, z], mirrorX(ear)));
 
   return union(...left, ...right);
 };
-

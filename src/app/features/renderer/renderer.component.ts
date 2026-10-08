@@ -57,6 +57,7 @@ const lidDeps = [
   'lidScrewRecessType',
   'lidScrewRecessDiameter',
   'lidScrewRecessDepth',
+  'lidScrewOffset',
   'insertThickness',
   'insertHeight',
   'insertClearance',
@@ -91,6 +92,7 @@ const baseDeps = [
   'sealThickness',
   'wallMountScrewDiameter',
   'wallMountCount',
+  'wallMountChamferAngle',
   'insertClearance',
   'snapFit',
   'baseBedChamfer',
@@ -111,6 +113,7 @@ const sealDeps = [
   'lidScrewNutWidth',
   'lidScrewRecessType',
   'lidScrewRecessDiameter',
+  'lidScrewOffset',
   'lidScrews',
 ];
 const mountDeps = [
@@ -157,6 +160,7 @@ const dinRailDeps = [
 ];
 const gridDeps = [
   'showGrid',
+  'showAxes',
   'gridSpacing',
   'length',
   'width',
@@ -525,6 +529,28 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
 
   private roundUpToStep(value: number, step: number): number {
     return Math.max(step, Math.ceil(value / step) * step);
+  }
+
+  /**
+   * 在基座本地原点（角点）画一个 XYZ 坐标轴 gizmo，走渲染器原生的 drawAxis 指令。
+   * 轴长用模型矩阵的等比缩放表示（指令以 size=1 创建）。
+   * X 红 → 左面(+X)，Y 绿 → 前面(+Y)，Z 蓝 → 上(+Z)。
+   * 该实体不带 geometry，因此不参与相机取景。
+   */
+  private buildAxisEntity(params: Params): Entity | null {
+    if (!params.showAxes) {
+      return null;
+    }
+    const axisLength = Math.max(params.width, params.length, params.height) * 0.9;
+    const L = Math.max(axisLength, 1);
+    const [ox, oy, oz] = this.baseOrigin;
+    return {
+      visuals: {
+        drawCmd: 'drawAxis',
+        show: true,
+      },
+      model: [L, 0, 0, 0, 0, L, 0, 0, 0, 0, L, 0, ox, oy, oz, 1],
+    } as unknown as Entity;
   }
 
   private buildTranslationMatrix(x: number, y: number, z: number): number[] {
@@ -997,6 +1023,11 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     const modelBounds = measureBoundingBox(this.model) as [Vec3Tuple, Vec3Tuple];
     const gridEntity = this.buildGridEntity(params, modelBounds);
     const entities: Entity[] = gridEntity ? [gridEntity, ...modelEntities] : modelEntities;
+
+    const axisEntity = this.buildAxisEntity(params);
+    if (axisEntity) {
+      entities.push(axisEntity);
+    }
 
     const pcbEntities = this.buildPcbEntities(params);
     if (pcbEntities.length > 0 && params.showBase) {

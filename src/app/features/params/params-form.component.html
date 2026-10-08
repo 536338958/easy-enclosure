@@ -402,6 +402,21 @@
           </select>
         </div>
 
+        <div class="input-group">
+          <label>{{ t('params.lidScrewOffset') }}</label>
+          <input
+            type="number"
+            min="0"
+            step="0.5"
+            [value]="params().lidScrewOffset"
+            (keydown.enter)="$any($event.target).blur()"
+            (blur)="setNumberParam('lidScrewOffset', $any($event.target).value)"
+          />
+          <p class="hint">
+            {{ t('params.lidScrewOffsetHint', { value: effectiveScrewOffset() }) }}
+          </p>
+        </div>
+
         @if (params().lidScrewHoleType === 'blind') {
           <div class="input-group">
             <label>Base Hole Depth</label>
@@ -1140,6 +1155,26 @@
             (blur)="setNumberParam('wallMountScrewDiameter', $any($event.target).value)"
           />
         </div>
+
+        <div class="input-group">
+          <label>{{ t('params.wallMountChamfer') }}</label>
+          <input
+            type="number"
+            [min]="chamferAngleMin"
+            [max]="chamferAngleMax"
+            step="1"
+            [value]="params().wallMountChamferAngle"
+            (keydown.enter)="$any($event.target).blur()"
+            (blur)="
+              setChamferAngle($any($event.target).value);
+              $any($event.target).value = params().wallMountChamferAngle
+            "
+          />
+          @if (chamferAngleErrorState(); as err) {
+            <p class="hint error">{{ t(err.key, err.vars) }}</p>
+          }
+          <p class="hint">{{ t('params.wallMountChamferHint') }}</p>
+        </div>
       }
     </div>
   </div>
@@ -1317,6 +1352,15 @@
           (change)="setBooleanParam('showGrid', $any($event.target).checked)"
         />
       </div>
+      <div class="input-group checkbox-group">
+        <label>{{ t('params.showAxes') }}</label>
+        <input
+          type="checkbox"
+          [checked]="params().showAxes"
+          (change)="setBooleanParam('showAxes', $any($event.target).checked)"
+        />
+      </div>
+      <p class="input-group-full hint">{{ t('params.showAxesHint') }}</p>
       <div class="input-group input-group-full">
         <label>Grid Spacing</label>
         <input

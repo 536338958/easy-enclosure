@@ -131,6 +131,8 @@ export type Params = {
   showLid: boolean;
   showBase: boolean;
   showGrid: boolean;
+  /** 在基座角点画 XYZ 坐标轴（X 红 / Y 绿 / Z 蓝），用于对照各偏移方向 */
+  showAxes: boolean;
   gridSpacing: number;
   cornerRadius: number;
   holes: Hole[];
@@ -142,6 +144,11 @@ export type Params = {
   wallMounts: boolean;
   wallMountCount: number;
   wallMountScrewDiameter: number;
+  /**
+   * 挂耳外侧切角角度（°），取值 45–70。
+   * 角度越小切掉的实体越多、挂耳越厚实；越大切掉越少、切面越陡。
+   */
+  wallMountChamferAngle: number;
   lidScrews: boolean;
   lidScrewDiameter: number;
   baseLidScrewDiameter: number;
@@ -152,6 +159,11 @@ export type Params = {
   lidScrewRecessType: LidScrewRecessType;
   lidScrewRecessDiameter: number;
   lidScrewRecessDepth: number;
+  /**
+   * 盖板螺丝孔中心距相邻两边的距离（mm）。0 表示自动（沿用既有公式），
+   * 正值按用户给定值，并夹紧到保证螺丝孔与外壁之间留有最小壁厚的区间内。
+   */
+  lidScrewOffset: number;
   dinRailMount: boolean;
   dinRailOrientation: 'horizontal' | 'vertical';
   dinRailMountWidth: number;
@@ -179,6 +191,7 @@ export const DEFAULT_PARAMS: Params = {
   showLid: true,
   showBase: true,
   showGrid: true,
+  showAxes: false,
   gridSpacing: 10,
   cornerRadius: 3,
   holes: [
@@ -277,6 +290,7 @@ export const DEFAULT_PARAMS: Params = {
   wallMounts: true,
   wallMountCount: 4,
   wallMountScrewDiameter: 3.98,
+  wallMountChamferAngle: 60,
   lidScrews: true,
   lidScrewDiameter: 2.98,
   baseLidScrewDiameter: 2.88,
@@ -287,6 +301,7 @@ export const DEFAULT_PARAMS: Params = {
   lidScrewRecessType: 'none',
   lidScrewRecessDiameter: 6.2,
   lidScrewRecessDepth: 3.0,
+  lidScrewOffset: 0,
   dinRailMount: false,
   dinRailOrientation: 'horizontal',
   dinRailMountWidth: 15,

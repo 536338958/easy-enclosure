@@ -14,6 +14,8 @@ import { DEFAULT_CABLE_CLAMP, DEFAULT_VENTILATION } from '../../core/params';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import type { TranslationKey } from '../../core/i18n/translations';
+import { WALL_MOUNT_CHAMFER_MAX, WALL_MOUNT_CHAMFER_MIN } from '../../core/enclosure/wallmount';
+import { getScrewOffset } from '../../core/enclosure/screws';
 
 type Surface = 'top' | 'bottom' | 'left' | 'right' | 'front' | 'back';
 
@@ -40,6 +42,47 @@ export class ParamsFormComponent {
 
   t(key: TranslationKey, vars?: Record<string, string | number>): string {
     return this.i18n.t(key, vars);
+  }
+
+  readonly chamferAngleMin = WALL_MOUNT_CHAMFER_MIN;
+  readonly chamferAngleMax = WALL_MOUNT_CHAMFER_MAX;
+
+  /** 切角角度越界时的提示（null 表示无错误）；模板据此把输入框回退到生效值 */
+  readonly chamferAngleErrorState = signal<{
+    key: TranslationKey;
+    vars: Record<string, string | number>;
+  } | null>(null);
+
+  /** 孔位距边的实际生效值（夹紧之后），用于提示文案里的对照 */
+  effectiveScrewOffset(): number {
+    return Math.round(getScrewOffset(this.params()) * 100) / 100;
+  }
+
+  setChamferAngle(rawValue: string): void {
+    const current = this.params().wallMountChamferAngle;
+    const range = { min: this.chamferAngleMin, max: this.chamferAngleMax };
+
+    if (!rawValue) {
+      this.chamferAngleErrorState.set(null);
+      return;
+    }
+
+    const parsed = parseFloat(rawValue);
+    if (Number.isNaN(parsed)) {
+      this.chamferAngleErrorState.set({ key: 'params.wallMountChamferNotNumber', vars: {} });
+      return;
+    }
+
+    if (parsed < this.chamferAngleMin || parsed > this.chamferAngleMax) {
+      this.chamferAngleErrorState.set({
+        key: 'params.wallMountChamferError',
+        vars: { ...range, current },
+      });
+      return;
+    }
+
+    this.chamferAngleErrorState.set(null);
+    this.state.updateParam('wallMountChamferAngle', parsed);
   }
 
   /** 所在面的名称（跟随当前语言） */
