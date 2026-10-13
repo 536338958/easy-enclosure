@@ -82,11 +82,28 @@ export const screwPostProtrusion = (params: Params): number => {
 };
 
 /**
+ * 嵌入边外表面距外壳外表面的距离（mm）。
+ *
+ * 底壳那边容纳嵌入边的空腔，外边界都在「外壳内缩 wall」处 —— 非防水时是内腔本身，
+ * 防水时是密封圈槽的外壁。嵌入边再往里让 insertClearance，就是这个值。
+ */
+export const insertRimInset = (params: Params): number =>
+  params.wall + params.insertClearance;
+
+/**
  * 盖板嵌入边的外形圆角半径：开盖板螺丝时嵌入边走 clover，其外形由螺丝柱
  * 半径决定；否则是普通圆角矩形。嵌入边顶端倒角必须按这个轮廓来，否则斜面对不上边。
+ *
+ * 圆角矩形这条路径上，半径必须跟着内缩量一起减、圆心保持与外壳同心 ——
+ * 嵌入边是「底壳空腔再内缩 insertClearance」的真等距结果，不是拿 cornerRadius
+ * 重新画一个圆角矩形。否则壁厚一接近/超过 cornerRadius，腔的四角已经塌成尖角，
+ * 嵌入边却还是 cornerRadius 的大圆角，角部间隙会涨到 0.5~0.9mm
+ * （直边只有 insertClearance），装配时对不上。
  */
 export const insertRimRadius = (params: Params): number =>
-  params.lidScrews ? screwPostProtrusion(params) : params.cornerRadius;
+  params.lidScrews
+    ? screwPostProtrusion(params)
+    : Math.max(params.cornerRadius - insertRimInset(params), 0);
 
 /**
  * 螺丝孔中心距相邻两边的距离（mm）。

@@ -36,6 +36,12 @@ export const cavityFloorZ = (params: {
 }): number => (params.lidScrews ? params.floor : innerWallInset(params));
 
 export const roundedCube2d = (l: number, w: number, r = 8, s = 48) => {
+  // 半径为 0（壁厚 ≥ 外形圆角，内缩后圆角塌成尖角）时 hull of zero-radius circles
+  // 会得到退化/空几何，直接退成矩形 —— 这是「内缩到圆角消失」的正确结果。
+  if (r <= 0) {
+    // 注意 center：hull 版占据 [0,l]×[0,w]，rectangle 默认以原点为中心，必须对齐
+    return rectangle({ size: [l, w], center: [l / 2, w / 2] });
+  }
   const c = circle({
     radius: r,
     segments: s,

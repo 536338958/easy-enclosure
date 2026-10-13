@@ -1,9 +1,16 @@
 import { Params } from '../params';
 
-import { cloverFrame } from './utils';
+import { cloverFrame, roundedFrame } from './utils';
 import { screwPostProtrusion } from './screws';
 
 import { translate } from '@jscad/modeling/src/operations/transforms';
+
+/**
+ * 密封圈槽的外形圆角半径（圆角矩形路径用）。
+ * 槽的外边界是「外壳内缩 wall」，圆角半径与圆心都要跟着内缩走。
+ */
+const sealRimRadius = (params: Params): number =>
+  Math.max(params.cornerRadius - params.wall, 0);
 
 export const getSealReliefRadius = (params: Params): number => {
   const { wall, insertThickness, insertClearance } = params;
@@ -32,27 +39,39 @@ export const waterProofSealCutout = (params: Params) => {
     insertClearance,
   } = params;
 
-  const relief = getSealReliefRadius(params);
-  return translate(
-    [wall, wall, height - (insertHeight + sealThickness)],
-    cloverFrame(
-      width - wall * 2,
-      length - wall * 2,
-      insertHeight + sealThickness + insertClearance,
-      insertThickness + insertClearance * 2,
-      relief,
-    ),
-  );
+  // 槽的形状必须与被它容纳的嵌入边同族：开盖板螺丝时嵌入边是 clover，槽也要是
+  // clover（四角绕开螺丝柱）；否则嵌入边是圆角矩形，槽用 clover 会在四角多挖出
+  // 一块没人填的让位缺口。
+  const frame = params.lidScrews
+    ? cloverFrame(
+        width - wall * 2,
+        length - wall * 2,
+        insertHeight + sealThickness + insertClearance,
+        insertThickness + insertClearance * 2,
+        getSealReliefRadius(params),
+      )
+    : roundedFrame(
+        width - wall * 2,
+        length - wall * 2,
+        insertHeight + sealThickness + insertClearance,
+        insertThickness + insertClearance * 2,
+        sealRimRadius(params),
+      );
+  return translate([wall, wall, height - (insertHeight + sealThickness)], frame);
 };
 
 export const waterProofSeal = (params: Params) => {
   const { length, width, wall, sealThickness, insertThickness, insertClearance } = params;
-  const relief = getSealReliefRadius(params);
-  return cloverFrame(
-    width - wall * 2 - insertClearance * 2,
-    length - wall * 2 - insertClearance * 2,
-    sealThickness,
-    insertThickness,
-    relief,
-  );
+  // 密封圈本体是槽外边界内缩 insertClearance，形状族与槽保持一致
+  const l = width - wall * 2 - insertClearance * 2;
+  const w = length - wall * 2 - insertClearance * 2;
+  return params.lidScrews
+    ? cloverFrame(l, w, sealThickness, insertThickness, getSealReliefRadius(params))
+    : roundedFrame(
+        l,
+        w,
+        sealThickness,
+        insertThickness,
+        Math.max(sealRimRadius(params) - insertClearance, 0),
+      );
 };

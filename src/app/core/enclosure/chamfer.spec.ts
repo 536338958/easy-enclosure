@@ -72,9 +72,10 @@ describe('topChamferTool', () => {
   const rimTopZ = params.roof + params.insertHeight;
 
   const build = (c: number, p: Params = params): Geom3 => {
-    // 与 lid.ts 保持一致：轮廓半径取螺丝柱凸出量（insertRimRadius），不是螺丝孔位
+    // 与 lid.ts 保持一致：轮廓半径走 insertRimRadius —— clover 取螺丝柱凸出量，
+    // 圆角矩形取 cornerRadius - (wall + insertClearance)，圆心与外壳同心
     const radius = insertRimRadius(p);
-    const outline = p.lidScrews ? cloverOutline(radius) : roundedOutline(p.cornerRadius);
+    const outline = p.lidScrews ? cloverOutline(radius) : roundedOutline(radius);
     return topChamferTool(l, w, c, rimTopZ, outline);
   };
 
