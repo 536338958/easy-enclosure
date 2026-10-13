@@ -235,55 +235,94 @@ hull 出楔环）代替外接矩形，沿整条底边连续。`chamferSolidBotto
 
 ### 根因
 
-圆角矩形这条嵌入边路径（**关闭盖板螺丝**时走它）上，嵌入边外轮廓是「用 `cornerRadius`
-重新画一个圆角矩形」，而不是「底壳空腔做真等距内缩」：
+本地 `utils.ts` 的 `hollowRoundCube` / `roundedFrame2d` 把「内缩」做成了**真等距**
+（Minkowski offset）：内腔圆角半径取 `max(r - t, 1e-4)`、圆心与外壳同心。上游是
+**同族缩放**：长宽减 `2t`、**圆角半径保持不变**、再平移 `[t, t, t]`。
 
-- 底壳内腔 = 外壳内缩 `_wall`，圆角圆心与外壳同心、半径是 `cornerRadius - _wall`
-  （`hollowRoundCube` 里就是这么写的，圆心不动、半径减 t）
-- 嵌入边却用 `roundedCube2d(l - 2·rim, w - 2·rim, cornerRadius)` 再平移 `rim`
-  → 圆心跟着往里挪了 `rim`、半径一点没减
+| 做法 | 直边壁厚 | 角部壁厚 | 内腔圆角半径 |
+| --- | --- | --- | --- |
+| 真等距（本项目此前） | t | t | `cornerRadius - wall` → wall ≥ 3 时归零 |
+| 同族缩放（上游） | t | `t·√2`（更厚） | 恒为 `cornerRadius` |
 
-直边处两者只差 `insertClearance`，看不出问题；角部就露馅了 —— 实测沿嵌入边轮廓的间隙：
+于是 `wall ≥ cornerRadius`（默认 3）时内腔四角塌成尖角 —— 这就是「弧度消失」。
 
-| 组合 | 修复前 | 修复后 |
+⚠️ 这个真等距是**本项目自己加的**（`2837cbb` 随同步提交带进来，当时没记 CHANGELOG），
+上游 `main` 至今仍是 `roundedCube(l - t*2, w - t*2, h, r)`，半径不减。
+附在旁边的注释「圆角处内外轮廓完全重合、壁厚捏到 0」是算错了：两个半径同为 `r` 的
+圆弧圆心相距 `(t, t)`，沿 45° 方向量壁厚是 `t·√2 ≈ 1.41t`，**比直边更厚**，不会捏到 0。
+
+### 第一次修法（已作废）
+
+上一版把嵌入边也改成真等距（`rim` 半径 = `cornerRadius - (wall + insertClearance)`），
+间隙确实处处回到 0.04mm，代价是嵌入边的四个角随壁厚退化成直角 —— 不优雅，改用
+阶段 10 的做法。
+
+## 阶段 10 · 按上游「同族缩放」语义重做装配关系
+
+### 上游是怎么实现装配的
+
+四级同族缩放，每级都只缩长宽、**不缩圆角半径**：
+
+1. **底壳内腔** = 外壳内缩 `wall`（防水时 `_wall = 2·wall + 2·insertClearance + insertThickness`）。
+   开盖板螺丝走 `clover(…, screwOffset)`，关螺丝走 `hollowRoundCube(…, cornerRadius)`
+2. **盖板嵌入边** = 内腔再内缩 `insertClearance`，形状族与半径**跟内腔取同一个值**
+   （clover 取螺丝柱凸出量 / 圆角矩形取 `cornerRadius`）
+3. **防水时**：密封圈槽 = 外壳内缩 `wall`，槽宽 `insertThickness + 2·insertClearance`；
+   嵌入边落在槽里，槽与密封圈本体同族
+4. **导入倒角**：嵌入边顶端 `lidTopChamfer` 用嵌入边自身的外轮廓构造楔环（`topChamferTool`
+   的剪切求交，能保住 clover 的凹弧）
+
+结果 —— 直边间隙 = `insertClearance`、角部间隙 = `insertClearance·√2`，**处处为正且与
+壁厚无关**，圆角永不退化。解析对比（外壳 100×80，cornerRadius=3，insertClearance=0.04）：
+
+| wall | 真等距：腔角R | 边角R | 间隙 | 同族缩放：腔角R | 边角R | 间隙 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 2.00 | 1.96 | 0.040 | 3.00 | 3.00 | 0.040~0.057 |
+| 3 | 0.00 | 0.00 | 0.040 | 3.00 | 3.00 | 0.040~0.057 |
+| 6 | 0.00 | 0.00 | 0.040 | 3.00 | 3.00 | 0.040~0.057 |
+
+代价只是圆角处壁厚比直边厚 41%，对 3D 打印无害。
+
+### 上游有没有考虑装配余量
+
+考虑了，四处：
+
+| 余量 | 位置 | 默认值 |
 | --- | --- | --- |
-| 盖螺丝关 / 非防水 wall=1 | 0.040 ~ 0.470mm | 0.040 ~ 0.040mm |
-| 盖螺丝关 / 非防水 wall=3 | 0.040 ~ 0.919mm | 0.040 ~ 0.040mm |
-| 盖螺丝关 / 防水 wall=1~5 | 0.040 ~ 0.056mm | 0.040 ~ 0.040mm |
+| `insertClearance` | 嵌入边 ↔ 腔壁（X/Y 双向，角部实际是 ×√2） | 0.04mm |
+| `snapFit.clearance` | 卡扣凸珠 ↔ 凹槽：长宽各 `+clr·2`、深度 `depth + clr`、穿透再 `+0.5` | 参数 |
+| `lidTopChamfer` | 嵌入边顶端导入倒角，钳制在 `≤ 0.9·insertHeight` 与 `≤ 0.8·insertThickness` | 0.4mm |
+| `screws()` 的 `tolerance` | **只在孔长方向**（通孔两端各留 0.2 保证打穿）；径向**没有**余量，孔径就是用户填的直径 | 0.2mm |
 
-壁厚 ≥ `cornerRadius`（默认 3）时 `cornerRadius - _wall` 被夹到 0，内腔四角彻底塌成
-尖角 —— 这就是「弧度消失」，而嵌入边仍是 3mm 圆角，于是怎么都对不上。
+Z 方向：盖板板底与底壳顶面是**面接触**，没有垂直余量（靠螺丝/卡扣压紧）。防水时槽深
+`insertHeight + sealThickness + insertClearance`，多出的 `insertClearance` 是垂直余量。
+
+### 上游的一处真 bug（本项目保留修正）
+
+防水 + **关闭**盖板螺丝：上游的槽恒为 clover（四角留实体给螺丝柱），但关螺丝时嵌入边是
+圆角矩形、角上有料 → 直接撞上。实测 3D 干涉 **370mm³**（与壁厚无关）。所以本项目保留
+「槽与嵌入边同族」这条修正，只是半径改按同族语义取 `cornerRadius`（此前取的是
+`cornerRadius - wall`，还是真等距思路）。
 
 ### 改动
 
-- `screws.ts` —— 新增 `insertRimInset()`（= `wall + insertClearance`，嵌入边外表面距外壳
-  外表面的距离，防水时对应密封圈槽外壁、非防水时对应内腔壁，两者都在 `wall` 处）；
-  `insertRimRadius()` 在圆角矩形路径上改为 `max(cornerRadius - inset, 0)`
-- `lid.ts` —— 嵌入边外轮廓改用上面两个量；嵌入边顶端倒角的轮廓同步（原来也是裸
-  `cornerRadius`，与嵌入边外形对不上）
-- `waterproofseal.ts` —— 密封圈槽与密封圈本体按 `lidScrews` 选形状族：开螺丝时是
-  clover（四角绕开螺丝柱），关螺丝时改成圆角矩形。此前**无论有没有螺丝都用 clover**，
-  关闭螺丝时槽在四角凭空多挖一块让位缺口，而嵌入边是没缺口的圆角矩形
-- `utils.ts` —— `roundedCube2d` 在 `r ≤ 0` 时退成矩形。原来会拿零半径圆去 `hull`，
-  得到退化/空几何（下游 `sides` 为空，探针直接崩）。注意 `rectangle` 默认以原点为中心，
-  必须显式给 `center: [l/2, w/2]` 才能与 hull 版的 `[0,l]×[0,w]` 对齐
+- `utils.ts` —— `hollowRoundCube` / `roundedFrame2d` 恢复同族缩放（半径不减），注释写清
+  为什么不能再改回真等距；`roundedCube2d` 保留 `r ≤ 0` 退成矩形的兜底
+- `screws.ts` —— `insertRimRadius()` 圆角矩形路径改回 `cornerRadius`
+  （此前是 `cornerRadius - (wall + insertClearance)`）
+- `lid.ts` —— 嵌入边外轮廓与顶端倒角轮廓跟随（两者必须同源）
+- `waterproofseal.ts` —— 槽/密封圈按 `lidScrews` 选形状族，半径走 `insertRimRadius`；
+  修掉上面那条 370mm³ 干涉
+- `chamfer.spec.ts` —— 注释同步
 
 ### 验证
 
-新增 `verify-lid-fit.cjs`（`npm run verify:lid-fit`，已并入 `npm run verify`）：
+`verify-lid-fit.cjs` 判据重写为四条（`npm run verify:lid-fit`，已并入 `npm run verify`）：
 
-1. 沿嵌入边外轮廓采样，量到「底壳容纳腔轮廓」的有符号距离 —— 不许为负（干涉）、
-   最大值不许超过 `insertClearance + 0.05`（角部松一大截）
-2. 3D 装配干涉：盖板按实际姿态（嵌入边朝下、倒扣装入）镜像抬到底壳顶面后，
-   与底壳的相交体积必须 < 0.05mm³
+1. 嵌入边外轮廓到容纳腔外轮廓的有符号距离 ∈ `(0, insertClearance·√2 + 0.02]`
+   —— 不许干涉，也不许两条轮廓不同源
+2. 底壳容纳腔的角部圆弧半径必须等于 `cornerRadius`（wall 1~6）—— 抓「弧度消失」
+3. 防水时嵌入边内表面不许啃进槽内侧那道实体墙
+4. 3D 装配干涉（盖板倒扣装入）体积 < 0.05mm³
 
-覆盖 4 种组合（盖板螺丝 × 防水）× 壁厚 1/1.5/2/3/4/5/6，共 28 条 + 5 条 3D 干涉。
-
-已知边界：`wall < ~0.92` 时防水槽的让位半径会被「不得啃进内腔」的钳制压到小于螺丝柱
-凸出量，槽与嵌入边不同源。参数面板里 `wall` 的 `min` 是 1，UI 上不可达；要根治得让
-凸出量本身跟着钳制，那会动到默认产物，暂不处理。
-
-### 配套
-
-- `chamfer.spec.ts` 的轮廓构造与 `lid.ts` 对齐（原来用裸 `cornerRadius`）
-- `utils.spec.ts` 新增「半径为 0 时退成规整矩形」用例
+共 28 + 6 + 12 + 12 = 58 条，全过；`npm run verify` 三项与 `npm run build` 均通过。

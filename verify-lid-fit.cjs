@@ -1,14 +1,22 @@
-// 验证：盖板嵌入边能否装进底壳 —— 干涉与间隙均匀性
+// 验证：盖板嵌入边能否装进底壳 —— 干涉、间隙、以及角部弧度不退化
 //
-// 背景（本次小版本修的 bug）：圆角矩形这条嵌入边路径上，外轮廓的圆角半径原来直接用
-// cornerRadius、圆心还跟着 rim 往里挪，等于拿一个新圆角矩形当嵌入边，而不是把底壳
-// 空腔做真等距内缩。壁厚一旦接近/超过 cornerRadius，底壳内腔四角的圆角已经塌成尖角
-// （hollowRoundCube 里是 max(r - t, …)），嵌入边却还是大圆角，角部间隙从
-// insertClearance 涨到 0.5~0.9mm，装配时明显对不上。
+// 装配关系（上游原版的设计，本项目同步）：
+//   底壳内腔  = 外壳「同族缩放」：长宽减 2·wall，圆角半径**保持不变**
+//   嵌入边外廓 = 内腔「同族缩放」：长宽再减 2·insertClearance，半径仍保持不变
 //
-// 判据两条：
-//   1. 沿嵌入边外轮廓采样，到「底壳容纳腔轮廓」的有符号距离必须处处为正（不干涉）
-//   2. 间隙最大值不许显著超过 insertClearance（否则角部会松一大截）
+// 于是直边间隙 = insertClearance、角部间隙 = insertClearance·√2，处处为正，
+// 且**与壁厚无关** —— 这是判据 1、2 的来源。
+//
+// 反面教材：若把内缩做成真等距（内外同心、半径 r - t），壁厚 ≥ cornerRadius 时
+// 内腔圆角会被吃成 0、四角塌成尖角（判据 3 抓这个），嵌入边不同步退化就装不进去，
+// 同步退化则嵌入边也变成直角 —— 两头都不对，别再改回去。
+//
+// 判据四条：
+//   1. 沿嵌入边外轮廓采样，到「底壳容纳腔外轮廓」的有符号距离必须处处为正（不干涉）
+//   2. 间隙不超过 insertClearance·√2 + 容差（角部按设计就该是这个值，再大就说明
+//      两条轮廓不同源了）
+//   3. 底壳容纳腔的角部圆弧半径必须等于 cornerRadius —— 不随壁厚衰减
+//   4. 防水时还要查内圈：嵌入边的内表面不许啃进槽内侧的那道实体墙
 const load = (p) => {
   const m = require(p);
   return m && m.default ? m.default : m;
@@ -64,24 +72,49 @@ const signedDist = (sides, px, py) => {
   return inside(sides, px, py) ? d : -d;
 };
 
-// 底壳侧：嵌入边要插进去的那个空腔。防水时是密封圈槽（外边界在 wall），
-// 非防水时是内腔本身（外边界也在 wall，因为 _wall = wall）。
-const cavitySides = (p) => {
-  const { width: W, length: L, wall } = p;
-  if (p.waterProof) {
-    const relief = getSealReliefRadius(p);
-    const outer = p.lidScrews
-      ? clover2d(W - wall * 2, L - wall * 2, relief)
-      : roundedCube2d(W - wall * 2, L - wall * 2, Math.max(p.cornerRadius - wall, 0));
-    return shift(sidesOf(outer), wall, wall);
+const verticesOf = (sides) => {
+  const pts = [];
+  sides.forEach(([a, b]) => {
+    pts.push(a);
+    pts.push([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
+  });
+  return pts;
+};
+
+// 从矩形尖角点沿 45° 方向量到边界的距离 → 反推圆角半径 R = d / (√2 - 1)
+const cornerRadiusOf = (sides, cx, cy) => {
+  const step = 0.002;
+  for (let t = 0; t < 60; t += step) {
+    const x = cx + t * Math.SQRT1_2;
+    const y = cy + t * Math.SQRT1_2;
+    if (inside(sides, x, y)) {
+      return Math.hypot(x - cx, y - cy) / (Math.SQRT2 - 1);
+    }
   }
+  return NaN;
+};
+
+// 底壳侧：嵌入边要插进去的那个空腔的外边界。
+// 防水时是密封圈槽（外边界在 wall），非防水时是内腔本身（外边界也在 wall）。
+const cavityOuterSides = (p) => {
+  const { width: W, length: L, wall } = p;
   const outer = p.lidScrews
     ? clover2d(W - wall * 2, L - wall * 2, screwPostProtrusion(p))
-    : roundedCube2d(W - wall * 2, L - wall * 2, Math.max(p.cornerRadius - wall, 0));
+    : roundedCube2d(W - wall * 2, L - wall * 2, p.cornerRadius);
   return shift(sidesOf(outer), wall, wall);
 };
 
-const insertSides = (p) => {
+// 防水槽的内边界 —— 它内侧还有一道 wall 厚的实体墙，嵌入边不许啃进去
+const grooveInnerSides = (p) => {
+  const { width: W, length: L, wall, insertThickness, insertClearance } = p;
+  const tg = insertThickness + insertClearance * 2;
+  const inner = p.lidScrews
+    ? clover2d(W - wall * 2 - tg * 2, L - wall * 2 - tg * 2, getSealReliefRadius(p))
+    : roundedCube2d(W - wall * 2 - tg * 2, L - wall * 2 - tg * 2, insertRimRadius(p));
+  return shift(sidesOf(inner), wall + tg, wall + tg);
+};
+
+const insertOuterSides = (p) => {
   const { width: W, length: L } = p;
   const rim = p.wall + p.insertClearance;
   const outer = p.lidScrews
@@ -90,14 +123,20 @@ const insertSides = (p) => {
   return shift(sidesOf(outer), rim, rim);
 };
 
+// 嵌入边的内表面（外表面再内缩一个 insertThickness，与 roundedFrame/cloverFrame 一致）
+const insertInnerSides = (p) => {
+  const { width: W, length: L, insertThickness } = p;
+  const rim = p.wall + p.insertClearance + insertThickness;
+  const r = insertRimRadius(p);
+  const inner = p.lidScrews
+    ? clover2d(W - rim * 2, L - rim * 2, r)
+    : roundedCube2d(W - rim * 2, L - rim * 2, r);
+  return shift(sidesOf(inner), rim, rim);
+};
+
 const gapRange = (p) => {
-  const cav = cavitySides(p);
-  const ins = insertSides(p);
-  const pts = [];
-  ins.forEach(([a, b]) => {
-    pts.push(a);
-    pts.push([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
-  });
+  const cav = cavityOuterSides(p);
+  const pts = verticesOf(insertOuterSides(p));
   let min = Infinity;
   let max = -Infinity;
   for (const [x, y] of pts) {
@@ -124,44 +163,72 @@ const quiet = (over) => {
   return p;
 };
 
-console.log('\n=== 嵌入边 / 底壳空腔的装配间隙（目标 = insertClearance） ===');
 const ic = DEFAULT_PARAMS.insertClearance;
+const maxGap = ic * Math.SQRT2; // 角部按设计就该是这个值
+
+console.log('\n=== 嵌入边 / 底壳空腔的装配间隙（直边 = insertClearance，角部 = ×√2） ===');
+console.log(`目标区间 0 ~ ${maxGap.toFixed(3)}mm`);
 for (const lidScrews of [true, false]) {
   for (const waterProof of [true, false]) {
     const label = `盖螺丝=${lidScrews ? '开' : '关'} 防水=${waterProof ? '开' : '关'}`;
     // 1 起 —— 参数面板里 wall 的 min 是 1，更小的取值 UI 上不可达。
-// 已知边界：wall < ~0.92 时防水槽的让位半径会被「不得啃进内腔」的钳制压到小于
-// 螺丝柱凸出量，槽与嵌入边就不同源了（角部间隙会涨到 1mm 量级）。要真正解决得让
-// 凸出量本身跟着钳制，那会改默认产物，留待后续。
-for (const wall of [1, 1.5, 2, 3, 4, 5, 6]) {
+    for (const wall of [1, 1.5, 2, 3, 4, 5, 6]) {
       const p = quiet({ lidScrews, waterProof, wall });
       const { min, max } = gapRange(p);
-      const ok = min > -1e-6 && max <= ic + 0.05;
+      const ok = min > -1e-6 && max <= maxGap + 0.02;
       check(
         `${label} wall=${wall} 间隙 ${min.toFixed(3)}~${max.toFixed(3)}mm`,
         ok,
-        ok ? undefined : min <= -1e-6 ? '干涉' : '角部间隙过大',
+        ok ? undefined : min <= -1e-6 ? '干涉' : '角部间隙过大（两条轮廓不同源）',
       );
     }
   }
 }
 
-console.log('\n=== 3D 装配干涉（盖板倒扣装入底壳后的相交体积） ===');
-for (const c of [
-  { wall: 1, waterProof: true, lidScrews: true },
-  { wall: 5, waterProof: true, lidScrews: true },
-  { wall: 1, waterProof: false, lidScrews: false },
-  { wall: 5, waterProof: false, lidScrews: false },
-  { wall: 5, waterProof: true, lidScrews: false },
-]) {
-  const p = quiet(c);
-  const solid = intersect(base(p), assembleLid(p, lid(p)));
-  const vol = Math.abs(measureVolume(solid));
+console.log('\n=== 底壳空腔角部圆弧半径（应恒为 cornerRadius，不随壁厚衰减） ===');
+for (const wall of [1, 2, 3, 4, 5, 6]) {
+  const p = quiet({ lidScrews: false, waterProof: false, wall });
+  const r = cornerRadiusOf(cavityOuterSides(p), wall, wall);
+  const ok = Math.abs(r - p.cornerRadius) < 0.05;
   check(
-    `wall=${c.wall} 防水=${c.waterProof ? '开' : '关'} 盖螺丝=${c.lidScrews ? '开' : '关'}` +
-      ` 干涉体积 ${vol.toFixed(3)}mm³`,
-    vol < 0.05,
+    `wall=${wall} 腔角半径 ${r.toFixed(3)}mm（期望 ${p.cornerRadius}）`,
+    ok,
+    ok ? undefined : '角部弧度被壁厚吃掉了',
   );
+}
+
+console.log('\n=== 防水槽内侧：嵌入边内表面不许啃进槽内侧的实体墙 ===');
+for (const lidScrews of [true, false]) {
+  for (const wall of [1, 2, 3, 4, 5, 6]) {
+    const p = quiet({ lidScrews, waterProof: true, wall });
+    const inner = grooveInnerSides(p);
+    let min = Infinity;
+    for (const [x, y] of verticesOf(insertInnerSides(p))) {
+      // 正值 = 在实体墙之外（安全），负值 = 啃进去了
+      min = Math.min(min, -signedDist(inner, x, y));
+    }
+    check(
+      `盖螺丝=${lidScrews ? '开' : '关'} wall=${wall} 余量 ${min.toFixed(3)}mm`,
+      min > -1e-6,
+      min > -1e-6 ? undefined : '啃进槽内侧实体墙',
+    );
+  }
+}
+
+console.log('\n=== 3D 装配干涉（盖板倒扣装入底壳后的相交体积） ===');
+for (const lidScrews of [true, false]) {
+  for (const waterProof of [true, false]) {
+    for (const wall of [1, 3, 5]) {
+      const p = quiet({ lidScrews, waterProof, wall });
+      const solid = intersect(base(p), assembleLid(p, lid(p)));
+      const vol = Math.abs(measureVolume(solid));
+      check(
+        `wall=${wall} 防水=${waterProof ? '开' : '关'} 盖螺丝=${lidScrews ? '开' : '关'}` +
+          ` 干涉体积 ${vol.toFixed(3)}mm³`,
+        vol < 0.05,
+      );
+    }
+  }
 }
 
 console.log(failures === 0 ? '\n全部通过\n' : `\n失败 ${failures} 项\n`);

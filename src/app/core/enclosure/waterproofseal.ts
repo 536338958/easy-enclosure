@@ -1,16 +1,9 @@
 import { Params } from '../params';
 
 import { cloverFrame, roundedFrame } from './utils';
-import { screwPostProtrusion } from './screws';
+import { insertRimRadius, screwPostProtrusion } from './screws';
 
 import { translate } from '@jscad/modeling/src/operations/transforms';
-
-/**
- * 密封圈槽的外形圆角半径（圆角矩形路径用）。
- * 槽的外边界是「外壳内缩 wall」，圆角半径与圆心都要跟着内缩走。
- */
-const sealRimRadius = (params: Params): number =>
-  Math.max(params.cornerRadius - params.wall, 0);
 
 export const getSealReliefRadius = (params: Params): number => {
   const { wall, insertThickness, insertClearance } = params;
@@ -39,9 +32,12 @@ export const waterProofSealCutout = (params: Params) => {
     insertClearance,
   } = params;
 
-  // 槽的形状必须与被它容纳的嵌入边同族：开盖板螺丝时嵌入边是 clover，槽也要是
-  // clover（四角绕开螺丝柱）；否则嵌入边是圆角矩形，槽用 clover 会在四角多挖出
-  // 一块没人填的让位缺口。
+  // ⚠️ 对上游的**有意偏离**：上游的槽恒为 clover（四角让位给螺丝柱，角上留实体）。
+  // 但关闭盖板螺丝时嵌入边是圆角矩形、四角是有料的 —— 角上那块实体会跟嵌入边的
+  // 角撞上（实测干涉体积 370mm³，与壁厚无关）。所以槽必须与嵌入边同族：
+  // 开螺丝 → clover，关螺丝 → 圆角矩形。
+  // 半径走 insertRimRadius：clover 取螺丝柱凸出量，圆角矩形取 cornerRadius，
+  // 与内腔/嵌入边同源，角上间隙才处处为 insertClearance。
   const frame = params.lidScrews
     ? cloverFrame(
         width - wall * 2,
@@ -55,23 +51,17 @@ export const waterProofSealCutout = (params: Params) => {
         length - wall * 2,
         insertHeight + sealThickness + insertClearance,
         insertThickness + insertClearance * 2,
-        sealRimRadius(params),
+        insertRimRadius(params),
       );
   return translate([wall, wall, height - (insertHeight + sealThickness)], frame);
 };
 
 export const waterProofSeal = (params: Params) => {
   const { length, width, wall, sealThickness, insertThickness, insertClearance } = params;
-  // 密封圈本体是槽外边界内缩 insertClearance，形状族与槽保持一致
+  // 密封圈本体 = 槽外边界内缩 insertClearance，形状族与槽保持一致（同上）
   const l = width - wall * 2 - insertClearance * 2;
   const w = length - wall * 2 - insertClearance * 2;
   return params.lidScrews
     ? cloverFrame(l, w, sealThickness, insertThickness, getSealReliefRadius(params))
-    : roundedFrame(
-        l,
-        w,
-        sealThickness,
-        insertThickness,
-        Math.max(sealRimRadius(params) - insertClearance, 0),
-      );
+    : roundedFrame(l, w, sealThickness, insertThickness, insertRimRadius(params));
 };

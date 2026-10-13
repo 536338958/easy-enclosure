@@ -35,9 +35,11 @@ export const cavityFloorZ = (params: {
   floor: number;
 }): number => (params.lidScrews ? params.floor : innerWallInset(params));
 
+/**
+ * 半径为 0 时 hull of zero-radius circles 会得到退化/空几何，直接退成矩形。
+ * 上游原版内缩时圆角半径恒不衰减，正常走不到这里；保留作兜底（cornerRadius 取极小值时）。
+ */
 export const roundedCube2d = (l: number, w: number, r = 8, s = 48) => {
-  // 半径为 0（壁厚 ≥ 外形圆角，内缩后圆角塌成尖角）时 hull of zero-radius circles
-  // 会得到退化/空几何，直接退成矩形 —— 这是「内缩到圆角消失」的正确结果。
   if (r <= 0) {
     // 注意 center：hull 版占据 [0,l]×[0,w]，rectangle 默认以原点为中心，必须对齐
     return rectangle({ size: [l, w], center: [l / 2, w / 2] });
@@ -59,15 +61,13 @@ export const roundedCube = (l: number, w: number, h: number, r = 8, s = 48) => {
   return extrudeLinear({ height: h }, roundedCube2d(l, w, r, s));
 };
 
+/**
+ * ⚠️ 这里是「同族缩放」，不是真等距（Minkowski）偏移 —— 与内腔/嵌入边的装配关系
+ * 直接相关，改动前先看 hollowRoundCube 的注释。
+ */
 export const roundedFrame2d = (l: number, w: number, t: number, r = 8, s = 48) => {
   const outer = roundedCube2d(l, w, r, s);
-  // 内轮廓必须是外轮廓的真等距偏移（offset）。roundedCube2d 的圆角圆心在 (r, r)、
-  // 半径 r；等距内缩 t 后圆角圆心应不变、半径变为 r - t。旧写法
-  //   roundedCube2d(l - 2t, w - 2t, r) 再 translate([t, t], …)
-  // 让圆角半径保持 r、圆心又平移回 (r, r)，导致圆角处内外轮廓**完全重合**（壁厚捏到
-  // 0，即渲染/导出模型上的毛糙薄壁），直边处壁厚才是 t。正确做法是圆角半径也减 t
-  // （退化为 0 时用极小值保持几何合法）。
-  const inner = roundedCube2d(l - t * 2, w - t * 2, Math.max(r - t, 1e-4), s);
+  const inner = roundedCube2d(l - t * 2, w - t * 2, r, s);
   return subtract(outer, translate([t, t], inner));
 };
 
@@ -75,10 +75,27 @@ export const roundedFrame = (l: number, w: number, h: number, t: number, r = 8, 
   return extrudeLinear({ height: h }, roundedFrame2d(l, w, t, r, s));
 };
 
+/**
+ * 挖腔：**同族缩放**，不是真等距偏移。
+ *
+ * 内腔 = 外轮廓长宽各减 2t、圆角半径**保持不变**，再平移 [t, t, t]。
+ * 于是：直边处壁厚 = t；圆角处内外两个圆弧半径同为 r、圆心相距 (t, t)，
+ * 沿 45° 方向量壁厚 = t·√2（角上更厚，不是更薄）。
+ *
+ * 这个「半径不衰减」不是偷懒，是装配关系的根基 —— 盖板嵌入边是同一个族的
+ * 「长宽减 2·(wall + insertClearance)、半径同样不变」的副本，于是：
+ *
+ *   直边间隙 = insertClearance，角部间隙 = insertClearance·√2
+ *
+ * 间隙恒为正、圆角恒不消失，**与壁厚取值无关**。若改成真等距（内外同心、
+ * 半径 r - t），壁厚 ≥ cornerRadius 时内腔圆角会被吃成 0、四角塌成尖角，
+ * 而嵌入边若不同步退化就装不进去，同步退化则嵌入边也变成直角 —— 两头都不对。
+ *
+ * 代价只是圆角处壁厚比直边厚 41%，对 3D 打印完全无害。
+ */
 export const hollowRoundCube = (l: number, w: number, h: number, t: number, r = 8, s = 48) => {
   const outer = roundedCube(l, w, h, r, s);
-  // 同 roundedFrame2d：内腔圆角半径也要减 t，否则圆角处内外轮廓不同心、壁厚捏到 0。
-  const inner = roundedCube(l - t * 2, w - t * 2, h, Math.max(r - t, 1e-4), s);
+  const inner = roundedCube(l - t * 2, w - t * 2, h, r, s);
   return subtract(outer, translate([t, t, t], inner));
 };
 

@@ -91,19 +91,22 @@ export const insertRimInset = (params: Params): number =>
   params.wall + params.insertClearance;
 
 /**
- * 盖板嵌入边的外形圆角半径：开盖板螺丝时嵌入边走 clover，其外形由螺丝柱
- * 半径决定；否则是普通圆角矩形。嵌入边顶端倒角必须按这个轮廓来，否则斜面对不上边。
+ * 盖板嵌入边的「形状半径」—— 与底壳内腔取同一个族、同一个半径值。
  *
- * 圆角矩形这条路径上，半径必须跟着内缩量一起减、圆心保持与外壳同心 ——
- * 嵌入边是「底壳空腔再内缩 insertClearance」的真等距结果，不是拿 cornerRadius
- * 重新画一个圆角矩形。否则壁厚一接近/超过 cornerRadius，腔的四角已经塌成尖角，
- * 嵌入边却还是 cornerRadius 的大圆角，角部间隙会涨到 0.5~0.9mm
- * （直边只有 insertClearance），装配时对不上。
+ * 开盖板螺丝：嵌入边走 clover，四角让位缺口的形状由螺丝柱凸出量决定，
+ *   底壳内腔同样是 clover(postProtrusion)，两者同源。
+ * 不开盖板螺丝：嵌入边是圆角矩形，半径就是 cornerRadius，与底壳内腔
+ *   （hollowRoundCube → 内腔圆角半径也是 cornerRadius）**完全一致**。
+ *
+ * 嵌入边 = 内腔的「同族缩放」副本：长宽各减 2·insertClearance、半径不变。
+ * 所以直边间隙 = insertClearance、角部间隙 = insertClearance·√2，处处为正
+ * 且圆角不随壁厚退化。嵌入边顶端倒角也必须按这个半径构造，否则斜面对不上边。
+ *
+ * ⚠️ 不要在这里减 wall / insertRimInset —— 那是真等距思路，会让嵌入边随壁厚
+ * 退化成直角（详见 utils.ts 里 hollowRoundCube 的注释）。
  */
 export const insertRimRadius = (params: Params): number =>
-  params.lidScrews
-    ? screwPostProtrusion(params)
-    : Math.max(params.cornerRadius - insertRimInset(params), 0);
+  params.lidScrews ? screwPostProtrusion(params) : params.cornerRadius;
 
 /**
  * 螺丝孔中心距相邻两边的距离（mm）。

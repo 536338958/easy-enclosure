@@ -71,10 +71,9 @@ export const lid = (params: Params) => {
       }
     }
   } else {
-    // 嵌入边外轮廓 = 底壳空腔的真等距内缩：长宽减 2×(wall+insertClearance)，
-    // 圆角半径同样要减这么多（圆心与外壳保持同心）。用裸 cornerRadius 的话，
-    // 壁厚接近/超过 cornerRadius 时腔角已塌成尖角、嵌入边却是大圆角，
-    // 角部间隙会从 insertClearance 涨到 0.5~0.9mm。
+    // 嵌入边外轮廓 = 底壳内腔的「同族缩放」副本：长宽减 2×insertRimInset，
+    // 圆角半径与内腔**取同一个值**（cornerRadius，不随壁厚衰减）。
+    // 直边间隙 = insertClearance、角部间隙 = insertClearance·√2，处处为正。
     const rimInset = insertRimInset(params);
     const rimRadius = insertRimRadius(params);
     entities.push(
@@ -121,8 +120,8 @@ export const lid = (params: Params) => {
     const rimTopZ = roof + insertHeight;
     // 轮廓必须跟嵌入边自身的形状一致：开盖板螺丝时嵌入边走 clover，四角被螺丝柱
     // 让位缺口切掉好几毫米，若按圆角矩形做楔环，角上会切在实体之外、倒角断成四段
-    // 两种族共用 insertRimRadius：clover 取螺丝柱凸出量，圆角矩形取
-    // cornerRadius - rimInset（圆心与外壳同心，壁厚吃掉多少就减多少）
+    // 两种族共用 insertRimRadius：clover 取螺丝柱凸出量，圆角矩形取 cornerRadius
+    // —— 都跟底壳内腔同族同半径，倒角斜面才贴得住嵌入边的外立面
     const rimRadius = insertRimRadius(params);
     const outline = params.lidScrews ? cloverOutline(rimRadius) : roundedOutline(rimRadius);
     // 让切割体的外立面与嵌入边的外表面错开一点点，避免两者严格共面时 JSCAD 的布尔
