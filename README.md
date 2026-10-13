@@ -1,174 +1,230 @@
-# Easy Enclosure
+# Easy Enclosure（中文化增强版）
 
 ![](public/screenshot.png)
 
-EasyEnclosure is an open-source 3D modeling software tailored specifically for designing 3D-printable enclosures. It aims to provide an intuitive interface and a set of user-friendly controls that allow even those with little or no 3D modeling experience to create custom enclosures for their electronic projects, prototypes, or DIY gadgets.
+Easy Enclosure 是一款专为 **3D 打印外壳**设计的开源参数化建模工具。界面直观、参数即调即见，
+即使没有任何三维建模经验，也能为自己的电子项目、原型或 DIY 小玩意生成可直接打印的外壳。
 
-### **[Try it online now](https://bruceborrett.github.io/easy-enclosure/)**
+本仓库是 [bruceborrett/easy-enclosure](https://github.com/bruceborrett/easy-enclosure) 的
+**中文化增强分支**：基座取自上游 `main`，再逐项叠加中文界面与几何增强，保持可以持续合并上游改进。
 
-## Key Features
+### **[在线试用](https://536338958.github.io/easy-enclosure/)**
 
-- User-Friendly Interface
-- Real-Time 3D Preview
-- Export to STL (Mesh) and STEP (Solid CAD) Formats
-- Parametric Snap-Fit Clippable Lids (screwless assembly)
-- High-strength PCB standoffs with automatic proportional root fillets
-- Internal cable clamps with ribbed strain-relief grip and matching printable straps
-- Save and load parameter presets as JSON
+## 相对上游的改动
 
-## Export Formats
+### 中英双语界面
 
-EasyEnclosure supports multiple 3D exchange formats with single-file download and multi-part ZIP bundling:
+上游没有任何 i18n，本分支从零搭了一套：
 
-- **STL (Mesh)**: Triangulated surface mesh for 3D printing slicers (Cura, PrusaSlicer, Bambu Studio, OrcaSlicer).
-- **STEP (Solid CAD)**: Standard ISO-10303-21 (AP214) faceted boundary representation for CAD modeling and assembly interoperability (FreeCAD, Autodesk Fusion 360, SolidWorks, Onshape).
+- 界面语言可切换：**跟随系统 / 中文 / English**，选择持久化到 localStorage
+- 词条表是 TypeScript **联合类型**，模板里写错键会在 `ng build` 的模板类型检查阶段
+  直接编译失败，漏翻无处藏身
+- 插值用 `{name}` 占位符，缺变量时原样保留，便于发现漏传
 
-Exports can include the complete enclosure assembly or selected components (base, lid, waterproof TPU seal, PCB mounting standoffs, DIN rail clips, and cable clamp straps). An extensible export registry (`ExportFormatService`) enables adding additional formats (such as 3MF or OBJ) in the future.
+### 散热通风槽（上游没有的概念）
 
-## Technology Stack
+外壳六个面（顶 / 底 / 前 / 后 / 左 / 右）都可以单独开通风结构，四种样式可选：
 
-TypeScript, Angular, JSCAD
+| 样式 | 说明 |
+|---|---|
+| 圆角长槽 | 两圆柱 `hull` 出来的长圆孔，散热面积最大 |
+| 圆孔阵列 | 规则网格排布 |
+| 方孔阵列 | 规则网格排布 |
+| **六边形蜂窝** | 正六棱柱孔的蜂窝排布，同面积下开孔率最高、结构最匀称 |
 
-## Development
+孔径、间距、行列数、边距均可调；墙面通风槽沿厚度方向穿透，并与墙面网格行数参数联动。
 
-### Prerequisites
+### 参数级特性
+
+- **显示坐标轴**（`showAxes`）：视口里叠加三轴指示
+- **挂耳切角角度**：上游写死 45°，本分支开放为参数（默认 60°）
+- **螺丝孔位**：盖板螺丝的分布方式可选
+
+### 几何修复
+
+- **开孔贯穿余量**：修复侧面 / 底面开孔切不透、留一层皮的问题
+- **挂耳底边倒角**：修复倒角在挂耳圆端断裂的问题
+- **内腔地板基准**：修复关闭盖板螺丝时内隔板悬空 1.5mm（或陷入实体地板 2mm+）的问题，
+  四种「盖板螺丝 × 防水」组合实测全部对齐
+
+### 质量保障
+
+- `npm run verify` —— 几何验证：挂耳切角、内腔地板、嵌入边倒角闭合、切除体积等
+- `CHANGELOG.md` —— 按阶段记录每一步改动，附实测数字与判据
+
+## 功能特性（继承自上游）
+
+- 实时 3D 预览
+- 导出 STL（网格）与 STEP（实体 CAD）
+- 参数化卡扣盖板（免螺丝装配）
+- 高强度 PCB 支柱，根部圆角按支柱直径自动配比
+- 内部线缆夹，带肋条纹防脱 grip，附配套打印绑带
+- 参数预设保存 / 加载（JSON）
+
+## 导出格式
+
+支持多种三维交换格式，单文件下载或多零件 ZIP 打包：
+
+- **STL（网格）**：三角面片，供切片软件使用（Cura、PrusaSlicer、Bambu Studio、OrcaSlicer）
+- **STEP（实体 CAD）**：ISO-10303-21 (AP214) 面片边界表示，供 CAD 交互使用
+  （FreeCAD、Fusion 360、SolidWorks、Onshape）
+
+导出内容可以是完整装配，也可以只选部分零件（底壳、盖板、防水 TPU 密封圈、PCB 支柱、
+DIN 导轨夹、线缆夹绑带）。导出注册表（`ExportFormatService`) 可扩展，后续可以加 3MF、OBJ 等。
+
+## 技术栈
+
+TypeScript、Angular、JSCAD
+
+## 开发
+
+### 环境要求
 
 - Node.js 20+
 - npm 10+
 
-### Install
+### 安装
 
 ```bash
 npm install
 ```
 
-### Run Locally
+### 本地运行
 
 ```bash
 npm run dev
 ```
 
-This starts the Angular app from the repository root and synchronizes the UI version badge from `package.json`.
+启动 Angular 应用，并把 `package.json` 里的版本号同步到界面角标。
 
-### Build
+### 构建
 
 ```bash
 npm run build
 ```
 
-### Test
+### 测试
 
 ```bash
 npm test
 ```
 
-or watch mode:
+或监视模式：
 
 ```bash
 npm run test:watch
 ```
 
-### Deploy to GitHub Pages
+### 几何验证（本分支新增）
+
+```bash
+npm run verify
+```
+
+只跑几何验证 / 只跑嵌入边倒角验证 / 性能基准：
+
+```bash
+npm run verify:geometry
+npm run verify:rim-chamfer
+npm run bench
+```
+
+### 部署到 GitHub Pages
 
 ```bash
 npm run deploy
 ```
 
-Deployment publishes `dist/angular-app/browser`.
+发布 `dist/angular-app/browser`。
 
-## Contributions
+## 紧固与螺丝策略
 
-<a href="https://github.com/sponsors/bruceborrett" target="_blank"><img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%232f5d85" height="50" width="217"></a>
-<a href="https://www.buymeacoffee.com/bruceborrett" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-blue.png" alt="Buy Me A Coffee" height="50" width="217" style="border-radius:8px;"></a>
+盖板与底壳的紧固方式有多种打孔策略，对应不同的五金件：
 
-If you find this software useful and would like to see further development please consider [donating](https://www.buymeacoffee.com/bruceborrett) or [sponsoring](https://github.com/sponsors/bruceborrett).
+### 1. 盲孔（自攻螺丝）
 
-It is very time consuming and expensive to continuously test prints with all the various combinations of settings, so you can also help by printing with as many different settings as possible and reporting any issues you may find.
+- **适合**：紧凑结构、原型、很少拆开的外壳
+- **优点**：
+  - 占空间最小：角部凸台最小，给 PCB 和元件留出最大内腔
+  - 耗材最少、打印最快
+  - 底壳底面完全封闭、干净、防水
+  - 不需要特殊工具和额外五金（直接拧进打印塑料）
+- **缺点**：
+  - 反复拆装会磨损塑料螺纹
 
-Pull requests are also welcome!
+### 2. 盲孔（热熔铜螺母）
 
-## Fastening & Screw Strategies
+- **适合**：需要频繁拆装、长期耐用的正式外壳
+- **优点**：
+  - 黄铜机牙螺纹强度高、耐拆装，可无限次装配拆卸
+  - 凸台紧凑（比六角螺母槽小，比自攻底孔略大）
+  - 底壳底面保持实心、封闭、防水
+- **缺点**：
+  - 需要铜螺母（如 M3）和电烙铁压入
 
-When securing the lid to the base, EasyEnclosure provides several hole strategies to match your fastening hardware:
+### 3. 六角螺母槽
 
-### 1. Blind Holes (Self-Tapping Screws)
+- **适合**：用普通五金件实现高强度机牙紧固，且不想动电烙铁
+- **优点**：
+  - 普通六角螺母 + 机牙螺栓即可实现金属对金属的夹紧
+  - 无需压入工具
+- **缺点**：
+  - 六角螺母需要大得多的角部凸台来保证壁厚，压缩内部空间、耗材更多、打印更久
+  - 螺栓长度必须与底壳 + 盖板的合计高度精确匹配
+  - 底壳底面会留开口
 
-- **Best for**: Compact builds, prototypes, and projects where the enclosure will rarely be opened.
-- **Pros**:
-  - Uses the **least space**: smallest corner bosses, leaving maximum internal volume for PCBs and components.
-  - Uses the least filament and prints fastest.
-  - Keeps the bottom of the enclosure completely sealed, clean, and waterproof.
-  - No special tools or extra hardware required (screws directly into the 3D-printed plastic).
-- **Cons**:
-  - Repeated assembly and disassembly will wear out the plastic threads over time.
+### 4. 通孔
 
-### 2. Blind Holes (Heat-Set Threaded Inserts)
+- **适合**：长螺栓从底部加螺母、支柱安装，或把整个外壳锁到面板上
 
-- **Best for**: Professional enclosures requiring frequent opening and long-term durability.
-- **Pros**:
-  - Provides strong, wear-resistant brass machine threads that can be assembled and disassembled indefinitely.
-  - Bosses are compact (smaller than hex nut pockets, though slightly larger than self-tapping pilot holes).
-  - Keeps the bottom of the enclosure solid, closed, and waterproof.
-- **Cons**:
-  - Requires brass heat-set inserts (e.g., M3) and a soldering iron to install them.
+### 5. 卡扣（免螺丝卡扣盖板）
 
-### 3. Captive Hex Nut Pockets
+- **适合**：免工具装配、快拆电池仓、传感器外壳、不想用螺丝的紧凑外壳
+- **原理**：沿盖板嵌入边挤出的横向定位珠，卡进底壳内壁上切出的定位凹槽。
+  珠的截面用平滑椭圆弧，插入顺滑、保持牢固，且不易沿层间剥离
+- **卡扣数量**：
+  - **4 扣**（默认）：两条长边各 2 个
+  - **6 扣**：两条长边各 2 个 + 两条短边各 1 个居中
+  - **8 扣**：四边各 2 个
+- **可调参数**：珠宽、凸出深度、珠高、凹槽配合间隙、角部退让比例
+- **安全上限**：卡扣凸出深度自动钳制在壁厚的 80% 以内，保证外壁完整。可与角部盖板螺丝并用
 
-- **Best for**: Strong machine screw fastening using standard, widely available hardware without needing a soldering iron.
-- **Pros**:
-  - Strong metal-on-metal clamping using ordinary hex nuts and machine bolts.
-  - No special insertion tools needed.
-- **Cons**:
-  - Hex nuts require significantly larger corner bosses to provide adequate wall thickness, reducing internal space, using more filament, and increasing print times.
-  - Requires screws with a length matching the exact combined height of the base and lid.
-  - Leaves openings on the underside of the base.
+### 螺丝头沉孔与盖板厚度
 
-### 4. Through Holes
+启用螺丝头沉孔（**沉头孔 Counterbore** 或 **埋头孔 Countersunk**）时，沉孔直接开在盖板顶面。
+请确保「尺寸」页里的**盖板厚度（`roof`）大于沉孔深度**，留出实心夹持肩：
 
-- **Best for**: Long through-bolts with external nuts on the bottom, mounting standoffs, or clamping the entire enclosure to a surface.
+- **埋头螺丝（DIN 7991 / ISO 10642）**：
+  - M3 埋头约 1.7mm 深（90° 锥面）
+  - 建议盖板厚度：**2.5 – 3.0mm**，留下 0.8 – 1.3mm 实心塑料承受夹紧力
+- **沉头孔（圆柱头螺丝 DIN 912）**：
+  - 标准 M3 圆柱头约 3.0mm 高、5.5mm 直径
+  - 建议盖板厚度：**4.0 – 4.5mm**，沉孔深度 3.0mm
+- **沉头孔（低矮圆头螺丝 ISO 7380）**：
+  - 圆头高度只有约 1.65mm
+  - 建议盖板厚度：**2.5 – 3.0mm**，沉孔深度 1.7mm
 
-### 5. Snap-Fit (Screwless Clippable Lids)
+> **提示**：把盖板顶面加厚 1 – 1.5mm 几乎不费耗材（就是一层薄平板），却能让底壳四根
+> 竖柱保持紧凑，把内部空间尽量留给 PCB。
 
-- **Best for**: Tool-free assembly, quick access battery compartments, sensor housings, and compact enclosures without screws.
-- **Mechanism**: Parametric horizontal retention beads extruded along the lid insert rim snap into mating detent pockets cut into the interior base walls. Bead profiles use smooth elliptical arcs for easy insertion and positive retention without layer delamination.
-- **Snap Configurations**:
-  - **4 Clips** (Default): 2 clips on each of the two longer sides.
-  - **6 Clips**: 2 clips on each longer side + 1 centered clip on each shorter side.
-  - **8 Clips**: 2 clips distributed on all four sides.
-- **Tunable Parameters**: Bead width along the edge, protrusion depth, bead height, mating pocket clearance, and corner setback percentage.
-- **Safety Safeguard**: Snap bead projection depth is automatically clamped to $80\%$ of enclosure wall thickness to ensure outer wall integrity. Can be combined with or used instead of corner lid screws.
+### PCB 支柱根部加强
 
-### Screw Head Recesses & Lid Thickness
+沿 Z 轴竖直打印的圆柱支柱，在 FDM 打印里第一层与底板 / 盖板交界处应力集中，
+拧螺丝的扭矩很容易把它齐根剪断。本软件自动给所有 PCB 支柱加根部圆角：
 
-When enabling screw head recesses (**Counterbore** or **Countersunk**), the recess is cut directly into the top of the lid. Ensure that your **Lid Thickness (`roof`)** in the Dimensions tab is greater than the recess depth so a solid clamping shoulder remains:
+- **自动比例根部圆角**：360° 环形凹圆角过渡，消除直角缺口，在标准圆形 PCB 禁布环内
+  提供对抗侧向剪切和拧紧扭矩的最大各向同性强度。圆角半径按支柱外径自动配比
+  （外径的 1/3，例如 6.0mm 支柱配 2.0mm 圆角，并安全钳制在支柱高度的 45% 以内）
 
-- **Countersunk Screws (DIN 7991 / ISO 10642)**:
-  - M3 countersunk heads are $\approx 1.7\text{ mm}$ deep ($90^\circ$ cone).
-  - Recommended Lid Thickness (`roof`): **$2.5 - 3.0\text{ mm}$**, which leaves $0.8 - 1.3\text{ mm}$ of solid plastic to bear screw clamping force.
-- **Counterbore (Socket Head Cap Screws - DIN 912)**:
-  - Standard M3 socket cap screw heads are $\approx 3.0\text{ mm}$ tall and $\approx 5.5\text{ mm}$ in diameter.
-  - Recommended Lid Thickness (`roof`): **$4.0 - 4.5\text{ mm}$** with a $3.0\text{ mm}$ recess depth.
-- **Counterbore (Low-Profile Button Head Screws - ISO 7380)**:
-  - Button head screws have a head height of only $\approx 1.65\text{ mm}$.
-  - Recommended Lid Thickness (`roof`): **$2.5 - 3.0\text{ mm}$** with a $1.7\text{ mm}$ recess depth.
+## 注意事项
 
-> **Tip**: Increasing the lid roof thickness by $1 - 1.5\text{ mm}$ uses very little filament (just a thin flat layer), while keeping the four vertical base corner posts compact to maximize usable internal space for your PCB.
-
-### PCB Mount Standoff Reinforcement
-
-Standard cylindrical standoffs printed vertically along the Z-axis in FDM 3D prints are vulnerable to shearing off at the first layer where they meet the enclosure floor or lid due to stress concentration under screw insertion torque. EasyEnclosure automatically reinforces all PCB standoffs with built-in root fillets:
-
-- **Automatic Proportional Root Fillet**: A smooth circular transition ($360^\circ$ annular concave radius) that eliminates the sharp internal corner notch, providing maximum isotropic strength against both lateral shear and screw tightening torque while staying within standard circular PCB keep-out rings. The fillet is automatically sized in proportion to the standoff outer diameter ($1/3$ of outer diameter; e.g. a $2.0\text{ mm}$ fillet on a $6.0\text{ mm}$ standoff, capped safely at $45\%$ of standoff height).
-
-## Notes
-
-- All measurements are in millimeters
-- Enclosures intended for outdoor use should be printed with PETG filament
-- Waterproof seal should be printed with TPU filament
-- Supports are required for holes
-- Overall height = Base Height + wall thickness
-- Inner height = Base Height - wall thickness
-- Inner width = width - (wall thickness \* 2)
-- Inner length = length - (wall thickness \* 2)
-- Screws take up extra space in corners, keep this in mind when deciding length and width
-- PCB mount X and Y is derived from center of base
+- 所有尺寸单位均为毫米（mm）
+- 户外使用建议用 PETG 打印
+- 防水密封圈用 TPU 打印
+- 开孔需要支撑
+- 总高 = 底壳高度 + 壁厚
+- 内高 = 底壳高度 - 壁厚
+- 内宽 = 宽度 - 壁厚 × 2
+- 内长 = 长度 - 壁厚 × 2
+- 角部螺丝会额外占空间，决定长宽时记得留量
+- PCB 支柱的 X / Y 以底壳中心为原点
