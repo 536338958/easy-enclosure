@@ -9,11 +9,13 @@ import type {
   PCBPreview,
   SnapFit,
   Ventilation,
+  VentilationMode,
 } from '../../core/params';
-import { DEFAULT_CABLE_CLAMP, DEFAULT_VENTILATION } from '../../core/params';
+import { DEFAULT_CABLE_CLAMP, DEFAULT_VENTILATION, normalizeVentilation } from '../../core/params';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import type { TranslationKey } from '../../core/i18n/translations';
+import { HelpTipComponent } from './help-tip.component';
 import { WALL_MOUNT_CHAMFER_MAX, WALL_MOUNT_CHAMFER_MIN } from '../../core/enclosure/wallmount';
 import { getScrewOffset, screwPostProtrusion } from '../../core/enclosure/screws';
 
@@ -22,6 +24,7 @@ type Surface = 'top' | 'bottom' | 'left' | 'right' | 'front' | 'back';
 @Component({
   selector: 'app-params-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [HelpTipComponent],
   templateUrl: './params-form.component.html',
   styleUrl: './params-form.component.css',
 })
@@ -108,6 +111,120 @@ export class ParamsFormComponent {
     }
   }
 
+  /**
+   * 面内「水平」偏移标签（对应 hole.x / mount.x / vent.x）：
+   * 前/后面沿宽度（左右），左/右面沿长度（前后），顶/底面沿宽度（左右）。
+   * 与上游 easy-enclosure 的偏移方向约定一致。
+   */
+  offsetHLabel(surface: Surface): string {
+    if (surface === 'left' || surface === 'right') {
+      return this.t('params.offsetHSide');
+    }
+    return this.t('params.offsetXLeft');
+  }
+
+  /**
+   * 面内「垂直/纵向」偏移标签（对应 hole.y / mount.y / vent.y）：
+   * 墙面为高度方向（上下），顶/底面为长度方向（前后）。
+   */
+  offsetVLabel(surface: Surface): string {
+    if (surface === 'top' || surface === 'bottom') {
+      return this.t('params.offsetYFront');
+    }
+    return this.t('params.offsetVSide');
+  }
+
+  /**
+   * 面内水平偏移（X）的方向提示，随所在面变化。
+   * 开孔 / 通风槽语义（+ 指向 + 世界轴）：前/后/顶/底面 → +X 向左面，左/右面 → +Y 向前面。
+   */
+  faceOffsetXHint(surface: Surface): TranslationKey {
+    if (surface === 'left' || surface === 'right') {
+      return 'params.offsetFaceFrontHint';
+    }
+    return 'params.offsetFaceLeftHint';
+  }
+
+  /** 面内纵向偏移（Y）的方向提示：四个墙面 +Z 向上，顶/底面 +Y 向前面。 */
+  faceOffsetYHint(surface: Surface): TranslationKey {
+    if (surface === 'top' || surface === 'bottom') {
+      return 'params.offsetFaceFrontHint';
+    }
+    return 'params.offsetFaceUpHint';
+  }
+
+  /**
+   * PCB 支柱的水平偏移（X）标签。支柱几何用 `width/2 - mount.x` / `length/2 - mount.x`
+   * （负号），所以正值朝 - 世界轴：底/顶/前/后面沿宽度 → + 向右面，左/右面沿长度 → + 向后面。
+   */
+  mountOffsetXLabel(surface: Surface): string {
+    if (surface === 'left' || surface === 'right') {
+      return this.t('params.offsetXBack');
+    }
+    return this.t('params.offsetXRight');
+  }
+
+  /** PCB 支柱的纵向偏移（Y）标签：底/顶面沿长度 → + 向后面，四个墙面沿高度 → + 向上。 */
+  mountOffsetYLabel(surface: Surface): string {
+    if (surface === 'top' || surface === 'bottom') {
+      return this.t('params.offsetYBack');
+    }
+    return this.t('params.offsetVSide');
+  }
+
+  /** PCB 支柱水平偏移（X）的方向提示。 */
+  mountOffsetXHint(surface: Surface): TranslationKey {
+    if (surface === 'left' || surface === 'right') {
+      return 'params.offsetFaceBackHint';
+    }
+    return 'params.offsetFaceRightHint';
+  }
+
+  /** PCB 支柱纵向偏移（Y）的方向提示。 */
+  mountOffsetYHint(surface: Surface): TranslationKey {
+    if (surface === 'top' || surface === 'bottom') {
+      return 'params.offsetFaceBackHint';
+    }
+    return 'params.offsetFaceUpHint';
+  }
+
+  /** 通风模式；旧预设没有 mode 字段时按 'slot' 解释 */
+  ventModeOf(vent: Ventilation): VentilationMode {
+    return normalizeVentilation(vent).mode;
+  }
+
+  /** 切槽角度；旧预设没有 angle 字段时由 orientation 推导（竖切 90°，横切 0°） */
+  ventAngleOf(vent: Ventilation): number {
+    return normalizeVentilation(vent).angle;
+  }
+
+  /** 网格行数；旧预设没有 rows 字段时按 3 解释 */
+  ventRowsOf(vent: Ventilation): number {
+    return normalizeVentilation(vent).rows;
+  }
+
+  /** 「槽宽」在网格模式下语义不同：圆孔为直径，方孔为边长，六边形为对角宽度 */
+  ventSlotWidthLabel(mode: VentilationMode): string {
+    switch (mode) {
+      case 'circleGrid':
+        return this.t('params.ventHoleDiameter');
+      case 'squareGrid':
+        return this.t('params.ventHoleSize');
+      case 'hexGrid':
+        return this.t('params.ventHoleAcross');
+      default:
+        return this.t('params.ventSlotWidth');
+    }
+  }
+
+  /** 「槽数量」在网格模式下是列数 */
+  ventSlotCountLabel(mode: VentilationMode): string {
+    if (mode === 'slot') {
+      return this.t('params.ventSlotCount');
+    }
+    return this.t('params.ventCols');
+  }
+
   addVentilation(): void {
     const current = this.params();
     const next: Ventilation = { ...DEFAULT_VENTILATION };
@@ -123,9 +240,18 @@ export class ParamsFormComponent {
 
   updateVentilation(index: number, patch: Partial<Ventilation>): void {
     const current = this.params();
+    const next: Partial<Ventilation> = { ...patch };
+    // mode / angle 为新版字段：写入时丢弃旧版 orientation，避免两者并存产生歧义
+    if (next.mode !== undefined || next.angle !== undefined) {
+      next.orientation = undefined;
+    }
+    // 角度夹到 0–180，让界面显示值与几何实际取用的值保持一致
+    if (next.angle !== undefined) {
+      next.angle = Math.min(Math.max(next.angle, 0), 180);
+    }
     this.state.patchParams({
       ventilation: (current.ventilation ?? []).map((item, i) =>
-        i === index ? { ...item, ...patch } : item,
+        i === index ? { ...item, ...next } : item,
       ),
     });
   }
@@ -165,8 +291,8 @@ export class ParamsFormComponent {
       diameter: 12.5,
       width: 10,
       length: 10,
-      y: current.width / 2,
-      x: 6,
+      x: 0,
+      y: 0,
     };
     this.state.patchParams({ holes: [...current.holes, next] });
   }

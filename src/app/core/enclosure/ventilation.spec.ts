@@ -1,0 +1,160 @@
+import type { Geom3 } from '@jscad/modeling/src/geometries/types';
+import measureBoundingBox from '@jscad/modeling/src/measurements/measureBoundingBox';
+
+import { cloneParams, DEFAULT_PARAMS, Ventilation } from '../params';
+import { ventilationCut } from './ventilation';
+
+/** 构造一组通风参数；覆盖项通过 over 传入 */
+const makeParams = (over: Partial<Ventilation> = {}) => {
+  const params = cloneParams(DEFAULT_PARAMS);
+  params.width = 100;
+  params.length = 80;
+  params.height = 30;
+  params.roof = 6;
+  params.floor = 2;
+  params.ventilation = [
+    {
+      surface: 'top',
+      slotWidth: 2,
+      slotLength: 0,
+      slotGap: 3,
+      slotCount: 5,
+      x: 0,
+      y: 0,
+      ...over,
+    },
+  ];
+  return params;
+};
+
+/** 取几何体的三轴跨度 */
+const size = (g: Geom3) => {
+  const [[x0, y0, z0], [x1, y1, z1]] = measureBoundingBox(g);
+  return { w: x1 - x0, d: y1 - y0, h: z1 - z0 };
+};
+
+/** 生成指定面 / 模式的通风切割体 */
+const cut = (surface: Ventilation['surface'], over: Partial<Ventilation> = {}): Geom3 => {
+  const target = surface === 'top' ? 'lid' : 'base';
+  const g = ventilationCut(makeParams({ surface, ...over }), target);
+  if (!g) {
+    throw new Error(`ventilationCut returned null for surface=${surface}`);
+  }
+  return g;
+};
+
+describe('ventilation', () => {
+  it('treats 0° as horizontal slots and 90° as vertical slots', () => {
+    const horizontal = size(cut('top', { angle: 0 }));
+    const vertical = size(cut('top', { angle: 90 }));
+
+    // 横切：长轴沿宽度(X)，纵向只剩阵列跨度 → 宽 > 深
+    expect(horizontal.w).toBeGreaterThan(horizontal.d);
+    // 竖切：长轴沿长度(Y)，横向只剩阵列跨度 → 深 > 宽
+    expect(vertical.d).toBeGreaterThan(vertical.w);
+  });
+
+  it('keeps angled slots inside the face', () => {
+    for (const angle of [15, 30, 45, 60, 75, 105, 135]) {
+      const s = size(cut('top', { angle }));
+      expect(s.w).toBeLessThan(100);
+      expect(s.d).toBeLessThan(80);
+    }
+  });
+
+  it('is symmetric every 180°', () => {
+    const zero = size(cut('top', { angle: 0 }));
+    const full = size(cut('top', { angle: 180 }));
+    expect(full.w).toBeCloseTo(zero.w, 6);
+    expect(full.d).toBeCloseTo(zero.d, 6);
+  });
+
+  it('builds grids sized by columns x rows', () => {
+    const circle = size(cut('top', { mode: 'circleGrid', slotCount: 4, rows: 3 }));
+    const square = size(cut('top', { mode: 'squareGrid', slotCount: 4, rows: 3 }));
+    const hex = size(cut('top', { mode: 'hexGrid', slotCount: 4, rows: 3 }));
+
+    // 列数 4、行数 3、间距 2+3=5 → 方形网格跨度 ≈ 15+2 / 10+2
+    expect(square.w).toBeCloseTo(17, 1);
+    expect(square.d).toBeCloseTo(12, 1);
+    // 圆孔与方孔的排布一致，跨度接近（圆孔为直径 2，方孔为边长 2）
+    expect(circle.w).toBeCloseTo(square.w, 1);
+    expect(circle.d).toBeCloseTo(square.d, 1);
+    // 蜂窝：奇数行错开半格 → 横向更宽；行距 ×√3/2 → 纵向更窄
+    expect(hex.w).toBeGreaterThan(square.w);
+    expect(hex.d).toBeLessThan(square.d);
+  });
+
+  it('spaces hex holes so every rib has the same width', () => {
+    const slotWidth = 2;
+    const slotGap = 3;
+    // 要让邻居落在「边的法线」方向上，最近邻距离必须是 √3·R + 肋宽（R = 宽度/2）。
+    // 用 sw + gap 会把孔拉开 (1-√3/2)·sw，肋就变成两端张口的 V 形。
+    const pitch = (Math.sqrt(3) * slotWidth) / 2 + slotGap;
+
+    // 单行：每多一列多一个 pitch（用差分消掉孔自身的横向尺寸）
+    const threeCols = size(cut('top', { mode: 'hexGrid', slotCount: 3, rows: 1 }));
+    const fiveCols = size(cut('top', { mode: 'hexGrid', slotCount: 5, rows: 1 }));
+    expect((fiveCols.w - threeCols.w) / 2).toBeCloseTo(pitch, 6);
+
+    // 单列：每多一行多一个行距 pitch·√3/2（错排三角晶格）
+    const threeRows = size(cut('top', { mode: 'hexGrid', slotCount: 1, rows: 3 }));
+    const fiveRows = size(cut('top', { mode: 'hexGrid', slotCount: 1, rows: 5 }));
+    expect((fiveRows.d - threeRows.d) / 2).toBeCloseTo(pitch * (Math.sqrt(3) / 2), 6);
+
+    // 六边形已转过 30°：纵向是「顶到顶」= 对角 sw，横向是「平边到平边」= √3·R
+    const one = size(cut('top', { mode: 'hexGrid', slotCount: 1, rows: 1 }));
+    expect(one.d).toBeCloseTo(slotWidth, 6);
+    expect(one.w).toBeCloseTo((Math.sqrt(3) * slotWidth) / 2, 6);
+  });
+
+  it('lays grid rows across the face, never along the cut axis', () => {
+    const grid = { mode: 'hexGrid' as const, slotCount: 4, rows: 3, slotWidth: 2, slotGap: 3 };
+    const top = size(cut('top', grid));
+    const front = size(cut('front', grid));
+    const back = size(cut('back', grid));
+    const left = size(cut('left', grid));
+    const right = size(cut('right', grid));
+
+    // 前/后：列沿 X（宽度）、行沿 Z（高度），穿透厚度只剩侧壁，远小于行列跨度
+    expect(front.d).toBeLessThan(front.h);
+    expect(front.w).toBeCloseTo(top.w, 6);
+    expect(front.h).toBeCloseTo(top.d, 6);
+    expect(back.w).toBeCloseTo(front.w, 6);
+    expect(back.h).toBeCloseTo(front.h, 6);
+
+    // 左/右：整体再转 90°，拉伸轴变 X，列落到 Y（长度）、行仍在 Z
+    expect(right.w).toBeLessThan(right.d);
+    expect(right.d).toBeCloseTo(top.w, 6);
+    expect(right.h).toBeCloseTo(top.d, 6);
+    expect(left.w).toBeCloseTo(right.w, 6);
+    expect(left.h).toBeCloseTo(right.h, 6);
+
+    // 行数只有真的生效才能得到这个跨度；若被堆进穿透轴，纵向会缩到孔径本身
+    expect(front.h).toBeGreaterThan(grid.slotWidth);
+  });
+
+  it('still honours the legacy orientation field', () => {
+    const legacy = size(cut('top', { orientation: 'vertical', angle: undefined }));
+    const modern = size(cut('top', { angle: 90 }));
+    expect(legacy.w).toBeCloseTo(modern.w, 6);
+    expect(legacy.d).toBeCloseTo(modern.d, 6);
+  });
+
+  it('clamps out-of-range angles', () => {
+    const over = size(cut('top', { angle: 200 }));
+    const atMax = size(cut('top', { angle: 180 }));
+    const under = size(cut('top', { angle: -30 }));
+    const atMin = size(cut('top', { angle: 0 }));
+
+    expect(over.w).toBeCloseTo(atMax.w, 6);
+    expect(under.w).toBeCloseTo(atMin.w, 6);
+  });
+
+  it('cuts through the wall on vertical faces', () => {
+    // 墙面：切割体沿穿透方向(Y)应显著厚于孔径，且高度方向覆盖槽长
+    const front = size(cut('front', { angle: 0 }));
+    expect(front.d).toBeGreaterThan(2);
+    expect(front.h).toBeGreaterThan(2);
+  });
+});

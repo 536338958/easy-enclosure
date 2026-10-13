@@ -10,7 +10,7 @@
     </p>
     <div class="accordian-body">
       <div class="input-group">
-        <label>{{ t('params.length') }}</label>
+        <label>{{ t('params.length') }}<app-help-tip [hintKey]="'params.lengthHint'" /></label>
         <input
           type="number"
           min="1"
@@ -20,7 +20,7 @@
         />
       </div>
       <div class="input-group">
-        <label>{{ t('params.width') }}</label>
+        <label>{{ t('params.width') }}<app-help-tip [hintKey]="'params.widthHint'" /></label>
         <input
           type="number"
           min="1"
@@ -30,7 +30,7 @@
         />
       </div>
       <div class="input-group">
-        <label>{{ t('params.height') }}</label>
+        <label>{{ t('params.height') }}<app-help-tip [hintKey]="'params.heightHint'" /></label>
         <input
           type="number"
           min="1"
@@ -40,7 +40,7 @@
         />
       </div>
       <div class="input-group">
-        <label>{{ t('params.floor') }}</label>
+        <label>{{ t('params.floor') }}<app-help-tip [hintKey]="'params.floorHint'" /></label>
         <input
           type="number"
           min="1"
@@ -50,7 +50,7 @@
         />
       </div>
       <div class="input-group">
-        <label>{{ t('params.wall') }}</label>
+        <label>{{ t('params.wall') }}<app-help-tip [hintKey]="'params.wallHint'" /></label>
         <input
           type="number"
           min="1"
@@ -60,7 +60,7 @@
         />
       </div>
       <div class="input-group">
-        <label>{{ t('params.roof') }}</label>
+        <label>{{ t('params.roof') }}<app-help-tip [hintKey]="'params.roofHint'" /></label>
         <input
           type="number"
           min="1"
@@ -70,7 +70,9 @@
         />
       </div>
       <div class="input-group">
-        <label>{{ t('params.cornerRadius') }}</label>
+        <label
+          >{{ t('params.cornerRadius') }}<app-help-tip [hintKey]="'params.cornerRadiusHint'"
+        /></label>
         <input
           type="number"
           min="1"
@@ -89,7 +91,9 @@
     <div class="accordian-body">
       <div class="sub-section-title">{{ t('params.lidInsert') }}</div>
       <div class="input-group">
-        <label>{{ t('params.insertThickness') }}</label>
+        <label
+          >{{ t('params.insertThickness') }}<app-help-tip [hintKey]="'params.insertThicknessHint'"
+        /></label>
         <input
           type="number"
           min="1"
@@ -100,7 +104,9 @@
         />
       </div>
       <div class="input-group">
-        <label>{{ t('params.insertHeight') }}</label>
+        <label
+          >{{ t('params.insertHeight') }}<app-help-tip [hintKey]="'params.insertHeightHint'"
+        /></label>
         <input
           type="number"
           min="1"
@@ -111,7 +117,9 @@
         />
       </div>
       <div class="input-group">
-        <label>{{ t('params.insertClearance') }}</label>
+        <label
+          >{{ t('params.insertClearance') }}<app-help-tip [hintKey]="'params.insertClearanceHint'"
+        /></label>
         <input
           type="number"
           min="0.01"
@@ -124,7 +132,9 @@
 
       <div class="sub-section-title">{{ t('params.snapFit') }}</div>
       <div class="input-group checkbox-group">
-        <label>{{ t('params.snapFitEnable') }}</label>
+        <label
+          >{{ t('params.snapFitEnable') }}<app-help-tip [hintKey]="'params.snapFitHint'"
+        /></label>
         <input
           type="checkbox"
           [checked]="params().snapFit.enabled"
@@ -134,7 +144,9 @@
 
       @if (params().snapFit.enabled) {
         <div class="input-group">
-          <label>{{ t('params.snapFitPreset') }}</label>
+          <label
+            >{{ t('params.snapFitPreset') }}<app-help-tip [hintKey]="'params.snapFitPresetHint'"
+          /></label>
           <select
             [value]="params().snapFit.preset"
             (change)="setSnapFitPreset($any($event.target).value)"
@@ -148,25 +160,8 @@
         <div class="input-group">
           <label
             >{{ t('params.snapFitEndPercent')
-            }}<span class="help-tip help-tip-right" tabindex="0">
-              <svg
-                class="help-icon"
-                viewBox="0 0 16 16"
-                width="12"
-                height="12"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                aria-hidden="true"
-              >
-                <circle cx="8" cy="8" r="6.75" />
-                <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-              </svg>
-              <span class="help-tooltip" role="tooltip">{{
-                t('params.snapFitEndPercentHint')
-              }}</span>
-            </span>
-          </label>
+            }}<app-help-tip [hintKey]="'params.snapFitEndPercentHint'"
+          /></label>
           <input
             type="number"
             min="5"
@@ -180,24 +175,8 @@
 
         <div class="input-group">
           <label
-            >{{ t('params.snapFitWidth')
-            }}<span class="help-tip" tabindex="0">
-              <svg
-                class="help-icon"
-                viewBox="0 0 16 16"
-                width="12"
-                height="12"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                aria-hidden="true"
-              >
-                <circle cx="8" cy="8" r="6.75" />
-                <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-              </svg>
-              <span class="help-tooltip" role="tooltip">{{ t('params.snapFitWidthHint') }}</span>
-            </span>
-          </label>
+            >{{ t('params.snapFitWidth') }}<app-help-tip [hintKey]="'params.snapFitWidthHint'"
+          /></label>
           <input
             type="number"
             min="2"
@@ -211,24 +190,8 @@
 
         <div class="input-group">
           <label
-            >{{ t('params.snapFitDepth')
-            }}<span class="help-tip help-tip-right" tabindex="0">
-              <svg
-                class="help-icon"
-                viewBox="0 0 16 16"
-                width="12"
-                height="12"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                aria-hidden="true"
-              >
-                <circle cx="8" cy="8" r="6.75" />
-                <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-              </svg>
-              <span class="help-tooltip" role="tooltip">{{ t('params.snapFitDepthHint') }}</span>
-            </span>
-          </label>
+            >{{ t('params.snapFitDepth') }}<app-help-tip [hintKey]="'params.snapFitDepthHint'"
+          /></label>
           <input
             type="number"
             min="0.2"
@@ -242,24 +205,8 @@
 
         <div class="input-group">
           <label
-            >{{ t('params.snapFitHeight')
-            }}<span class="help-tip" tabindex="0">
-              <svg
-                class="help-icon"
-                viewBox="0 0 16 16"
-                width="12"
-                height="12"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                aria-hidden="true"
-              >
-                <circle cx="8" cy="8" r="6.75" />
-                <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-              </svg>
-              <span class="help-tooltip" role="tooltip">{{ t('params.snapFitHeightHint') }}</span>
-            </span>
-          </label>
+            >{{ t('params.snapFitHeight') }}<app-help-tip [hintKey]="'params.snapFitHeightHint'"
+          /></label>
           <input
             type="number"
             min="0.4"
@@ -274,25 +221,8 @@
         <div class="input-group">
           <label
             >{{ t('params.snapFitClearance')
-            }}<span class="help-tip help-tip-right" tabindex="0">
-              <svg
-                class="help-icon"
-                viewBox="0 0 16 16"
-                width="12"
-                height="12"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                aria-hidden="true"
-              >
-                <circle cx="8" cy="8" r="6.75" />
-                <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-              </svg>
-              <span class="help-tooltip" role="tooltip">{{
-                t('params.snapFitClearanceHint')
-              }}</span>
-            </span>
-          </label>
+            }}<app-help-tip [hintKey]="'params.snapFitClearanceHint'"
+          /></label>
           <input
             type="number"
             min="0"
@@ -307,7 +237,9 @@
 
       <div class="sub-section-title">{{ t('params.lidScrews') }}</div>
       <div class="input-group checkbox-group">
-        <label>{{ t('params.lidScrewsEnable') }}</label>
+        <label
+          >{{ t('params.lidScrewsEnable') }}<app-help-tip [hintKey]="'params.lidScrewsHint'"
+        /></label>
         <input
           type="checkbox"
           [checked]="params().lidScrews"
@@ -317,7 +249,10 @@
 
       @if (params().lidScrews) {
         <div class="input-group">
-          <label>{{ t('params.lidScrewDiameter') }}</label>
+          <label
+            >{{ t('params.lidScrewDiameter')
+            }}<app-help-tip [hintKey]="'params.lidScrewDiameterHint'"
+          /></label>
           <input
             type="number"
             min="1"
@@ -329,7 +264,10 @@
         </div>
 
         <div class="input-group">
-          <label>{{ t('params.baseLidScrewDiameter') }}</label>
+          <label
+            >{{ t('params.baseLidScrewDiameter')
+            }}<app-help-tip [hintKey]="'params.baseLidScrewDiameterHint'"
+          /></label>
           <input
             type="number"
             min="1"
@@ -341,7 +279,9 @@
         </div>
 
         <div class="input-group">
-          <label>{{ t('params.lidScrewRecess') }}</label>
+          <label
+            >{{ t('params.lidScrewRecess') }}<app-help-tip [hintKey]="'params.lidScrewRecessHint'"
+          /></label>
           <select
             [value]="params().lidScrewRecessType"
             (change)="setStringParam('lidScrewRecessType', $any($event.target).value)"
@@ -357,7 +297,10 @@
           params().lidScrewRecessType === 'countersunk'
         ) {
           <div class="input-group">
-            <label>{{ t('params.lidScrewRecessDiameter') }}</label>
+            <label
+              >{{ t('params.lidScrewRecessDiameter')
+              }}<app-help-tip [hintKey]="'params.lidScrewRecessDiameterHint'"
+            /></label>
             <input
               type="number"
               min="1"
@@ -371,7 +314,10 @@
 
         @if (params().lidScrewRecessType === 'counterbore') {
           <div class="input-group">
-            <label>{{ t('params.lidScrewRecessDepth') }}</label>
+            <label
+              >{{ t('params.lidScrewRecessDepth')
+              }}<app-help-tip [hintKey]="'params.lidScrewRecessDepthHint'"
+            /></label>
             <input
               type="number"
               min="0.5"
@@ -384,7 +330,10 @@
         }
 
         <div class="input-group">
-          <label>{{ t('params.lidScrewHoleType') }}</label>
+          <label
+            >{{ t('params.lidScrewHoleType')
+            }}<app-help-tip [hintKey]="'params.lidScrewHoleTypeHint'"
+          /></label>
           <select
             [value]="params().lidScrewHoleType"
             (change)="setStringParam('lidScrewHoleType', $any($event.target).value)"
@@ -396,7 +345,12 @@
         </div>
 
         <div class="input-group">
-          <label>{{ t('params.lidScrewOffset') }}</label>
+          <label
+            >{{ t('params.lidScrewOffset')
+            }}<app-help-tip
+              [hintKey]="'params.lidScrewOffsetHint'"
+              [hintValue]="effectiveScrewOffset()"
+          /></label>
           <input
             type="number"
             min="0"
@@ -405,13 +359,15 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setNumberParam('lidScrewOffset', $any($event.target).value)"
           />
-          <p class="hint">
-            {{ t('params.lidScrewOffsetHint', { value: effectiveScrewOffset() }) }}
-          </p>
         </div>
 
         <div class="input-group">
-          <label>{{ t('params.lidScrewProtrusion') }}</label>
+          <label
+            >{{ t('params.lidScrewProtrusion')
+            }}<app-help-tip
+              [hintKey]="'params.lidScrewProtrusionHint'"
+              [hintValue]="effectiveScrewProtrusion()"
+          /></label>
           <input
             type="number"
             min="0"
@@ -420,14 +376,14 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setNumberParam('lidScrewProtrusion', $any($event.target).value)"
           />
-          <p class="hint">
-            {{ t('params.lidScrewProtrusionHint', { value: effectiveScrewProtrusion() }) }}
-          </p>
         </div>
 
         @if (params().lidScrewHoleType === 'blind') {
           <div class="input-group">
-            <label>{{ t('params.lidScrewHoleDepth') }}</label>
+            <label
+              >{{ t('params.lidScrewHoleDepth')
+              }}<app-help-tip [hintKey]="'params.lidScrewHoleDepthHint'"
+            /></label>
             <input
               type="number"
               min="1"
@@ -442,7 +398,10 @@
 
         @if (params().lidScrewHoleType === 'nut-pocket') {
           <div class="input-group">
-            <label>{{ t('params.lidScrewNutWidth') }}</label>
+            <label
+              >{{ t('params.lidScrewNutWidth')
+              }}<app-help-tip [hintKey]="'params.lidScrewNutWidthHint'"
+            /></label>
             <input
               type="number"
               min="1"
@@ -454,7 +413,10 @@
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.lidScrewNutDepth') }}</label>
+            <label
+              >{{ t('params.lidScrewNutDepth')
+              }}<app-help-tip [hintKey]="'params.lidScrewNutDepthHint'"
+            /></label>
             <input
               type="number"
               min="0.5"
@@ -469,7 +431,9 @@
 
       <div class="sub-section-title">{{ t('params.waterproof') }}</div>
       <div class="input-group checkbox-group">
-        <label>{{ t('params.waterproofEnable') }}</label>
+        <label
+          >{{ t('params.waterproofEnable') }}<app-help-tip [hintKey]="'params.waterproofHint'"
+        /></label>
         <input
           type="checkbox"
           [checked]="params().waterProof"
@@ -479,7 +443,9 @@
 
       @if (params().waterProof) {
         <div class="input-group">
-          <label>{{ t('params.sealThickness') }}</label>
+          <label
+            >{{ t('params.sealThickness') }}<app-help-tip [hintKey]="'params.sealThicknessHint'"
+          /></label>
           <input
             type="number"
             min="1"
@@ -508,7 +474,9 @@
           </p>
 
           <div class="input-group">
-            <label>{{ t('params.holeShape') }}</label>
+            <label
+              >{{ t('params.holeShape') }}<app-help-tip [hintKey]="'params.holeShapeHint'"
+            /></label>
             <select
               [value]="hole.shape"
               (change)="updateHole($index, { shape: $any($event.target).value })"
@@ -520,7 +488,9 @@
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.holeSurface') }}</label>
+            <label
+              >{{ t('params.holeSurface') }}<app-help-tip [hintKey]="'params.holeSurfaceHint'"
+            /></label>
             <select
               [value]="hole.surface"
               (change)="updateHole($index, { surface: $any($event.target).value })"
@@ -534,7 +504,10 @@
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.offsetX') }}</label>
+            <label
+              >{{ offsetHLabel(hole.surface)
+              }}<app-help-tip [hintKey]="faceOffsetXHint(hole.surface)"
+            /></label>
             <input
               type="number"
               [value]="hole.x"
@@ -544,7 +517,10 @@
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.offsetY') }}</label>
+            <label
+              >{{ offsetVLabel(hole.surface)
+              }}<app-help-tip [hintKey]="faceOffsetYHint(hole.surface)"
+            /></label>
             <input
               type="number"
               [value]="hole.y"
@@ -555,7 +531,9 @@
 
           @if (hole.shape === 'rectangle' || hole.shape === 'square') {
             <div class="input-group">
-              <label>{{ t('params.holeWidth') }}</label>
+              <label
+                >{{ t('params.holeWidth') }}<app-help-tip [hintKey]="'params.holeWidthHint'"
+              /></label>
               <input
                 type="number"
                 [value]="hole.width"
@@ -567,7 +545,9 @@
 
           @if (hole.shape === 'rectangle') {
             <div class="input-group">
-              <label>{{ t('params.holeLength') }}</label>
+              <label
+                >{{ t('params.holeLength') }}<app-help-tip [hintKey]="'params.holeLengthHint'"
+              /></label>
               <input
                 type="number"
                 [value]="hole.length"
@@ -579,7 +559,9 @@
 
           @if (hole.shape === 'circle') {
             <div class="input-group">
-              <label>{{ t('params.holeDiameter') }}</label>
+              <label
+                >{{ t('params.holeDiameter') }}<app-help-tip [hintKey]="'params.holeDiameterHint'"
+              /></label>
               <input
                 type="number"
                 [value]="hole.diameter"
@@ -611,7 +593,9 @@
           </p>
 
           <div class="input-group">
-            <label>{{ t('params.mountSurface') }}</label>
+            <label
+              >{{ t('params.mountSurface') }}<app-help-tip [hintKey]="'params.mountSurfaceHint'"
+            /></label>
             <select
               [value]="mount.surface || 'bottom'"
               (change)="updatePcbMount($index, { surface: $any($event.target).value })"
@@ -624,7 +608,10 @@
             </select>
           </div>
           <div class="input-group">
-            <label>{{ t('params.offsetX') }}</label>
+            <label
+              >{{ mountOffsetXLabel(mount.surface || 'bottom')
+              }}<app-help-tip [hintKey]="mountOffsetXHint(mount.surface || 'bottom')"
+            /></label>
             <input
               type="number"
               [value]="mount.x"
@@ -633,7 +620,10 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.offsetY') }}</label>
+            <label
+              >{{ mountOffsetYLabel(mount.surface || 'bottom')
+              }}<app-help-tip [hintKey]="mountOffsetYHint(mount.surface || 'bottom')"
+            /></label>
             <input
               type="number"
               [value]="mount.y"
@@ -642,7 +632,9 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.mountHeight') }}</label>
+            <label
+              >{{ t('params.mountHeight') }}<app-help-tip [hintKey]="'params.mountHeightHint'"
+            /></label>
             <input
               type="number"
               [value]="mount.height"
@@ -651,7 +643,10 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.mountOuterDiameter') }}</label>
+            <label
+              >{{ t('params.mountOuterDiameter')
+              }}<app-help-tip [hintKey]="'params.mountOuterDiameterHint'"
+            /></label>
             <input
               type="number"
               [value]="mount.outerDiameter"
@@ -660,7 +655,10 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.mountScrewDiameter') }}</label>
+            <label
+              >{{ t('params.mountScrewDiameter')
+              }}<app-help-tip [hintKey]="'params.mountScrewDiameterHint'"
+            /></label>
             <input
               type="number"
               [value]="mount.screwDiameter"
@@ -684,24 +682,8 @@
     <div class="accordian-body">
       <div class="input-group checkbox-group input-group-full">
         <label
-          >{{ t('params.pcbEnable')
-          }}<span class="help-tip" tabindex="0">
-            <svg
-              class="help-icon"
-              viewBox="0 0 16 16"
-              width="12"
-              height="12"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="6.75" />
-              <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-            </svg>
-            <span class="help-tooltip" role="tooltip">{{ t('params.pcbPreviewHint') }}</span>
-          </span>
-        </label>
+          >{{ t('params.pcbEnable') }}<app-help-tip [hintKey]="'params.pcbPreviewHint'"
+        /></label>
         <input
           type="checkbox"
           [checked]="params().pcbPreview.enabled"
@@ -709,25 +691,7 @@
         />
       </div>
       <div class="input-group">
-        <label
-          >{{ t('params.pcbWidth')
-          }}<span class="help-tip" tabindex="0">
-            <svg
-              class="help-icon"
-              viewBox="0 0 16 16"
-              width="12"
-              height="12"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="6.75" />
-              <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-            </svg>
-            <span class="help-tooltip" role="tooltip">{{ t('params.pcbWidthHint') }}</span>
-          </span>
-        </label>
+        <label>{{ t('params.pcbWidth') }}<app-help-tip [hintKey]="'params.pcbWidthHint'" /></label>
         <input
           type="number"
           min="1"
@@ -739,24 +703,8 @@
       </div>
       <div class="input-group">
         <label
-          >{{ t('params.pcbLength')
-          }}<span class="help-tip help-tip-right" tabindex="0">
-            <svg
-              class="help-icon"
-              viewBox="0 0 16 16"
-              width="12"
-              height="12"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="6.75" />
-              <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-            </svg>
-            <span class="help-tooltip" role="tooltip">{{ t('params.pcbLengthHint') }}</span>
-          </span>
-        </label>
+          >{{ t('params.pcbLength') }}<app-help-tip [hintKey]="'params.pcbLengthHint'"
+        /></label>
         <input
           type="number"
           min="1"
@@ -768,24 +716,8 @@
       </div>
       <div class="input-group">
         <label
-          >{{ t('params.pcbThickness')
-          }}<span class="help-tip" tabindex="0">
-            <svg
-              class="help-icon"
-              viewBox="0 0 16 16"
-              width="12"
-              height="12"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="6.75" />
-              <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-            </svg>
-            <span class="help-tooltip" role="tooltip">{{ t('params.pcbThicknessHint') }}</span>
-          </span>
-        </label>
+          >{{ t('params.pcbThickness') }}<app-help-tip [hintKey]="'params.pcbThicknessHint'"
+        /></label>
         <input
           type="number"
           min="0.1"
@@ -798,25 +730,8 @@
       <div class="input-group">
         <label
           >{{ t('params.pcbComponentHeight')
-          }}<span class="help-tip help-tip-right" tabindex="0">
-            <svg
-              class="help-icon"
-              viewBox="0 0 16 16"
-              width="12"
-              height="12"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="6.75" />
-              <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-            </svg>
-            <span class="help-tooltip" role="tooltip">{{
-              t('params.pcbComponentHeightHint')
-            }}</span>
-          </span>
-        </label>
+          }}<app-help-tip [hintKey]="'params.pcbComponentHeightHint'"
+        /></label>
         <input
           type="number"
           min="0"
@@ -828,24 +743,8 @@
       </div>
       <div class="input-group">
         <label
-          >{{ t('params.pcbOffsetX')
-          }}<span class="help-tip" tabindex="0">
-            <svg
-              class="help-icon"
-              viewBox="0 0 16 16"
-              width="12"
-              height="12"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="6.75" />
-              <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-            </svg>
-            <span class="help-tooltip" role="tooltip">{{ t('params.pcbOffsetXHint') }}</span>
-          </span>
-        </label>
+          >{{ t('params.pcbOffsetX') }}<app-help-tip [hintKey]="'params.pcbOffsetXHint'"
+        /></label>
         <input
           type="number"
           step="0.1"
@@ -856,24 +755,8 @@
       </div>
       <div class="input-group">
         <label
-          >{{ t('params.pcbOffsetY')
-          }}<span class="help-tip help-tip-right" tabindex="0">
-            <svg
-              class="help-icon"
-              viewBox="0 0 16 16"
-              width="12"
-              height="12"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="6.75" />
-              <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-            </svg>
-            <span class="help-tooltip" role="tooltip">{{ t('params.pcbOffsetYHint') }}</span>
-          </span>
-        </label>
+          >{{ t('params.pcbOffsetY') }}<app-help-tip [hintKey]="'params.pcbOffsetYHint'"
+        /></label>
         <input
           type="number"
           step="0.1"
@@ -901,7 +784,9 @@
           </p>
 
           <div class="input-group">
-            <label>X</label>
+            <label
+              >{{ t('params.offsetXRight') }}<app-help-tip [hintKey]="'params.offsetXFloorHint'"
+            /></label>
             <input
               type="number"
               [value]="wallItem.x"
@@ -910,7 +795,9 @@
             />
           </div>
           <div class="input-group">
-            <label>Y</label>
+            <label
+              >{{ t('params.offsetYBack') }}<app-help-tip [hintKey]="'params.offsetYFloorHint'"
+            /></label>
             <input
               type="number"
               [value]="wallItem.y"
@@ -919,7 +806,9 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.wallHeight') }}</label>
+            <label
+              >{{ t('params.wallHeight') }}<app-help-tip [hintKey]="'params.wallHeightHint'"
+            /></label>
             <input
               type="number"
               min="0.1"
@@ -930,7 +819,9 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.wallLength') }}</label>
+            <label
+              >{{ t('params.wallLength') }}<app-help-tip [hintKey]="'params.wallLengthHint'"
+            /></label>
             <input
               type="number"
               min="0.1"
@@ -941,7 +832,9 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.wallThickness') }}</label>
+            <label
+              >{{ t('params.wallThickness') }}<app-help-tip [hintKey]="'params.wallThicknessHint'"
+            /></label>
             <input
               type="number"
               min="0.1"
@@ -952,7 +845,9 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.wallRotation') }}</label>
+            <label
+              >{{ t('params.wallRotation') }}<app-help-tip [hintKey]="'params.wallRotationHint'"
+            /></label>
             <input
               type="number"
               step="1"
@@ -985,7 +880,9 @@
           </p>
 
           <div class="input-group">
-            <label>{{ t('params.mountSurface') }}</label>
+            <label
+              >{{ t('params.mountSurface') }}<app-help-tip [hintKey]="'params.mountSurfaceHint'"
+            /></label>
             <select
               [value]="clamp.surface || 'bottom'"
               (change)="updateCableClamp($index, { surface: $any($event.target).value })"
@@ -995,7 +892,9 @@
             </select>
           </div>
           <div class="input-group">
-            <label>X</label>
+            <label
+              >{{ t('params.offsetXRight') }}<app-help-tip [hintKey]="'params.offsetXFloorHint'"
+            /></label>
             <input
               type="number"
               [value]="clamp.x"
@@ -1004,7 +903,9 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.offsetY') }}</label>
+            <label
+              >{{ t('params.offsetYBack') }}<app-help-tip [hintKey]="'params.offsetYFloorHint'"
+            /></label>
             <input
               type="number"
               [value]="clamp.y"
@@ -1013,7 +914,9 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.clampLength') }}</label>
+            <label
+              >{{ t('params.clampLength') }}<app-help-tip [hintKey]="'params.clampLengthHint'"
+            /></label>
             <input
               type="number"
               min="5"
@@ -1024,7 +927,10 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.clampMountHeight') }}</label>
+            <label
+              >{{ t('params.clampMountHeight')
+              }}<app-help-tip [hintKey]="'params.clampMountHeightHint'"
+            /></label>
             <input
               type="number"
               min="1"
@@ -1035,7 +941,10 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.clampWallHeight') }}</label>
+            <label
+              >{{ t('params.clampWallHeight')
+              }}<app-help-tip [hintKey]="'params.clampWallHeightHint'"
+            /></label>
             <input
               type="number"
               min="0.5"
@@ -1046,7 +955,10 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.clampWallThickness') }}</label>
+            <label
+              >{{ t('params.clampWallThickness')
+              }}<app-help-tip [hintKey]="'params.clampWallThicknessHint'"
+            /></label>
             <input
               type="number"
               min="1"
@@ -1057,7 +969,10 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.clampOuterDiameter') }}</label>
+            <label
+              >{{ t('params.clampOuterDiameter')
+              }}<app-help-tip [hintKey]="'params.clampOuterDiameterHint'"
+            /></label>
             <input
               type="number"
               min="2"
@@ -1068,7 +983,10 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.clampScrewDiameter') }}</label>
+            <label
+              >{{ t('params.clampScrewDiameter')
+              }}<app-help-tip [hintKey]="'params.clampScrewDiameterHint'"
+            /></label>
             <input
               type="number"
               min="0.5"
@@ -1079,7 +997,10 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.clampTopHeight') }}</label>
+            <label
+              >{{ t('params.clampTopHeight')
+              }}<app-help-tip [hintKey]="'params.clampTopHeightHint'"
+            /></label>
             <input
               type="number"
               min="0.5"
@@ -1090,7 +1011,10 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.clampTopScrewDiameter') }}</label>
+            <label
+              >{{ t('params.clampTopScrewDiameter')
+              }}<app-help-tip [hintKey]="'params.clampTopScrewDiameterHint'"
+            /></label>
             <input
               type="number"
               min="0.5"
@@ -1101,7 +1025,9 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.wallRotation') }}</label>
+            <label
+              >{{ t('params.wallRotation') }}<app-help-tip [hintKey]="'params.wallRotationHint'"
+            /></label>
             <input
               type="number"
               step="1"
@@ -1111,7 +1037,9 @@
             />
           </div>
           <div class="input-group checkbox-group">
-            <label>{{ t('params.clampRidges') }}</label>
+            <label
+              >{{ t('params.clampRidges') }}<app-help-tip [hintKey]="'params.clampRidgesHint'"
+            /></label>
             <input
               type="checkbox"
               [checked]="clamp.ridges !== false"
@@ -1133,7 +1061,9 @@
     </p>
     <div class="accordian-body">
       <div class="input-group checkbox-group">
-        <label>{{ t('params.wallMountEnable') }}</label>
+        <label
+          >{{ t('params.wallMountEnable') }}<app-help-tip [hintKey]="'params.wallMountHint'"
+        /></label>
         <input
           type="checkbox"
           [checked]="params().wallMounts"
@@ -1143,7 +1073,9 @@
 
       @if (params().wallMounts) {
         <div class="input-group">
-          <label>{{ t('params.wallMountCount') }}</label>
+          <label
+            >{{ t('params.wallMountCount') }}<app-help-tip [hintKey]="'params.wallMountCountHint'"
+          /></label>
           <select
             [value]="params().wallMountCount"
             (change)="setNumberParam('wallMountCount', $any($event.target).value)"
@@ -1154,7 +1086,10 @@
         </div>
 
         <div class="input-group">
-          <label>{{ t('params.wallMountScrewDiameter') }}</label>
+          <label
+            >{{ t('params.wallMountScrewDiameter')
+            }}<app-help-tip [hintKey]="'params.wallMountScrewDiameterHint'"
+          /></label>
           <input
             type="number"
             min="1"
@@ -1166,7 +1101,13 @@
         </div>
 
         <div class="input-group">
-          <label>{{ t('params.wallMountChamfer') }}</label>
+          <label
+            >{{ t('params.wallMountChamfer')
+            }}<app-help-tip
+              [hintKey]="'params.wallMountChamferHint'"
+              [hintMin]="chamferAngleMin"
+              [hintMax]="chamferAngleMax"
+          /></label>
           <input
             type="number"
             [min]="chamferAngleMin"
@@ -1182,7 +1123,6 @@
           @if (chamferAngleErrorState(); as err) {
             <p class="hint error">{{ t(err.key, err.vars) }}</p>
           }
-          <p class="hint">{{ t('params.wallMountChamferHint') }}</p>
         </div>
       }
     </div>
@@ -1195,7 +1135,9 @@
     </p>
     <div class="accordian-body">
       <div class="input-group checkbox-group">
-        <label>{{ t('params.dinRailMountEnable') }}</label>
+        <label
+          >{{ t('params.dinRailMountEnable') }}<app-help-tip [hintKey]="'params.dinRailMountHint'"
+        /></label>
         <input
           type="checkbox"
           [checked]="params().dinRailMount"
@@ -1205,7 +1147,10 @@
 
       @if (params().dinRailMount) {
         <div class="input-group">
-          <label>{{ t('params.dinRailOrientation') }}</label>
+          <label
+            >{{ t('params.dinRailOrientation')
+            }}<app-help-tip [hintKey]="'params.dinRailOrientationHint'"
+          /></label>
           <select
             [value]="params().dinRailOrientation"
             (change)="setStringParam('dinRailOrientation', $any($event.target).value)"
@@ -1216,7 +1161,10 @@
         </div>
 
         <div class="input-group">
-          <label>{{ t('params.dinRailMountWidth') }}</label>
+          <label
+            >{{ t('params.dinRailMountWidth')
+            }}<app-help-tip [hintKey]="'params.dinRailMountWidthHint'"
+          /></label>
           <input
             type="number"
             min="10"
@@ -1229,7 +1177,10 @@
         </div>
 
         <div class="input-group">
-          <label>{{ t('params.dinRailScrewDiameter') }}</label>
+          <label
+            >{{ t('params.dinRailScrewDiameter')
+            }}<app-help-tip [hintKey]="'params.dinRailScrewDiameterHint'"
+          /></label>
           <input
             type="number"
             min="1"
@@ -1251,24 +1202,8 @@
     <div class="accordian-body">
       <div class="input-group">
         <label
-          >{{ t('params.baseBedChamfer')
-          }}<span class="help-tip" tabindex="0">
-            <svg
-              class="help-icon"
-              viewBox="0 0 16 16"
-              width="12"
-              height="12"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="6.75" />
-              <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-            </svg>
-            <span class="help-tooltip" role="tooltip">{{ t('params.baseBedChamferHint') }}</span>
-          </span>
-        </label>
+          >{{ t('params.baseBedChamfer') }}<app-help-tip [hintKey]="'params.baseBedChamferHint'"
+        /></label>
         <input
           type="number"
           min="0"
@@ -1280,24 +1215,8 @@
       </div>
       <div class="input-group">
         <label
-          >{{ t('params.lidBedChamfer')
-          }}<span class="help-tip help-tip-right" tabindex="0">
-            <svg
-              class="help-icon"
-              viewBox="0 0 16 16"
-              width="12"
-              height="12"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="6.75" />
-              <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-            </svg>
-            <span class="help-tooltip" role="tooltip">{{ t('params.lidBedChamferHint') }}</span>
-          </span>
-        </label>
+          >{{ t('params.lidBedChamfer') }}<app-help-tip [hintKey]="'params.lidBedChamferHint'"
+        /></label>
         <input
           type="number"
           min="0"
@@ -1309,24 +1228,8 @@
       </div>
       <div class="input-group">
         <label
-          >{{ t('params.lidTopChamfer')
-          }}<span class="help-tip" tabindex="0">
-            <svg
-              class="help-icon"
-              viewBox="0 0 16 16"
-              width="12"
-              height="12"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="6.75" />
-              <path d="M8 7v4.5M8 4.75v.5" stroke-linecap="round" />
-            </svg>
-            <span class="help-tooltip" role="tooltip">{{ t('params.lidTopChamferHint') }}</span>
-          </span>
-        </label>
+          >{{ t('params.lidTopChamfer') }}<app-help-tip [hintKey]="'params.lidTopChamferHint'"
+        /></label>
         <input
           type="number"
           min="0"
@@ -1346,7 +1249,7 @@
     </p>
     <div class="accordian-body">
       <div class="input-group checkbox-group">
-        <label>{{ t('params.showGrid') }}</label>
+        <label>{{ t('params.showGrid') }}<app-help-tip [hintKey]="'params.showGridHint'" /></label>
         <input
           type="checkbox"
           [checked]="params().showGrid"
@@ -1354,16 +1257,17 @@
         />
       </div>
       <div class="input-group checkbox-group">
-        <label>{{ t('params.showAxes') }}</label>
+        <label>{{ t('params.showAxes') }}<app-help-tip [hintKey]="'params.showAxesHint'" /></label>
         <input
           type="checkbox"
           [checked]="params().showAxes"
           (change)="setBooleanParam('showAxes', $any($event.target).checked)"
         />
       </div>
-      <p class="input-group-full hint">{{ t('params.showAxesHint') }}</p>
       <div class="input-group input-group-full">
-        <label>{{ t('params.gridSpacing') }}</label>
+        <label
+          >{{ t('params.gridSpacing') }}<app-help-tip [hintKey]="'params.gridSpacingHint'"
+        /></label>
         <input
           type="number"
           min="1"
@@ -1378,8 +1282,8 @@
 
   <div class="accordian" [class.active]="activeTab() === 12">
     <p class="accordian-header" (click)="setActiveTab(12)">
-      {{ t('params.ventilation') }}
-      <span class="accordian-icon">{{ activeTab() === 12 ? '-' : '+' }}</span>
+      {{ t('params.ventilation')
+      }}<span class="accordian-icon">{{ activeTab() === 12 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       @for (vent of params().ventilation; track $index) {
@@ -1392,7 +1296,9 @@
           </p>
 
           <div class="input-group">
-            <label>{{ t('params.ventSurface') }}</label>
+            <label
+              >{{ t('params.ventSurface') }}<app-help-tip [hintKey]="'params.ventSurfaceHint'"
+            /></label>
             <select
               [value]="vent.surface"
               (change)="updateVentilation($index, { surface: $any($event.target).value })"
@@ -1404,18 +1310,56 @@
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.ventOrientation') }}</label>
+            <label
+              >{{ t('params.ventMode') }}<app-help-tip [hintKey]="'params.ventModeHint'"
+            /></label>
             <select
-              [value]="vent.orientation"
-              (change)="updateVentilation($index, { orientation: $any($event.target).value })"
+              [value]="ventModeOf(vent)"
+              (change)="updateVentilation($index, { mode: $any($event.target).value })"
             >
-              <option value="horizontal">{{ t('params.ventOrientationHorizontal') }}</option>
-              <option value="vertical">{{ t('params.ventOrientationVertical') }}</option>
+              <option value="slot">{{ t('params.ventModeSlot') }}</option>
+              <option value="circleGrid">{{ t('params.ventModeCircleGrid') }}</option>
+              <option value="squareGrid">{{ t('params.ventModeSquareGrid') }}</option>
+              <option value="hexGrid">{{ t('params.ventModeHexGrid') }}</option>
             </select>
           </div>
 
+          @if (ventModeOf(vent) === 'slot') {
+            <div class="input-group">
+              <label
+                >{{ t('params.ventAngle') }}<app-help-tip [hintKey]="'params.ventAngleHint'"
+              /></label>
+              <input
+                type="number"
+                min="0"
+                max="180"
+                step="1"
+                [value]="ventAngleOf(vent)"
+                (keydown.enter)="$any($event.target).blur()"
+                (blur)="updateVentilation($index, { angle: +$any($event.target).value })"
+              />
+            </div>
+          } @else {
+            <div class="input-group">
+              <label
+                >{{ t('params.ventRows') }}<app-help-tip [hintKey]="'params.ventRowsHint'"
+              /></label>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                [value]="ventRowsOf(vent)"
+                (keydown.enter)="$any($event.target).blur()"
+                (blur)="updateVentilation($index, { rows: +$any($event.target).value })"
+              />
+            </div>
+          }
+
           <div class="input-group">
-            <label>{{ t('params.offsetX') }}</label>
+            <label
+              >{{ offsetHLabel(vent.surface)
+              }}<app-help-tip [hintKey]="faceOffsetXHint(vent.surface)"
+            /></label>
             <input
               type="number"
               step="0.5"
@@ -1425,7 +1369,10 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.offsetY') }}</label>
+            <label
+              >{{ offsetVLabel(vent.surface)
+              }}<app-help-tip [hintKey]="faceOffsetYHint(vent.surface)"
+            /></label>
             <input
               type="number"
               step="0.5"
@@ -1435,7 +1382,10 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.ventSlotWidth') }}</label>
+            <label
+              >{{ ventSlotWidthLabel(ventModeOf(vent))
+              }}<app-help-tip [hintKey]="'params.ventSlotWidthHint'"
+            /></label>
             <input
               type="number"
               min="0.5"
@@ -1445,19 +1395,26 @@
               (blur)="updateVentilation($index, { slotWidth: +$any($event.target).value })"
             />
           </div>
+          @if (ventModeOf(vent) === 'slot') {
+            <div class="input-group">
+              <label
+                >{{ t('params.ventSlotLength')
+                }}<app-help-tip [hintKey]="'params.ventSlotLengthHint'"
+              /></label>
+              <input
+                type="number"
+                min="0"
+                step="0.5"
+                [value]="vent.slotLength"
+                (keydown.enter)="$any($event.target).blur()"
+                (blur)="updateVentilation($index, { slotLength: +$any($event.target).value })"
+              />
+            </div>
+          }
           <div class="input-group">
-            <label>{{ t('params.ventSlotLength') }}</label>
-            <input
-              type="number"
-              min="0"
-              step="0.5"
-              [value]="vent.slotLength"
-              (keydown.enter)="$any($event.target).blur()"
-              (blur)="updateVentilation($index, { slotLength: +$any($event.target).value })"
-            />
-          </div>
-          <div class="input-group">
-            <label>{{ t('params.ventSlotGap') }}</label>
+            <label
+              >{{ t('params.ventSlotGap') }}<app-help-tip [hintKey]="'params.ventSlotGapHint'"
+            /></label>
             <input
               type="number"
               min="0"
@@ -1468,7 +1425,10 @@
             />
           </div>
           <div class="input-group">
-            <label>{{ t('params.ventSlotCount') }}</label>
+            <label
+              >{{ ventSlotCountLabel(ventModeOf(vent))
+              }}<app-help-tip [hintKey]="'params.ventSlotCountHint'"
+            /></label>
             <input
               type="number"
               min="1"
@@ -1483,7 +1443,6 @@
       <button type="button" class="add-btn" (click)="addVentilation()">
         {{ t('params.addVent') }}
       </button>
-      <p class="input-group-full hint">{{ t('params.ventilationHint') }}</p>
     </div>
   </div>
 </form>

@@ -108,6 +108,7 @@ describe('topChamferTool', () => {
   it('produces negligible volume when chamfer size is 0', () => {
     expect(measureVolume(build(0))).toBeLessThan(0.01);
   });
+
 });
 
 describe('bottomChamferTool', () => {

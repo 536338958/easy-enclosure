@@ -108,7 +108,12 @@ const run = (label, params, maxRatio = 1.15) => {
 
   console.log(`\n=== ${label} ===`);
   const t0 = Date.now();
-  const tool = translate([rimInset, rimInset, 0], topChamferTool(l, w, c, rimTopZ, outline));
+  // 与 lid.ts 保持一致：外移量按轮廓凹凸决定（clover 是凹轮廓，传 0）
+  const expand = params.lidScrews ? 0 : 0.01;
+  const tool = translate(
+    [rimInset - expand, rimInset - expand, 0],
+    topChamferTool(l, w, c, rimTopZ, outline, expand),
+  );
   const tTool = Date.now() - t0;
 
   if (c <= 0) {
@@ -120,7 +125,7 @@ const run = (label, params, maxRatio = 1.15) => {
     return;
   }
 
-  // 外周长：用轮廓柱体（实心，顶面只有一圈边界）。高度取 1 避免退化
+  // 外周长：用轮廓柱体（实心，顶面只有一圈边界）。高度取 1 避免退化。
   const prism = outline(l, w, 1);
   const edges = boundaryEdges(prism, 1);
   const perimeter = edges.reduce((s, [a, b]) => s + Math.hypot(b[0] - a[0], b[1] - a[1]), 0);

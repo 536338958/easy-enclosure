@@ -116,11 +116,23 @@ export const lid = (params: Params) => {
     // 让位缺口切掉好几毫米，若按圆角矩形做楔环，角上会切在实体之外、倒角断成四段
     const rimRadius = insertRimRadius(params);
     const outline = params.lidScrews ? cloverOutline(rimRadius) : roundedOutline(cornerRadius);
+    // 让切割体的外立面与嵌入边的外表面错开一点点，避免两者严格共面时 JSCAD 的布尔
+    // 减法留下浮点残渣（倒角面上的毛糙薄壁）。
+    // ⚠️ 只有凸的圆角矩形能这么干：clover 的让位缺口是**凹**轮廓，外移会让 BSP 分类
+    // 失稳、盖板体积直接爆炸（详见 chamfer.ts 中 OutlineBuilder 的注释）。
+    const expand = params.lidScrews ? 0 : 0.01;
     result = subtract(
       result,
       translate(
-        [rimInset, rimInset, 0],
-        topChamferTool(width - rimInset * 2, length - rimInset * 2, rimChamfer, rimTopZ, outline),
+        [rimInset - expand, rimInset - expand, 0],
+        topChamferTool(
+          width - rimInset * 2,
+          length - rimInset * 2,
+          rimChamfer,
+          rimTopZ,
+          outline,
+          expand,
+        ),
       ),
     );
   }

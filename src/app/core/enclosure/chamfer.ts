@@ -26,13 +26,7 @@ export const lidTopChamferSize = (params: Params): number => {
   return Math.min(params.lidTopChamfer, upper);
 };
 
-export const bottomChamferTool = (
-  l: number,
-  w: number,
-  c: number,
-  r = 8,
-  s = 48,
-): Geom3 => {
+export const bottomChamferTool = (l: number, w: number, c: number, r = 8, s = 48): Geom3 => {
   const eps = 0.01;
   const cc = Math.max(Math.min(c, r * 0.9, l / 2 - 0.5, w / 2 - 0.5), 0);
   if (cc <= 0) {
@@ -48,6 +42,19 @@ export const bottomChamferTool = (
 
 export const CHAMFER_DIRECTIONS = 8;
 
+/**
+ * 生成倒角切割体的柱体。
+ *
+ * `expand` 是要求把这个柱体向外放大的量（mm）。调用方用它把切割体的外立面推到被切
+ * 对象的外表面之外，打破两者的严格共面 —— 共面会让 JSCAD 的布尔减法留下浮点残渣，
+ * 也就是模型上那层毛糙薄壁。
+ *
+ * ⚠️ 凹轮廓（clover 的四叶草让位缺口）**不能外移**：实测外移 0.01 后，90 组参数里
+ * 有 14 组的盖板体积直接爆炸（默认参数下 16789 → 4326mm³，表现为「盖板只剩下一点点」）。
+ * 原因是外移后切割体外墙与被切件外墙变成**近共面** —— 这个距离远大于布尔容差、又远
+ * 小于任何特征尺寸，JSCAD 的 BSP 在这一带分类不稳定，会整片丢面。失效呈混沌分布，
+ * 单点验证发现不了，只能扫包络。所以 lid.ts 里 clover 传 0、圆角矩形传 0.01。
+ */
 export type OutlineBuilder = (l: number, w: number, h: number) => Geom3;
 
 export const roundedOutline =
@@ -87,6 +94,7 @@ export const topChamferTool = (
   c: number,
   topZ: number,
   outline: OutlineBuilder,
+  expand = 0,
 ): Geom3 => {
   const eps = 0.01;
   const cc = Math.max(Math.min(c, topZ * 0.9, l / 2 - 0.5, w / 2 - 0.5), 0);
@@ -94,7 +102,9 @@ export const topChamferTool = (
     return cuboid({ size: [eps, eps, eps] });
   }
   const slabZ = topZ - cc;
-  const slab = outline(l, w, cc);
+  // 切割体的外立面必须与嵌入边的外表面错开一点点：两者若严格共面，JSCAD 的布尔减法
+  // 会在共面处留下浮点残渣，表现为倒角面上的毛糙薄壁。
+  const slab = outline(l + 2 * expand, w + 2 * expand, cc);
   let keep: Geom3 | null = null;
   for (let i = 0; i < CHAMFER_DIRECTIONS; i += 1) {
     const angle = (i / CHAMFER_DIRECTIONS) * Math.PI * 2;

@@ -55,7 +55,13 @@ export const roundedCube = (l: number, w: number, h: number, r = 8, s = 48) => {
 
 export const roundedFrame2d = (l: number, w: number, t: number, r = 8, s = 48) => {
   const outer = roundedCube2d(l, w, r, s);
-  const inner = roundedCube2d(l - t * 2, w - t * 2, r, s);
+  // 内轮廓必须是外轮廓的真等距偏移（offset）。roundedCube2d 的圆角圆心在 (r, r)、
+  // 半径 r；等距内缩 t 后圆角圆心应不变、半径变为 r - t。旧写法
+  //   roundedCube2d(l - 2t, w - 2t, r) 再 translate([t, t], …)
+  // 让圆角半径保持 r、圆心又平移回 (r, r)，导致圆角处内外轮廓**完全重合**（壁厚捏到
+  // 0，即渲染/导出模型上的毛糙薄壁），直边处壁厚才是 t。正确做法是圆角半径也减 t
+  // （退化为 0 时用极小值保持几何合法）。
+  const inner = roundedCube2d(l - t * 2, w - t * 2, Math.max(r - t, 1e-4), s);
   return subtract(outer, translate([t, t], inner));
 };
 
@@ -65,7 +71,8 @@ export const roundedFrame = (l: number, w: number, h: number, t: number, r = 8, 
 
 export const hollowRoundCube = (l: number, w: number, h: number, t: number, r = 8, s = 48) => {
   const outer = roundedCube(l, w, h, r, s);
-  const inner = roundedCube(l - t * 2, w - t * 2, h, r, s);
+  // 同 roundedFrame2d：内腔圆角半径也要减 t，否则圆角处内外轮廓不同心、壁厚捏到 0。
+  const inner = roundedCube(l - t * 2, w - t * 2, h, Math.max(r - t, 1e-4), s);
   return subtract(outer, translate([t, t, t], inner));
 };
 
@@ -106,6 +113,11 @@ export const clover = (l: number, w: number, h: number, r = 8, s = 48) => {
 
 export const cloverFrame2d = (l: number, w: number, t: number, r = 8, s = 48) => {
   const outer = clover2d(l, w, r, s);
+  // 注意：这里不能像 roundedFrame2d 那样用 expand 真等距偏移——clover2d 的四角是
+  // 内凹圆弧（凹轮廓），expand 负 delta 会产生未闭合/自交轮廓，导致 extrudeLinear
+  // 抛「geometry is not closed」。因此暂时沿用「缩小长宽 + 平移」。
+  // TODO: 凹弧处壁厚仍会不均匀（凹弧内缩时半径未相应增大），lidScrews=true 且大倒角
+  // 时顶环在凹弧 S 弯处可能收窄出残鳍，需专门用 true offset（凹弧半径 r+t）修复。
   const inner = clover2d(l - t * 2, w - t * 2, r, s);
   return subtract(outer, translate([t, t], inner));
 };
