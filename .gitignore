@@ -43,3 +43,8 @@ yarn-error.log*
 
 # 几何验证脚本的 tsc 产物
 /.verify-build
+
+# 本地临时产物（回滚备份、截图用构建、探针配置）
+/.rollback-backup
+/dist-preview
+/tsconfig.probe.json
