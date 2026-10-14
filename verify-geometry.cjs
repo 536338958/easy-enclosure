@@ -51,16 +51,35 @@ console.log('\n=== Bug 1: 挂耳切角是否为 45° ===');
   const params = cloneParams(DEFAULT_PARAMS);
   params.wallMountScrewDiameter = 4;
   const normals = faceNormals(flanges(params));
-  const d1 = [Math.SQRT1_2, 0, Math.SQRT1_2];
-  const d2 = [Math.SQRT1_2, 0, -Math.SQRT1_2];
-  const wrong = [Math.cos(45), 0, -Math.sin(45)];
+  const at = (deg) => {
+    const a = (deg * Math.PI) / 180;
+    return [
+      [Math.cos(a), 0, Math.sin(a)],
+      [Math.cos(a), 0, -Math.sin(a)],
+    ];
+  };
+  const [d1, d2] = at(45);
 
   check('存在 45° 斜面', hasFaceAlong(normals, d1) || hasFaceAlong(normals, d2));
-  check('不存在 58.4° 斜面（45 弧度）', !hasFaceAlong(normals, wrong));
   check('法向量数量非零', normals.length > 0, `${normals.length} 个面`);
 
-  const single = faceNormals(flange(4));
+  // 1.4.2 起 flange 需要 3 个参数（screwDiameter, chamferAngle, bedChamfer），
+  // 旧调用 flange(4) 后两个是 undefined，斜面根本不是 45° —— 那才是曾经的 FAIL 原因
+  const single = faceNormals(
+    flange(4, params.wallMountChamferAngle, params.baseBedChamfer),
+  );
   check('单个挂耳同样含 45° 斜面', hasFaceAlong(single, d1) || hasFaceAlong(single, d2));
+
+  // 「不存在 58.4° 斜面（45 弧度）」判据已移除：它假定 58.3° 只可能来自漏写
+  // degToRad（rotateY(45) 把 45 当弧度）。1.4.2 的挂耳自带 57.9°/120° 的合法面
+  // （肋条与底边倒角），该角度不再是 bug 特征，判据只会误报。
+  // 换成正面判据：把角度调到 60°，斜面必须跟着变 —— 直接验证「角度可配置」生效
+  const p60 = cloneParams(DEFAULT_PARAMS);
+  p60.wallMountScrewDiameter = 4;
+  p60.wallMountChamferAngle = 60;
+  const n60 = faceNormals(flanges(p60));
+  const [s1, s2] = at(60);
+  check('切角角度可配置（设 60° 生效）', hasFaceAlong(n60, s1) || hasFaceAlong(n60, s2));
 }
 
 console.log('\n=== Bug 2: 内腔地板基准一致性 ===');

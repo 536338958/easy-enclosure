@@ -33,8 +33,8 @@ export const base = (params: Params) => {
     baseLidScrewDiameter,
   } = params;
 
-  const body = [];
-  const subtracts = [];
+  const body: Geom3[] = [];
+  const subtracts: Geom3[] = [];
 
   const _wall = innerWallInset(params);
 

@@ -43,3 +43,9 @@ yarn-error.log*
 
 # 几何自检脚本（verify-*.cjs）的临时 CJS 编译产物
 /.verify-build
+
+# 本地诊断 / 预览产物（旧分支遗留）
+/.rollback-backup
+/dist-preview
+/tsconfig.probe.json
+/docs/assembly-check

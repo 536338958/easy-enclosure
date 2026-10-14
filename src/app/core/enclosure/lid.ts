@@ -41,8 +41,8 @@ export const lid = (params: Params) => {
     lidScrewDiameter,
   } = params;
 
-  const entities = [];
-  const subtracts = [];
+  const entities: Geom3[] = [];
+  const subtracts: Geom3[] = [];
 
   // 嵌入边相对盖板外形的内缩量：它要插进基座顶部的槽里
   const rimInset = wall + insertClearance;
