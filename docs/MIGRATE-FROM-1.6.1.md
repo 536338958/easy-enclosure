@@ -1,0 +1,127 @@
+# 1.4.2 → 1.6.1 搬迁清单
+
+基线：本分支 `restart/v1.4.2`，起点 `588b0d6`（v1.4.2），当前 `80e0acb`。
+对比对象：`archive/planB-20261013`（1.6.1，即被判定「灾难性 bug 较多」的那条线）。
+
+规模：**58 个文件，+5827 / −3644**。
+
+> 原则：**只挑真修复与真功能，不搬那条线上已判定失败的几何改动。**
+> 1.6.1 相对 1.4.2 并不全是进步 —— 它还**删掉了 7 个测试文件**。
+
+---
+
+## 一、✅ 建议搬（按优先级）
+
+### P0 · STEP 导出（最大的功能增量）
+
+| 文件 | 行数 |
+| --- | --- |
+| `src/app/core/export/step-serializer.ts` | 350（新增） |
+| `src/app/core/export/export-format.ts` | 45（新增） |
+| `src/app/core/export/export-format.service.ts` | 67（新增） |
+| `step-serializer.spec.ts` / `export-format.service.spec.ts` | 41 / 123（新增） |
+
+- 1.4.2 的 CHANGELOG 明确写着 **「STEP 导出：评估过，暂不实现」**，理由是布尔运算后
+  是 polygon soup（约 35% 开放边）、STEP 要求拓扑闭合。
+- 1.6.1 把它做出来了。**搬之前必须先验证它是否真的绕开了闭合性问题**
+  （导出一个防水壳 → 用 FreeCAD 打开看是不是实体）。这一步没验就搬 = 引入新雷。
+- 价值高（CAD 用户刚需），且是**独立模块**，不碰几何，风险隔离。
+
+### P1 · 孔深贯穿余量（改动极小、已实测有效）
+
+`holes.ts` 新增 `SIDE_HOLE_DEPTH_TOLERANCE = 0.2`，孔深改为
+`totalWallThickness + SIDE_HOLE_DEPTH_TOLERANCE * 2`（即多穿 0.4mm）。
+
+- 根因：防水开启时壁厚正好 = `totalWallThickness`，孔端面与壁面**严格齐平**，
+  是布尔退化情形（表现为「孔没打穿 / 只剩一层膜」）。
+- ⭐ **这是本轮唯一被用户切片实测确认有效的修复**：加上之后
+  BambuStudio 的「空层 9~12.2」警告消失。
+- 改动 = 1 个常量 + 1 处使用。**建议第一个搬。**
+
+### P2 · 新增测试覆盖（但不要跟着删测试）
+
+新增：`pcbpreview.spec.ts`(277)、`ventilation.spec.ts`(160)、`clamp.spec.ts`。
+
+⚠️ 1.6.1 同时**删除**了 7 个文件，其中 5 个是测试：
+
+```
+base.spec.ts  clearance.spec.ts  dimensions.spec.ts
+internalwalls.spec.ts  lid.spec.ts(−177)  params.spec.ts(−51)
+```
+
+- `dimensions.spec.ts` 删除合理（`dimensions.ts` 被合并了）；
+- 其余 **不要跟着删** —— 那是 1.6.1 测试覆盖的净损失，不是进步。
+  1.4.2 这边的 `base.spec` / `lid.spec` / `params.spec` 要保留。
+
+### P3 · 线缆夹 `clamp.ts`（新增模块）
+
+`src/app/core/enclosure/clamp.ts` + `clamp.spec.ts` —— 1.4.2 没有这个模块。
+独立模块，需确认它是否被 `base.ts` / 参数系统引用（若是，则牵一发动全身）。
+
+### P4 · 参数说明气泡 `help-tip.component.ts`（UI 增强）
+
+- 新增组件 224 行，配套 `params-form.component.html` **+1551/−? 的巨量改动**
+  （每个参数标签都要挂 `<app-help-tip>`）。
+- 本仓库有成熟约定（见 MEMORY.md）：气泡必须 `position: fixed`、
+  `{value}` 占位符走 `[hintValue]` 标量 input、不要加常驻文字说明、
+  **分区标题不要挂叹号**（用户撤销过）。
+- 风险：改动面最大、最易冲突，建议排在功能之后。
+
+---
+
+## 二、⚠️ 需要你拍板（会改变默认产物 / 破坏预设兼容）
+
+| # | 事项 | 1.4.2 | 1.6.1 | 影响 |
+| --- | --- | --- | --- | --- |
+| 1 | **偏移语义** `internalwalls` | `width/2 + wall.x` | `width/2 − wall.x` | 旧预设的孔/隔板位置**镜像偏移** |
+| 2 | `lidScrewHoleType` 默认值 | `through` | `blind` | 默认产物变化 |
+| 3 | 通风槽 `angle` 参数 | 无 | 有 | 新参数，旧预设走兜底 |
+| 4 | `dimensions.ts` 合并进 `utils` | 独立文件 | `innerWallInset`/`cavityFloorZ` 移入 utils | 纯重构 |
+
+**第 1 项要特别说**：记忆里 2026-10-10 曾拍板「改回上游语义」，但 1.4.2（09-30）
+是那之前的版本、用的是本地旧语义。你现在选 1.4.2 作基线，是**保留旧语义**还是
+**再改回上游语义**？保留 = 你现有的预设继续可用；改回 = 与上游一致但旧预设失效。
+
+---
+
+## 三、❌ 不要搬（本轮已判定失败的改动）
+
+这一整类来自 1.6.1 的几何"优化"，是本轮 8 次试错被否决的东西：
+
+| 改动 | 为什么不要 |
+| --- | --- |
+| `utils.ts` 真等距内缩 `Math.max(r - t, 1e-4)` | 「壁厚增大时内腔四角弧度消失」的根因 |
+| clover 解析式重写（`cloverOutline2d` / `cloverFrameIso2d`） | 槽连续但非流形 883、内壁弧度与原版不符 |
+| 叶加厚 `CLOVER_RIB` | 尖刺 2.08→0.58，但凹口变浅 1.5mm（外形变化），**第 8 次试错，已被否决** |
+| clover 切割体外移 0.01mm | BSP 爆炸（盖板体积 16789→4326mm³） |
+| `waterproofseal` 按 lidScrews 选形状族 | 只影响「防水 + 关螺丝」—— 该组合被 UI 双向联动锁死，不可达 |
+| `getSealReliefRadius` 的 clamp | 同上，且实测该 clamp 未触发就已打穿 |
+
+**核心结论**（务必记住）：clover 花瓣「叶厚 0」是数学死结，等距内缩只有
+尖刺 / 断开 / 残鳍 三种结果，**没有第四种**。别再从「内缩方式」上想办法。
+
+---
+
+## 四、建议的搬迁顺序
+
+```
+1. 孔深贯穿余量            ← 改动 2 行，已实测有效，立刻见效
+2. STEP 导出               ← 独立模块，先验证闭合性再搬
+3. clamp 线缆夹            ← 独立模块
+4. 新增 spec（pcbpreview / ventilation / clamp）
+5. help-tip 参数说明       ← UI 改动最大，放后面
+6. 偏移语义等兼容性变更     ← 等你拍板
+```
+
+每步一个 commit，跑 `npm run verify` + `npm run build` 后确认。
+
+---
+
+## 五、本分支已有的东西（不用再搬）
+
+1.4.2 已内建，此前以为要从 1.6.1 搬回来的：
+
+`i18n/`（translations 623 行）、`ventilation.ts`、`pcbpreview.ts`、`dinrailmount.ts`、
+`showAxes`、`wallMountChamferAngle`、`lidScrewOffset`/`lidScrewProtrusion`、
+`screwPostProtrusion`/`sealReliefRadius`（防水槽打穿 1.4.2 **已修过一次**）、
+22 个 spec / 183 单测通过。
