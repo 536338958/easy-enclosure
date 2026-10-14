@@ -49,3 +49,4 @@ yarn-error.log*
 /dist-preview
 /tsconfig.probe.json
 /docs/assembly-check
+/.backup

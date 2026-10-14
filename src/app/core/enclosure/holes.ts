@@ -10,6 +10,21 @@ import { Surface, SURFACES } from '.';
 
 const TOP_HOLE_DEPTH_TOLERANCE = 0.2;
 
+/**
+ * 侧面 / 底面开孔的贯穿余量（mm），孔深在壁厚之上两端各多切这么多。
+ *
+ * 防水开启时壁厚正好等于 `totalWallThickness`，若孔深也取同一个值，孔的上下端面
+ * 会与壁的内外表面**严格齐平** —— 这是布尔运算的退化情形，端面共面时外表面有
+ * 可能保留下来（表现为「孔没打穿」，只剩一层膜）。防水关闭时壁厚只有 wall、
+ * 孔深远大于它，属于超挖，所以反而看不出问题。
+ *
+ * 往两端各多切一点：外侧切到空气里、内侧切进腔内，都不影响成品，但能保证孔在
+ * 任何参数组合下都真正贯穿。顶面同理，见 TOP_HOLE_DEPTH_TOLERANCE。
+ *
+ * ⭐ 经用户切片实测：加此余量后 BambuStudio 的「空层 9~12.2」警告消失。
+ */
+const SIDE_HOLE_DEPTH_TOLERANCE = 0.2;
+
 export const holes = (
   params: Params,
   surfacesFilter: Surface[] = ['bottom', 'left', 'right', 'back', 'front'],
@@ -43,7 +58,8 @@ export const holes = (
       let rot: Vec3;
 
       const totalWallThickness = insertThickness + insertClearance * 2 + wall * 2;
-      let holeDepth = totalWallThickness;
+      // 两端各留一点余量，避免防水开启时孔端面与壁面齐平而打不穿
+      let holeDepth = totalWallThickness + SIDE_HOLE_DEPTH_TOLERANCE * 2;
 
       // 统一偏移约定（与通风槽一致）：
       //   hole.x = 面内「水平」偏移，+ 指向 +世界轴（前/后面→+X=左面；左/右面→+Y=前面）
