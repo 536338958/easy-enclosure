@@ -8,6 +8,9 @@ import { Params } from '../params';
 import { base } from './base';
 import { cableClampsOnBase } from './clamp';
 import { cavityFloorZ } from './dimensions';
+
+// 内腔地板基准下沉在 dimensions，这里再导出：spec 与既有 import 都不受影响
+export { cavityFloorZ };
 import { internalWalls } from './internalwalls';
 
 // 计算 PCB 底面所在的 Z 高度：自动落在底面支柱顶部；若没有底面支柱，则落在内腔地板上
@@ -22,7 +25,7 @@ export const pcbRestZ = (params: Params): number => {
 };
 
 // PCB 板中心在基座本地坐标系下的位置（与支柱/内隔板一致：以基座中心为原点）
-const pcbCenterXY = (params: Params): [number, number] => {
+export const pcbCenterXY = (params: Params): [number, number] => {
   const { width, length, pcbPreview } = params;
   // 偏移约定：pcbPreview.x = 左右偏移（+ 向 +X=左面），pcbPreview.y = 前后偏移（+ 向 +Y=前面）
   return [width / 2 + pcbPreview.x, length / 2 + pcbPreview.y];
@@ -57,6 +60,8 @@ export type PCBCollisionResult = {
   collides: boolean;
   hitsWalls: boolean;
   hitsCeiling: boolean;
+  /** PCB 与障碍物的重叠体积（mm³，保留 1 位小数）；无碰撞为 0 */
+  overlapVolume: number;
 };
 
 // 稍微收缩板体，避免“正好贴合”被误判为碰撞
@@ -98,7 +103,7 @@ const erodedOccupied = (params: Params): Geom3 => {
 // （基座是最贵的一块几何，含 clover 链）。传入的必须是未平移的本地坐标几何。
 export const pcbCollision = (params: Params, baseSolid?: Geom3): PCBCollisionResult => {
   if (!params.pcbPreview.enabled) {
-    return { collides: false, hitsWalls: false, hitsCeiling: false };
+    return { collides: false, hitsWalls: false, hitsCeiling: false, overlapVolume: 0 };
   }
 
   const occupied = erodedOccupied(params);
@@ -115,17 +120,23 @@ export const pcbCollision = (params: Params, baseSolid?: Geom3): PCBCollisionRes
   }
 
   let hitsWalls = false;
+  let overlapVolume = 0;
   try {
     const overlap = intersect(occupied, union(obstacles));
-    hitsWalls = measureVolume(overlap) > 1;
+    const volume = measureVolume(overlap);
+    if (volume > 1) {
+      hitsWalls = true;
+      overlapVolume = Math.round(volume * 10) / 10;
+    }
   } catch {
     hitsWalls = false;
   }
 
   // 顶棚：盖板装上后中央区域的天花板在 z = height 处
   const restZ = pcbRestZ(params);
-  const topZ = restZ + params.pcbPreview.thickness + params.pcbPreview.componentHeight;
+  const topZ =
+    restZ + params.pcbPreview.thickness + Math.max(0, params.pcbPreview.componentHeight);
   const hitsCeiling = topZ > params.height + 1e-6;
 
-  return { collides: hitsWalls || hitsCeiling, hitsWalls, hitsCeiling };
+  return { collides: hitsWalls || hitsCeiling, hitsWalls, hitsCeiling, overlapVolume };
 };
