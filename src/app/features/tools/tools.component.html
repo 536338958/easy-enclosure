@@ -7,10 +7,10 @@
   </app-action-button>
   <app-action-button
     variant="toolbar-primary"
-    [title]="t('tools.stlTitle')"
+    [title]="t('tools.exportActionTitle')"
     (click)="openExportModal()"
   >
-    {{ t('tools.stl') }}
+    {{ t('tools.exportAction') }}
   </app-action-button>
 
   <input #fileInput type="file" accept=".json" class="hidden" (change)="loadParamsFile($event)" />
