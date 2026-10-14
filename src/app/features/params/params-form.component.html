@@ -803,70 +803,84 @@
   </div>
   <div class="accordian" [class.active]="activeTab() === 7">
     <p class="accordian-header" (click)="setActiveTab(7)">
-      {{ t('params.ventilation') }}
-      <span class="accordian-icon">{{ activeTab() === 7 ? '-' : '+' }}</span>
+      {{ t('params.ventilation')
+      }}<span class="accordian-icon">{{ activeTab() === 7 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
       @for (vent of params().ventilation; track $index) {
         <div class="sub-params">
-          <button
-            class="remove-btn"
-            type="button"
-            [attr.aria-label]="t('params.remove')"
-            (click)="removeVentilation($index)"
-          >
-            X
+          <button class="remove-btn" type="button" (click)="removeVentilation($index)">
+            {{ t('params.remove') }}
           </button>
           <p>
             <b>{{ t('params.ventItem', { n: $index + 1 }) }}</b>
           </p>
 
           <div class="input-group">
-            <label>{{ t('params.ventSurface') }}<app-help-tip [hintKey]="'params.ventSurfaceHint'" /></label>
+            <label
+              >{{ t('params.ventSurface') }}<app-help-tip [hintKey]="'params.ventSurfaceHint'"
+            /></label>
             <select
               [value]="vent.surface"
               (change)="updateVentilation($index, { surface: $any($event.target).value })"
             >
-              <option value="top" [selected]="vent.surface === 'top'">
-                {{ t('surface.top') }}
-              </option>
-              <option value="bottom" [selected]="vent.surface === 'bottom'">
-                {{ t('surface.bottom') }}
-              </option>
-              <option value="front" [selected]="vent.surface === 'front'">
-                {{ t('surface.front') }}
-              </option>
-              <option value="back" [selected]="vent.surface === 'back'">
-                {{ t('surface.back') }}
-              </option>
-              <option value="left" [selected]="vent.surface === 'left'">
-                {{ t('surface.left') }}
-              </option>
-              <option value="right" [selected]="vent.surface === 'right'">
-                {{ t('surface.right') }}
-              </option>
+              @for (s of surfaces; track s) {
+                <option [value]="s">{{ ventSurfaceLabel(s) }}</option>
+              }
             </select>
-            
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.ventOrientation') }}<app-help-tip [hintKey]="'params.ventOrientationHint'" /></label>
+            <label
+              >{{ t('params.ventMode') }}<app-help-tip [hintKey]="'params.ventModeHint'"
+            /></label>
             <select
-              [value]="vent.orientation"
-              (change)="updateVentilation($index, { orientation: $any($event.target).value })"
+              [value]="ventModeOf(vent)"
+              (change)="updateVentilation($index, { mode: $any($event.target).value })"
             >
-              <option value="horizontal" [selected]="vent.orientation === 'horizontal'">
-                {{ t('params.ventOrientationHorizontal') }}
-              </option>
-              <option value="vertical" [selected]="vent.orientation === 'vertical'">
-                {{ t('params.ventOrientationVertical') }}
-              </option>
+              <option value="slot">{{ t('params.ventModeSlot') }}</option>
+              <option value="circleGrid">{{ t('params.ventModeCircleGrid') }}</option>
+              <option value="squareGrid">{{ t('params.ventModeSquareGrid') }}</option>
+              <option value="hexGrid">{{ t('params.ventModeHexGrid') }}</option>
             </select>
-            
           </div>
 
+          @if (ventModeOf(vent) === 'slot') {
+            <div class="input-group">
+              <label
+                >{{ t('params.ventAngle') }}<app-help-tip [hintKey]="'params.ventAngleHint'"
+              /></label>
+              <input
+                type="number"
+                min="0"
+                max="180"
+                step="1"
+                [value]="ventAngleOf(vent)"
+                (keydown.enter)="$any($event.target).blur()"
+                (blur)="updateVentilation($index, { angle: +$any($event.target).value })"
+              />
+            </div>
+          } @else {
+            <div class="input-group">
+              <label
+                >{{ t('params.ventRows') }}<app-help-tip [hintKey]="'params.ventRowsHint'"
+              /></label>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                [value]="ventRowsOf(vent)"
+                (keydown.enter)="$any($event.target).blur()"
+                (blur)="updateVentilation($index, { rows: +$any($event.target).value })"
+              />
+            </div>
+          }
+
           <div class="input-group">
-            <label>{{ offsetHLabel(vent.surface) }}<app-help-tip [hintKey]="'params.offsetFaceHint'" /></label>
+            <label
+              >{{ offsetHLabel(vent.surface)
+              }}<app-help-tip [hintKey]="faceOffsetXHint(vent.surface)"
+            /></label>
             <input
               type="number"
               step="0.5"
@@ -874,11 +888,12 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { x: +$any($event.target).value })"
             />
-            
           </div>
-
           <div class="input-group">
-            <label>{{ offsetVLabel(vent.surface) }}<app-help-tip [hintKey]="'params.offsetFaceHint'" /></label>
+            <label
+              >{{ offsetVLabel(vent.surface)
+              }}<app-help-tip [hintKey]="faceOffsetYHint(vent.surface)"
+            /></label>
             <input
               type="number"
               step="0.5"
@@ -886,50 +901,55 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { y: +$any($event.target).value })"
             />
-            
           </div>
-
           <div class="input-group">
-            <label>{{ t('params.ventSlotWidth') }}<app-help-tip [hintKey]="'params.ventSlotWidthHint'" /></label>
+            <label
+              >{{ ventSlotWidthLabel(ventModeOf(vent))
+              }}<app-help-tip [hintKey]="'params.ventSlotWidthHint'"
+            /></label>
             <input
               type="number"
-              min="0.4"
-              step="0.1"
+              min="0.5"
+              step="0.5"
               [value]="vent.slotWidth"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { slotWidth: +$any($event.target).value })"
             />
-            
           </div>
-
+          @if (ventModeOf(vent) === 'slot') {
+            <div class="input-group">
+              <label
+                >{{ t('params.ventSlotLength')
+                }}<app-help-tip [hintKey]="'params.ventSlotLengthHint'"
+              /></label>
+              <input
+                type="number"
+                min="0"
+                step="0.5"
+                [value]="vent.slotLength"
+                (keydown.enter)="$any($event.target).blur()"
+                (blur)="updateVentilation($index, { slotLength: +$any($event.target).value })"
+              />
+            </div>
+          }
           <div class="input-group">
-            <label>{{ t('params.ventSlotLength') }}<app-help-tip [hintKey]="'params.ventSlotLengthHint'" /></label>
+            <label
+              >{{ t('params.ventSlotGap') }}<app-help-tip [hintKey]="'params.ventSlotGapHint'"
+            /></label>
             <input
               type="number"
               min="0"
               step="0.5"
-              [value]="vent.slotLength"
-              (keydown.enter)="$any($event.target).blur()"
-              (blur)="updateVentilation($index, { slotLength: +$any($event.target).value })"
-            />
-            
-          </div>
-
-          <div class="input-group">
-            <label>{{ t('params.ventSlotGap') }}<app-help-tip [hintKey]="'params.ventSlotGapHint'" /></label>
-            <input
-              type="number"
-              min="0.4"
-              step="0.1"
               [value]="vent.slotGap"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { slotGap: +$any($event.target).value })"
             />
-            
           </div>
-
           <div class="input-group">
-            <label>{{ t('params.ventSlotCount') }}<app-help-tip [hintKey]="'params.ventSlotCountHint'" /></label>
+            <label
+              >{{ ventSlotCountLabel(ventModeOf(vent))
+              }}<app-help-tip [hintKey]="'params.ventSlotCountHint'"
+            /></label>
             <input
               type="number"
               min="1"
@@ -938,15 +958,12 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { slotCount: +$any($event.target).value })"
             />
-            
           </div>
         </div>
       }
-
-      <button class="add-btn" type="button" (click)="addVentilation()">
+      <button type="button" class="add-btn" (click)="addVentilation()">
         {{ t('params.addVent') }}
       </button>
-      <p class="input-group-full hint">{{ t('params.ventilationHint') }}</p>
     </div>
   </div>
   <div class="accordian" [class.active]="activeTab() === 8">

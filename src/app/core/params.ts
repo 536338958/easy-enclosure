@@ -38,18 +38,66 @@ export type PCBPreview = {
   y: number;
 };
 
+export type VentilationMode = 'slot' | 'circleGrid' | 'squareGrid' | 'hexGrid';
+
+/** 合法模式清单，供 normalizeVentilation 校验用 */
+export const VENTILATION_MODES: readonly VentilationMode[] = [
+  'slot',
+  'circleGrid',
+  'squareGrid',
+  'hexGrid',
+];
+
+/**
+ * 散热通风（本 fork 独有，上游没有对应模块）。
+ *
+ * 模式：
+ * - slot：长条槽，长轴按 angle 旋转。0° = 横切，90° = 竖切，有效范围 0–180（槽按 180° 对称）
+ * - circleGrid / squareGrid / hexGrid：圆孔 / 方孔 / 正六边形孔的网格阵列，
+ *   列数用 slotCount，行数用 rows；hexGrid 为六边形孔的蜂窝状交错排列
+ *
+ * 偏移沿用本分支约定：x = 面内水平偏移，y = 竖直 / 纵向偏移，+ 指向 +世界轴。
+ *
+ * orientation 是旧版字段，仅为兼容旧预设保留；新代码一律读写 angle。
+ */
 export type Ventilation = {
   surface: 'top' | 'bottom' | 'front' | 'back' | 'left' | 'right';
-  // 竖切 = 槽沿竖直/纵向；横切 = 槽沿水平/横向
-  orientation: 'vertical' | 'horizontal';
+  /** 通风模式；缺省按 'slot' 处理（兼容旧预设） */
+  mode?: VentilationMode;
+  /** 切槽角度（度，0–180，仅槽模式生效）：0 = 横切，90 = 竖切 */
+  angle?: number;
+  /** @deprecated 旧版切槽方向，仅用于兼容旧预设，请改用 angle */
+  orientation?: 'vertical' | 'horizontal';
+  /** 槽宽；网格模式下作为圆孔直径 / 方孔边长 / 六边形对边尺寸 */
   slotWidth: number;
+  /** 槽长；0 表示按所在面的 60% 自动取值。网格模式下不使用 */
   slotLength: number;
+  /** 槽间距；网格模式下为相邻孔的间隙 */
   slotGap: number;
+  /** 槽模式的条数；网格模式的列数 */
   slotCount: number;
+  /** 网格模式的行数；缺省按 3 处理 */
+  rows?: number;
   // 在所在面内的偏移：x = 水平方向，y = 竖直/纵向
   x: number;
   y: number;
 };
+
+/**
+ * 把旧预设/缺字段的通风项补齐成完整形态。
+ *
+ * 向后兼容的关键：`angle` 缺省时从旧的 `orientation` 推导
+ * （vertical → 90，horizontal → 0），所以旧 JSON 预设无需迁移。
+ */
+export const normalizeVentilation = (
+  item: Ventilation,
+): Required<Pick<Ventilation, 'mode' | 'angle' | 'rows'>> => ({
+  mode: VENTILATION_MODES.includes(item.mode as VentilationMode)
+    ? (item.mode as VentilationMode)
+    : 'slot',
+  angle: item.angle ?? (item.orientation === 'vertical' ? 90 : 0),
+  rows: Math.max(Math.floor(item.rows ?? 3), 1),
+});
 
 export type SnapFit = {
   enabled: boolean;

@@ -1,17 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
-import type {
-  CableClamp,
-  DinRailOrientation,
-  Hole,
-  InternalWall,
-  PCBMount,
-  PCBPreview,
-  Params,
-  SnapFit,
-  Ventilation,
-} from '../../core/params';
-import { DEFAULT_CABLE_CLAMP } from '../../core/params';
+import type { CableClamp, DinRailOrientation, Hole, InternalWall, PCBMount, PCBPreview, Params, SnapFit, Ventilation, VentilationMode } from '../../core/params';
+import { DEFAULT_CABLE_CLAMP, normalizeVentilation } from '../../core/params';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
 import {
   screwDiameterMax,
@@ -392,5 +382,62 @@ export class ParamsFormComponent {
         i === index ? { ...item, ...patch } : item,
       ),
     });
+  }
+
+  /** 通风项所在面的标签（与 surfaceLabel 等价，单独命名便于通风区阅读） */
+  ventSurfaceLabel(surface: Surface): string {
+    return this.surfaceLabel(surface);
+  }
+
+  ventModeOf(vent: Ventilation): VentilationMode {
+    return normalizeVentilation(vent).mode;
+  }
+
+  /** 切槽角度；旧预设没有 angle 字段时由 orientation 推导（竖切 90°，横切 0°） */
+  ventAngleOf(vent: Ventilation): number {
+    return normalizeVentilation(vent).angle;
+  }
+
+  /** 网格行数；旧预设没有 rows 字段时按 3 解释 */
+  ventRowsOf(vent: Ventilation): number {
+    return normalizeVentilation(vent).rows;
+  }
+
+  /** 「槽宽」在网格模式下语义不同：圆孔为直径，方孔为边长，六边形为对角宽度 */
+  ventSlotWidthLabel(mode: VentilationMode): string {
+    switch (mode) {
+      case 'circleGrid':
+        return this.t('params.ventHoleDiameter');
+      case 'squareGrid':
+        return this.t('params.ventHoleSize');
+      case 'hexGrid':
+        return this.t('params.ventHoleAcross');
+      default:
+        return this.t('params.ventSlotWidth');
+    }
+  }
+
+  /** 「槽数量」在网格模式下是列数 */
+  ventSlotCountLabel(mode: VentilationMode): string {
+    if (mode === 'slot') {
+      return this.t('params.ventSlotCount');
+    }
+    return this.t('params.ventCols');
+  }
+
+  /** 面内水平偏移（X）的方向提示：左/右面 + 向前面，其余 + 向左面 */
+  faceOffsetXHint(surface: Surface): TranslationKey {
+    if (surface === 'left' || surface === 'right') {
+      return 'params.offsetFaceFrontHint';
+    }
+    return 'params.offsetFaceLeftHint';
+  }
+
+  /** 面内纵向偏移（Y）的方向提示：顶/底面 + 向前面，四个墙面 +Z 向上 */
+  faceOffsetYHint(surface: Surface): TranslationKey {
+    if (surface === 'top' || surface === 'bottom') {
+      return 'params.offsetFaceFrontHint';
+    }
+    return 'params.offsetFaceUpHint';
   }
 }
