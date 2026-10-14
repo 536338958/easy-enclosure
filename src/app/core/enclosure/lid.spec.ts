@@ -154,12 +154,16 @@ describe('lid', () => {
     // 窝不能打穿盖板本体，否则螺丝就没有咬合长度了
     it('never punches through the lid body', () => {
       const params = setup('counterbore');
-      params.lidScrewRecessDepth = 99;
+      params.lidScrewRecessDepth = 99; // 会被夹到 roof − 0.4 = 1.6
+
+      // 探针要落在窝内（半径方向超出螺丝孔、但没出窝），
+      // 别取盖板中心 —— 默认参数那里正好有一个顶面方孔
+      const [cx, cy] = holeCornersOf(params)[0];
+      const outsideR = params.lidScrewDiameter / 2 + 0.5;
 
       expect(() => lid(params)).not.toThrow();
-      // 盖板本体 z ∈ [0, roof]，窝底之下必须还留着一层
-      expect(materialAt(lid(params), [params.width / 2, params.length / 2, params.roof - 0.1]))
-        .toBeGreaterThan(0.001);
+      // 夹紧后的窝底在 z = 1.6，取 1.8 就在窝底之下、盖板本体（z ∈ [0, 2]）之内
+      expect(materialAt(lid(params), [cx + outsideR, cy, 1.8])).toBeGreaterThan(0.001);
     });
   });
 

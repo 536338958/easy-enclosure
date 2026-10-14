@@ -198,4 +198,73 @@ describe('RendererComponent', () => {
       expect((fixture.componentInstance as any).renderOptions.entities).toEqual([]);
     });
   });
+
+  // 只验证「哪种拖动走哪条分支」，不驱动真实的 WebGL 渲染循环
+  describe('拖动方式：旋转 vs 平移', () => {
+    const drag = (
+      over: Partial<PointerEvent>,
+    ): { pan: [number, number]; rotate: [number, number] } => {
+      const fixture = TestBed.createComponent(RendererComponent);
+      const component = fixture.componentInstance as any;
+
+      component.onPointerDown({
+        pageX: 100,
+        pageY: 100,
+        pointerId: 1,
+        preventDefault: () => {},
+      } as unknown as PointerEvent);
+      component.onPointerMove({
+        pageX: 120,
+        pageY: 130,
+        pointerId: 1,
+        buttons: 1,
+        shiftKey: false,
+        ctrlKey: false,
+        metaKey: false,
+        preventDefault: () => {},
+        ...over,
+      } as unknown as PointerEvent);
+
+      return { pan: component.panDelta, rotate: component.rotateDelta };
+    };
+
+    it('左键拖动 = 旋转', () => {
+      const { pan, rotate } = drag({});
+
+      expect(rotate).not.toEqual([0, 0]);
+      expect(pan).toEqual([0, 0]);
+    });
+
+    it('Shift + 左键 = 平移', () => {
+      const { pan, rotate } = drag({ shiftKey: true });
+
+      expect(pan).not.toEqual([0, 0]);
+      expect(rotate).toEqual([0, 0]);
+    });
+
+    // buttons 是位掩码：1=左键、2=右键、4=中键
+    it('中键拖动 = 平移', () => {
+      const { pan, rotate } = drag({ buttons: 4 });
+
+      expect(pan).not.toEqual([0, 0]);
+      expect(rotate).toEqual([0, 0]);
+    });
+
+    it('Ctrl / Meta + 左键也是平移', () => {
+      expect(drag({ ctrlKey: true }).pan).not.toEqual([0, 0]);
+      expect(drag({ metaKey: true }).pan).not.toEqual([0, 0]);
+    });
+
+    it('中键按下拦掉默认行为（自动滚动），左键不受影响', () => {
+      const component = TestBed.createComponent(RendererComponent).componentInstance;
+      const middle = new MouseEvent('mousedown', { button: 1, cancelable: true });
+      const left = new MouseEvent('mousedown', { button: 0, cancelable: true });
+
+      component.onMouseDown(middle);
+      component.onMouseDown(left);
+
+      expect(middle.defaultPrevented).toBeTrue();
+      expect(left.defaultPrevented).toBeFalse();
+    });
+  });
 });

@@ -325,6 +325,7 @@ type SurfaceAnchor = {
     '(pointermove)': 'onPointerMove($event)',
     '(pointerdown)': 'onPointerDown($event)',
     '(pointerup)': 'onPointerUp($event)',
+    '(mousedown)': 'onMouseDown($event)',
     '(wheel)': 'onWheel($event)',
   },
   templateUrl: './renderer.component.html',
@@ -444,7 +445,10 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     const dx = this.lastX - event.pageX;
     const dy = event.pageY - this.lastY;
 
-    if (event.shiftKey) {
+    // 平移预览画面：Ctrl+拖 / Meta+拖 / Shift+拖 / **鼠标中键拖**。
+    // `buttons` 是位掩码（1=左键、2=右键、4=中键），`=== 4` 表示只按着中键。
+    // 其余情况（左键、右键）都当旋转处理 —— 与上游一致。
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.buttons === 4) {
       this.panDelta[0] += dx;
       this.panDelta[1] += dy;
     } else {
@@ -469,6 +473,16 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     this.pointerDown = false;
     this.containerRef?.nativeElement.releasePointerCapture(event.pointerId);
     this.updateSurfaceLabels();
+  }
+
+  /**
+   * 中键在部分浏览器里的默认行为是「自动滚动」，会和拖动平移抢操作。
+   * 只拦中键（button 1），左键/右键的默认行为一概不动。
+   */
+  onMouseDown(event: MouseEvent): void {
+    if (event.button === 1) {
+      event.preventDefault();
+    }
   }
 
   onWheel(event: WheelEvent): void {
