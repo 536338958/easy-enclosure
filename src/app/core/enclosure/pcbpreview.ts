@@ -6,6 +6,7 @@ import measureVolume from '@jscad/modeling/src/measurements/measureVolume';
 
 import { Params } from '../params';
 import { base } from './base';
+import { cableClampsOnBase } from './clamp';
 import { cavityFloorZ } from './dimensions';
 import { internalWalls } from './internalwalls';
 
@@ -105,6 +106,12 @@ export const pcbCollision = (params: Params, baseSolid?: Geom3): PCBCollisionRes
   const obstacles: Geom3[] = [baseSolid ?? base(params)];
   if (params.internalWalls.length > 0) {
     obstacles.push(internalWalls(params));
+  if ((params.cableClamps?.length ?? 0) > 0) {
+    const clamps = cableClampsOnBase(params);
+    if (clamps) {
+      obstacles.push(clamps);
+    }
+  }
   }
 
   let hitsWalls = false;
