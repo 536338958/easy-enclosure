@@ -809,8 +809,13 @@
     <div class="accordian-body">
       @for (vent of params().ventilation; track $index) {
         <div class="sub-params">
-          <button class="remove-btn" type="button" (click)="removeVentilation($index)">
-            {{ t('params.remove') }}
+          <button
+            class="remove-btn"
+            type="button"
+            [attr.aria-label]="t('params.remove')"
+            (click)="removeVentilation($index)"
+          >
+            X
           </button>
           <p>
             <b>{{ t('params.ventItem', { n: $index + 1 }) }}</b>
@@ -825,7 +830,9 @@
               (change)="updateVentilation($index, { surface: $any($event.target).value })"
             >
               @for (s of surfaces; track s) {
-                <option [value]="s">{{ ventSurfaceLabel(s) }}</option>
+                <option [value]="s" [selected]="s === vent.surface">
+                  {{ ventSurfaceLabel(s) }}
+                </option>
               }
             </select>
           </div>
@@ -1221,8 +1228,13 @@
     <div class="accordian-body">
       @for (clamp of params().cableClamps; track $index) {
         <div class="sub-params">
-          <button class="remove-btn" type="button" (click)="removeCableClamp($index)">
-            {{ t('params.remove') }}
+          <button
+            class="remove-btn"
+            type="button"
+            [attr.aria-label]="t('params.remove')"
+            (click)="removeCableClamp($index)"
+          >
+            X
           </button>
           <p>
             {{ t('params.clamps') }} {{ $index + 1 }}
