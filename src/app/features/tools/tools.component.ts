@@ -9,9 +9,15 @@ import {
 } from '@angular/core';
 import type { Geom3 } from '@jscad/modeling/src/geometries/types';
 import { union } from '@jscad/modeling/src/operations/booleans';
-import { serialize } from '@jscad/stl-serializer';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
+
+import {
+  STL_FORMAT,
+  type ExportFormatDefinition,
+  type ExportFormatId,
+} from '../../core/export/export-format';
+import { ExportFormatService } from '../../core/export/export-format.service';
 
 import { base } from '../../core/enclosure/base';
 import { dinRailMountGeometry } from '../../core/enclosure/dinrailmount';
@@ -40,9 +46,26 @@ export class ToolsComponent {
 
   private readonly state = inject(EnclosureStateService);
   private readonly i18n = inject(I18nService);
+  private readonly exportFormatService = inject(ExportFormatService);
 
   readonly isExportModalOpen = signal(false);
   readonly isExporting = signal(false);
+
+  // 导出格式（stl / step）统一走 ExportFormatService 序列化
+  readonly supportedFormats = this.exportFormatService.formats;
+  readonly exportFormat = signal<ExportFormatId>('stl');
+  readonly selectedFormat = computed<ExportFormatDefinition>(
+    () =>
+      this.exportFormatService.getFormat(this.exportFormat()) ??
+      this.supportedFormats()[0] ??
+      STL_FORMAT,
+  );
+
+  setExportFormat(format: ExportFormatId): void {
+    if (this.exportFormatService.getFormat(format)) {
+      this.exportFormat.set(format);
+    }
+  }
 
   // 存的是文案 key 而不是成品字符串：切换语言时已显示的错误提示要跟着变
   private readonly loadErrorKey = signal<TranslationKey | null>(null);
@@ -201,6 +224,7 @@ export class ToolsComponent {
     this.isExporting.set(true);
     try {
       const tsStr = this.formattedTimestamp();
+      const ext = this.selectedFormat().extension;
       const currentParams = this.state.params();
       const files: { name: string; blob: Blob }[] = [];
 
@@ -217,7 +241,7 @@ export class ToolsComponent {
         }
 
         files.push({
-          name: `enclosure-base-${tsStr}.stl`,
+          name: `enclosure-base-${tsStr}.${ext}`,
           blob: this.geometryToBlob(baseParts.length > 1 ? union(baseParts) : baseParts[0]),
         });
       }
@@ -226,14 +250,14 @@ export class ToolsComponent {
         const lidMounts = pcbMountsOnLid(currentParams);
         const lidGeometry = lidMounts ? union([lid(currentParams), lidMounts]) : lid(currentParams);
         files.push({
-          name: `enclosure-lid-${tsStr}.stl`,
+          name: `enclosure-lid-${tsStr}.${ext}`,
           blob: this.geometryToBlob(lidGeometry),
         });
       }
 
       if (this.hasSeal() && this.exportSeal()) {
         files.push({
-          name: `enclosure-waterproof-seal-${tsStr}.stl`,
+          name: `enclosure-waterproof-seal-${tsStr}.${ext}`,
           blob: this.geometryToBlob(waterProofSeal(currentParams)),
         });
       }
@@ -242,7 +266,7 @@ export class ToolsComponent {
         const baseMounts = pcbMountsOnBase(currentParams);
         if (baseMounts) {
           files.push({
-            name: `enclosure-pcb-mounts-base-${tsStr}.stl`,
+            name: `enclosure-pcb-mounts-base-${tsStr}.${ext}`,
             blob: this.geometryToBlob(baseMounts),
           });
         }
@@ -250,7 +274,7 @@ export class ToolsComponent {
         const lidMounts = pcbMountsOnLid(currentParams);
         if (lidMounts) {
           files.push({
-            name: `enclosure-pcb-mounts-lid-${tsStr}.stl`,
+            name: `enclosure-pcb-mounts-lid-${tsStr}.${ext}`,
             blob: this.geometryToBlob(lidMounts),
           });
         }
@@ -258,7 +282,7 @@ export class ToolsComponent {
 
       if (this.hasDinRailMount() && this.exportDinRail()) {
         files.push({
-          name: `enclosure-din-rail-mount-${tsStr}.stl`,
+          name: `enclosure-din-rail-mount-${tsStr}.${ext}`,
           blob: this.geometryToBlob(dinRailMountGeometry(currentParams)),
         });
       }
@@ -295,9 +319,9 @@ export class ToolsComponent {
     return fileCount;
   }
 
-  private geometryToBlob(geometry: Geom3): Blob {
-    const rawData = serialize({ binary: false }, geometry);
-    return new Blob([rawData], { type: 'application/octet-stream' });
+  private geometryToBlob(geometry: Geom3, name = 'enclosure'): Blob {
+    const format = this.selectedFormat();
+    return this.exportFormatService.serialize(format.id, geometry, { name });
   }
 
   private saveFile(data: Blob, fileName: string): void {

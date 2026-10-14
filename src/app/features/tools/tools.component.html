@@ -41,6 +41,28 @@
     </p>
 
     <div
+      class="mb-4 flex flex-wrap items-center justify-center gap-6 rounded-xl border border-slate-200/90 bg-slate-50/70 px-3 py-2 text-xs font-semibold text-slate-700"
+    >
+      <span class="text-slate-500">{{ t('tools.exportFormat') }}</span>
+      @for (fmt of supportedFormats(); track fmt.id) {
+        <label
+          class="flex cursor-pointer select-none items-center gap-1.5"
+          [title]="fmt.description ?? ''"
+        >
+          <input
+            type="radio"
+            name="export-format"
+            [value]="fmt.id"
+            class="h-4 w-4 cursor-pointer text-sky-600 focus:ring-sky-500/30"
+            [checked]="exportFormat() === fmt.id"
+            (change)="setExportFormat(fmt.id)"
+          />
+          <span>{{ fmt.label }}</span>
+        </label>
+      }
+    </div>
+
+    <div
       class="mb-5 divide-y divide-slate-200/70 rounded-xl border border-slate-200/90 bg-slate-50/70"
     >
       <label
