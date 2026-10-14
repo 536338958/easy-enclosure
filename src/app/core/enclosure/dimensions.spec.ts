@@ -1,11 +1,8 @@
 import { DEFAULT_PARAMS, cloneParams, type Params } from '../params';
 import {
   MIN_SCREW_WALL,
-  MAX_SCREW_COUNTERSINK,
-  MIN_SCREW_COUNTERSINK,
   cavityFloorZ,
   innerWallInset,
-  lidScrewCountersinkSize,
   maxScrewOffset,
   minScrewOffset,
   screwOffset,
@@ -223,36 +220,4 @@ describe('dimensions', () => {
     });
   });
 
-  describe('lidScrewCountersinkSize', () => {
-    it('is zero when switched off', () => {
-      const params = cloneParams(DEFAULT_PARAMS);
-      params.lidScrewCountersink = 0;
-
-      expect(lidScrewCountersinkSize(params)).toBe(0);
-    });
-
-    it('clamps a value below the printable minimum up to it', () => {
-      const params = cloneParams(DEFAULT_PARAMS);
-      params.lidScrewCountersink = 0.05;
-
-      expect(lidScrewCountersinkSize(params)).toBe(MIN_SCREW_COUNTERSINK);
-    });
-
-    it('clamps an oversized value down to the absolute limit', () => {
-      const params = cloneParams(DEFAULT_PARAMS);
-      params.lidScrewCountersink = 99;
-
-      expect(lidScrewCountersinkSize(params)).toBe(MAX_SCREW_COUNTERSINK);
-    });
-
-    // 锥坑不能切太深，否则会穿透盖板本体、也让自攻螺丝失去咬合长度
-    it('never sinks deeper than 60 percent of the lid thickness', () => {
-      const params = cloneParams(DEFAULT_PARAMS);
-      params.roof = 1;
-      params.insertHeight = 1;
-      params.lidScrewCountersink = 99;
-
-      expect(lidScrewCountersinkSize(params)).toBeLessThanOrEqual((1 + 1) * 0.6);
-    });
-  });
 });

@@ -123,25 +123,9 @@ export const lidTopChamferSize = (params: Params): number => {
   return Math.min(params.lidTopChamfer, upper);
 };
 
-// 沉头倒角的最小可打印尺寸与合理上限
-export const MIN_SCREW_COUNTERSINK = 0.2;
-export const MAX_SCREW_COUNTERSINK = 2.5;
-
-/**
- * 盖板螺丝孔沉头倒角的实际生效尺寸（mm），0 表示关闭。
- *
- * 上限取 `min(2.5, 盖板总厚度 × 0.6)`：锥坑不能切得太深，否则会穿透盖板本体、
- * 也会让自攻螺丝失去咬合长度。
- */
-export const lidScrewCountersinkSize = (params: Params): number => {
-  const size = params.lidScrewCountersink;
-  if (size <= 0) {
-    return 0;
-  }
-  const maxByDepth = (params.roof + params.insertHeight) * 0.6;
-  const upper = Math.max(Math.min(MAX_SCREW_COUNTERSINK, maxByDepth), MIN_SCREW_COUNTERSINK);
-  return Math.min(Math.max(size, MIN_SCREW_COUNTERSINK), upper);
-};
+// 圆柱沉头窝深度的可打印下限，以及窝底必须保留的最小余量（不要打穿盖板本体）
+export const MIN_SCREW_RECESS_DEPTH = 0.2;
+export const MIN_SCREW_RECESS_RESIDUAL = 0.4;
 
 // 经典（自动）螺丝孔位置：沿用既有公式，保证默认参数下行为不变
 const classicScrewOffset = (params: Params, screwDiameter: number): number =>

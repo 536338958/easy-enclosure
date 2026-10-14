@@ -3,6 +3,14 @@ import { union } from '@jscad/modeling/src/operations/booleans';
 import { cylinder, cylinderElliptic } from '@jscad/modeling/src/primitives';
 import { translate } from '@jscad/modeling/src/operations/transforms';
 
+import { Params } from '../params';
+import {
+  MIN_SCREW_RECESS_DEPTH,
+  MIN_SCREW_RECESS_RESIDUAL,
+  screwDiameterMax,
+  screwOffset,
+} from './dimensions';
+
 // 孔口超出实体表面的余量。让切割体**略微伸出**实体之外，
 // 避免切面与实体的顶面/底面共面 —— 共面是 JSCAD 布尔运算产生非流形边的典型原因。
 const TOLERANCE = 0.2;
@@ -66,36 +74,63 @@ export const nutPockets = (
 };
 
 /**
- * 螺丝孔的沉头倒角：在每个孔口生成一个 45° 圆锥坑，从盖板减去即可
- * 让沉头螺丝的螺帽沉进去、不凸出表面。
+ * 盖板螺丝孔口的沉头窝切割体。从盖板减去，即可把螺丝头/螺帽藏进盖板里。
  *
- * 盖板的**外表面是 z = 0**（嵌入边朝 z 增大的方向伸进基座），所以锥坑的
- * 大端开在 z = 0、小端收到孔径，坑占据 z ∈ [0, depth]。
+ * 盖板的**外表面是 z = 0**（嵌入边朝 z 增大的方向伸进基座），所以窝口开在
+ * z = 0、向 z 增大方向挖。孔位与 `screws()` 的四角孔一致（都走 screwOffset）。
  *
- * `spread` 是径向扩展量，`depth` 是锥坑深度；45° 时两者相等。
+ * - `counterbore`：平底圆柱窝，把螺栓头整颗藏进去；深度由 `lidScrewRecessDepth` 给
+ * - `countersunk`：45° 锥坑，配沉头螺丝；深度由窝口直径与孔径之差算出（固定 45°）
+ * - `none`（或其他）：返回 `null`，调用方据此跳过
+ *
+ * 两种窝都让切割体**略微伸出**盖板外表面（−TOLERANCE），避免窝口切面与盖板顶面
+ * 共面 —— 共面是 JSCAD 布尔运算产生非流形边的典型原因。
  */
-export const screwCountersinks = (
-  length: number,
-  width: number,
-  offset: number,
-  holeDiameter: number,
-  spread: number,
-  depth: number,
-) => {
-  const inner = holeDiameter / 2;
-  const outer = inner + spread;
-  const cone = () =>
-    cylinderElliptic({
-      height: depth,
-      startRadius: [outer, outer],
-      endRadius: [inner, inner],
+export const lidScrewRecesses = (params: Params) => {
+  const { length, width, lidScrewDiameter, lidScrewRecessType } = params;
+  const offset = screwOffset(params, screwDiameterMax(params));
+
+  if (lidScrewRecessType === 'counterbore') {
+    const { roof, lidScrewRecessDiameter, lidScrewRecessDepth } = params;
+    const effectiveDepth = Math.max(
+      MIN_SCREW_RECESS_DEPTH,
+      Math.min(lidScrewRecessDepth, roof - MIN_SCREW_RECESS_RESIDUAL),
+    );
+    const height = effectiveDepth + TOLERANCE;
+    const zCenter = (effectiveDepth - TOLERANCE) / 2;
+    const bore = cylinder({ radius: lidScrewRecessDiameter / 2, height });
+
+    return union(
+      translate([offset, offset, zCenter], bore),
+      translate([width - offset, offset, zCenter], bore),
+      translate([offset, length - offset, zCenter], bore),
+      translate([width - offset, length - offset, zCenter], bore),
+    );
+  }
+
+  if (lidScrewRecessType === 'countersunk') {
+    const { lidScrewRecessDiameter } = params;
+    // 45° 锥：半径差与深度相等。窝口不大于孔径时退化为最小可打印深度，避免零厚度
+    const coneDepth = Math.max(
+      MIN_SCREW_RECESS_DEPTH,
+      (lidScrewRecessDiameter - lidScrewDiameter) / 2,
+    );
+    const height = coneDepth + TOLERANCE;
+    const zCenter = (coneDepth - TOLERANCE) / 2;
+    const cone = cylinderElliptic({
+      startRadius: [lidScrewRecessDiameter / 2 + TOLERANCE, lidScrewRecessDiameter / 2 + TOLERANCE],
+      endRadius: [lidScrewDiameter / 2, lidScrewDiameter / 2],
+      height,
       segments: 32,
     });
 
-  return union(
-    translate([offset, offset, depth / 2], cone()),
-    translate([width - offset, offset, depth / 2], cone()),
-    translate([offset, length - offset, depth / 2], cone()),
-    translate([width - offset, length - offset, depth / 2], cone()),
-  );
+    return union(
+      translate([offset, offset, zCenter], cone),
+      translate([width - offset, offset, zCenter], cone),
+      translate([offset, length - offset, zCenter], cone),
+      translate([width - offset, length - offset, zCenter], cone),
+    );
+  }
+
+  return null;
 };

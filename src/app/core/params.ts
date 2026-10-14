@@ -143,6 +143,14 @@ export type PcbMountFillet = {
  */
 export type LidScrewHoleType = 'blind' | 'nut-pocket' | 'through';
 
+/**
+ * 盖板螺丝孔口的沉头窝形式：
+ * - `none`：不开窝，螺丝头部直接压在盖板外表面上
+ * - `counterbore`：圆柱沉头窝（平底），把螺栓头/螺帽整颗藏进盖板里
+ * - `countersunk`：45° 锥坑，配沉头螺丝，螺帽与表面齐平
+ */
+export type LidScrewRecessType = 'counterbore' | 'countersunk' | 'none';
+
 /** DIN 导轨（TH35）相对外壳的走向 */
 export type DinRailOrientation = 'horizontal' | 'vertical';
 
@@ -237,13 +245,20 @@ export type Params = {
   /** 嵌入螺母槽的深度（mm），仅 `nut-pocket` 时生效。 */
   lidScrewNutDepth: number;
   /**
-   * 盖板螺丝孔的沉头倒角（mm）。
-   *
-   * 在盖板顶面的螺丝孔口切出一个 45° 锥坑，让沉头螺丝的螺帽沉进去、不凸出表面。
-   * 取值是锥坑在**径向**的扩展量，深度与之相等（45°）。0＝关闭。
-   * 实际生效值会被夹到 `[0.2, min(2.5, 盖板总厚度×0.6)]`。
+   * 盖板螺丝孔口的沉头窝形式，见 `LidScrewRecessType`。`none` 表示不开窝。
    */
-  lidScrewCountersink: number;
+  lidScrewRecessType: LidScrewRecessType;
+  /**
+   * 沉头窝直径（mm）。
+   * - `counterbore`：圆柱窝的直径，必须大于螺丝头/螺帽的外接圆才藏得住
+   * - `countersunk`：锥坑大端直径；锥坑深度由它与孔径之差算出（固定 45°）
+   */
+  lidScrewRecessDiameter: number;
+  /**
+   * 沉头窝深度（mm），仅 `counterbore` 生效（`countersunk` 的深度由直径差决定）。
+   * 实际生效值会被夹到 `[0.2, roof − 0.4]`，不会打穿盖板本体。
+   */
+  lidScrewRecessDepth: number;
   /**
    * 开启盖板螺丝后，内腔四角会凸出一块实体（螺丝柱）—— 也就是 clover 挖空时
    * 让位缺口使内腔在角落收缩后留下的那块。这个参数控制它**向腔内凸出多少**（mm）。
@@ -426,7 +441,9 @@ export const DEFAULT_PARAMS: Params = {
   lidScrewNutWidth: 5.7,
   lidScrewNutDepth: 2.5,
   pcbMountFillet: { style: 'round', size: 1 },
-  lidScrewCountersink: 0,
+  lidScrewRecessType: 'none',
+  lidScrewRecessDiameter: 6.2,
+  lidScrewRecessDepth: 3,
   dinRailMount: false,
   dinRailOrientation: 'horizontal',
   dinRailMountWidth: 15,

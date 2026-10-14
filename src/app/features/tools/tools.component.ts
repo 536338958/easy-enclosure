@@ -154,6 +154,7 @@ export class ToolsComponent {
       try {
         const data = JSON.parse(fileReader.result as string) as Partial<Params> & {
           lidScrewThrough?: boolean;
+          lidScrewCountersink?: number;
         };
         const current = this.state.params();
         // 嵌套对象要逐层合并：旧版预设里没有 snapFit / pcbPreview 的新字段，
@@ -171,6 +172,15 @@ export class ToolsComponent {
           if (!data.lidScrewThrough) {
             merged.lidScrewHoleDepth = Math.max(merged.height - merged.floor, 0);
           }
+        }
+        // 兼容 v1.4 及更早的预设：那时用单个数值 lidScrewCountersink 表示 45° 锥坑的
+        // 径向扩展量（深度与之相等），现在换成「形式 + 直径 + 深度」三个字段。
+        // 老预设没带新字段时按老语义迁移：锥坑的大端直径 = 孔径 + 2×扩展量。
+        if (data.lidScrewRecessType === undefined && (data.lidScrewCountersink ?? 0) > 0) {
+          const spread = data.lidScrewCountersink as number;
+          merged.lidScrewRecessType = 'countersunk';
+          merged.lidScrewRecessDiameter = merged.lidScrewDiameter + spread * 2;
+          merged.lidScrewRecessDepth = spread;
         }
         this.state.setParams(merged);
       } catch {

@@ -440,6 +440,48 @@
             />
             <small class="hint">{{ t('params.autoValueNote', { value: effectiveScrewProtrusion() }) }}</small>
           </div>
+
+          <div class="input-group input-group-full">
+            <label>{{ t('params.lidScrewRecessType') }}<app-help-tip [hintKey]="'params.lidScrewRecessTypeHint'" /></label>
+            <select
+              [value]="params().lidScrewRecessType"
+              (change)="setStringParam('lidScrewRecessType', $any($event.target).value)"
+            >
+              <option value="none">{{ t('params.lidScrewRecessType.none') }}</option>
+              <option value="counterbore">{{ t('params.lidScrewRecessType.counterbore') }}</option>
+              <option value="countersunk">{{ t('params.lidScrewRecessType.countersunk') }}</option>
+            </select>
+          </div>
+
+          @if (params().lidScrewRecessType !== 'none') {
+            <div class="input-group">
+              <label>{{ t('params.lidScrewRecessDiameter') }}<app-help-tip [hintKey]="'params.lidScrewRecessDiameterHint'" /></label>
+              <input
+                type="number"
+                min="1"
+                step="0.1"
+                [value]="params().lidScrewRecessDiameter"
+                (keydown.enter)="$any($event.target).blur()"
+                (blur)="setNumberParam('lidScrewRecessDiameter', $any($event.target).value)"
+              />
+              
+            </div>
+          }
+
+          @if (params().lidScrewRecessType === 'counterbore') {
+            <div class="input-group">
+              <label>{{ t('params.lidScrewRecessDepth') }}<app-help-tip [hintKey]="'params.lidScrewRecessDepthHint'" /></label>
+              <input
+                type="number"
+                min="0.2"
+                step="0.1"
+                [value]="params().lidScrewRecessDepth"
+                (keydown.enter)="$any($event.target).blur()"
+                (blur)="setNumberParam('lidScrewRecessDepth', $any($event.target).value)"
+              />
+              
+            </div>
+          }
         }
       </div>
 
@@ -1135,18 +1177,6 @@
           [value]="params().lidTopChamfer"
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('lidTopChamfer', $any($event.target).value)"
-        />
-        
-      </div>
-      <div class="input-group">
-        <label>{{ t('params.lidScrewCountersink') }}<app-help-tip [hintKey]="'params.lidScrewCountersinkHint'" /></label>
-        <input
-          type="number"
-          min="0"
-          step="0.1"
-          [value]="params().lidScrewCountersink"
-          (keydown.enter)="$any($event.target).blur()"
-          (blur)="setNumberParam('lidScrewCountersink', $any($event.target).value)"
         />
         
       </div>

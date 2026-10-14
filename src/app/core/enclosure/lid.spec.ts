@@ -4,7 +4,13 @@ import { intersect } from '@jscad/modeling/src/operations/booleans';
 import { cuboid } from '@jscad/modeling/src/primitives';
 import { translate } from '@jscad/modeling/src/operations/transforms';
 
-import { DEFAULT_PARAMS, cloneParams, type LidScrewHoleType, type Params } from '../params';
+import {
+  DEFAULT_PARAMS,
+  cloneParams,
+  type LidScrewHoleType,
+  type LidScrewRecessType,
+  type Params,
+} from '../params';
 import { screwOffset, screwDiameterMax } from './dimensions';
 import { lid } from './lid';
 
@@ -101,44 +107,59 @@ describe('lid', () => {
     });
   });
 
-  // 沉头倒角：在外表面（z = 0）的孔口切 45° 锥坑，让沉头螺丝的螺帽沉进去
-  describe('lid screw countersink', () => {
-    const setup = (size: number): Params => {
+  // 沉头窝：在外表面（z = 0）的孔口开窝，让螺丝头/螺帽沉进去、不凸出
+  describe('lid screw recess', () => {
+    const setup = (type: LidScrewRecessType): Params => {
       const params = cloneParams(DEFAULT_PARAMS);
       params.lidScrews = true;
-      params.lidScrewCountersink = size;
+      params.lidScrewRecessType = type;
+      params.lidScrewRecessDiameter = 6.2;
+      params.lidScrewRecessDepth = 1;
       return params;
     };
 
     it('opens the hole mouth at the outer face', () => {
-      const params = setup(1);
-      const plain = setup(0);
+      for (const type of ['counterbore', 'countersunk'] as const) {
+        const params = setup(type);
+        const plain = setup('none');
 
-      const holeR = params.lidScrewDiameter / 2;
-      const [cx, cy] = holeCornersOf(params)[0];
-      // 孔口外侧一点：落在锥坑内、但超出圆柱孔本身
-      const at: [number, number, number] = [cx + holeR + 0.5, cy, 0.05];
+        const holeR = params.lidScrewDiameter / 2;
+        const [cx, cy] = holeCornersOf(params)[0];
+        // 孔口外侧一点：落在窝内、但超出圆柱孔本身
+        const at: [number, number, number] = [cx + holeR + 0.5, cy, 0.05];
 
-      expect(materialAt(lid(plain), at)).toBeGreaterThan(0.001);
-      expect(materialAt(lid(params), at)).toBeLessThan(0.001);
+        expect(materialAt(lid(plain), at)).toBeGreaterThan(0.001);
+        expect(materialAt(lid(params), at)).toBeLessThan(0.001);
+      }
     });
 
-    it('leaves the geometry untouched when switched off', () => {
-      const off = lid(setup(0));
-      const on = lid(setup(1));
+    it('removes material only when a recess type is selected', () => {
+      const off = measureVolume(lid(setup('none')));
 
-      expect(measureVolume(off)).toBeGreaterThan(measureVolume(on));
+      expect(off).toBeGreaterThan(measureVolume(lid(setup('counterbore'))));
+      expect(off).toBeGreaterThan(measureVolume(lid(setup('countersunk'))));
     });
 
-    it('does not cut into the embedded lip side', () => {
-      const params = setup(1);
+    // 窝只加宽孔口，不该把整条孔都扩成窝的直径
+    it('only widens the mouth, not the whole hole', () => {
+      const params = setup('counterbore');
       const [cx, cy] = holeCornersOf(params)[0];
-      const holeR = params.lidScrewDiameter / 2;
-      // 嵌入边一侧（z 靠下）的孔壁应保留，锥坑只开在外表面
-      const at: [number, number, number] = [cx + holeR + 0.3, cy, params.height];
+      const outsideR = params.lidScrewDiameter / 2 + 0.5;
+
+      expect(materialAt(lid(params), [cx + outsideR, cy, 0.05])).toBeLessThan(0.001);
+      // 窝底（深度 1）以下仍是实心
+      expect(materialAt(lid(params), [cx + outsideR, cy, 1.4])).toBeGreaterThan(0.001);
+    });
+
+    // 窝不能打穿盖板本体，否则螺丝就没有咬合长度了
+    it('never punches through the lid body', () => {
+      const params = setup('counterbore');
+      params.lidScrewRecessDepth = 99;
 
       expect(() => lid(params)).not.toThrow();
-      expect(at[2]).toBeGreaterThan(0);
+      // 盖板本体 z ∈ [0, roof]，窝底之下必须还留着一层
+      expect(materialAt(lid(params), [params.width / 2, params.length / 2, params.roof - 0.1]))
+        .toBeGreaterThan(0.001);
     });
   });
 

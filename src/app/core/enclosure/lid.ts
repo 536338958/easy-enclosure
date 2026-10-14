@@ -11,10 +11,9 @@ import {
 } from './utils';
 
 import { Params } from '../params';
-import { screws, screwCountersinks } from './screws';
+import { lidScrewRecesses, screws } from './screws';
 import {
   insertRimRadius,
-  lidScrewCountersinkSize,
   lidTopChamferSize,
   screwDiameterMax,
   screwOffset,
@@ -72,12 +71,10 @@ export const lid = (params: Params) => {
     // 「孔贯穿底板」开关只作用于基座，盖板的孔不受它影响
     subtracts.push(screws(length, width, rimTopZ, screwCentre, lidScrewDiameter));
 
-    // 沉头倒角：在外表面（z = 0）的孔口切 45° 锥坑，让沉头螺丝的螺帽沉进去、不凸出
-    const countersink = lidScrewCountersinkSize(params);
-    if (countersink > 0) {
-      subtracts.push(
-        screwCountersinks(length, width, screwCentre, lidScrewDiameter, countersink, countersink),
-      );
+    // 沉头窝：在外表面（z = 0）的孔口开窝，让螺丝头/螺帽沉进去、不凸出
+    const recess = lidScrewRecesses(params);
+    if (recess) {
+      subtracts.push(recess);
     }
   } else {
     entities.push(

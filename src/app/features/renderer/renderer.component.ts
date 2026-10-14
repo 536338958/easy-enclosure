@@ -57,8 +57,10 @@ const lidDeps = [
   'snapFit',
   'lidBedChamfer',
   'lidTopChamfer',
-  // 沉头倒角会在盖板顶面切锥坑
-  'lidScrewCountersink',
+  // 沉头窝会在盖板外表面挖坑
+  'lidScrewRecessType',
+  'lidScrewRecessDiameter',
+  'lidScrewRecessDepth',
   // 凸出量改动螺丝柱，孔位改动螺丝孔，两者都会改几何，缺一个就「改了不刷新」
   'lidScrewProtrusion',
   'lidScrewOffset',

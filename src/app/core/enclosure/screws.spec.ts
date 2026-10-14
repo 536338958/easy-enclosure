@@ -1,7 +1,12 @@
 import measureBoundingBox from '@jscad/modeling/src/measurements/measureBoundingBox';
-import { DEFAULT_PARAMS, cloneParams } from '../params';
-import { screws, nutPockets } from './screws';
-import { lidScrewBlindDepth, screwDiameterMax, screwOffset } from './dimensions';
+import { DEFAULT_PARAMS, cloneParams, type Params } from '../params';
+import { lidScrewRecesses, screws, nutPockets } from './screws';
+import {
+  MIN_SCREW_RECESS_RESIDUAL,
+  lidScrewBlindDepth,
+  screwDiameterMax,
+  screwOffset,
+} from './dimensions';
 import { base } from './base';
 import { lid } from './lid';
 
@@ -93,5 +98,65 @@ describe('screws（螺丝孔与螺母槽）', () => {
       expect(base(params)).toBeDefined();
       expect(lid(params)).toBeDefined();
     }
+  });
+
+  describe('沉头窝（lidScrewRecesses）', () => {
+    // 盖板外表面是 z = 0，窝口略微伸出之外（−0.2）以避免共面
+    const boxOf = (params: Params) => {
+      const solid = lidScrewRecesses(params);
+      if (!solid) {
+        throw new Error('expected a recess solid');
+      }
+      return measureBoundingBox(solid);
+    };
+
+    it('未选形式时不生成切割体', () => {
+      const params = cloneParams(DEFAULT_PARAMS);
+      params.lidScrewRecessType = 'none';
+
+      expect(lidScrewRecesses(params)).toBeNull();
+    });
+
+    it('圆柱窝深度被夹到「不打穿盖板本体」', () => {
+      const params = cloneParams(DEFAULT_PARAMS);
+      params.lidScrewRecessType = 'counterbore';
+      params.lidScrewRecessDepth = 99;
+
+      const [min, max] = boxOf(params);
+      expect(min[2]).toBeCloseTo(-0.2, 6);
+      expect(max[2]).toBeCloseTo(params.roof - MIN_SCREW_RECESS_RESIDUAL, 6);
+    });
+
+    // 45° 锥：半径差与深度相等
+    it('锥坑深度由窝口直径与孔径之差算出', () => {
+      const params = cloneParams(DEFAULT_PARAMS);
+      params.lidScrewRecessType = 'countersunk';
+      params.lidScrewDiameter = 3;
+      params.lidScrewRecessDiameter = 7;
+
+      const [min, max] = boxOf(params);
+      expect(min[2]).toBeCloseTo(-0.2, 6);
+      expect(max[2]).toBeCloseTo(2, 6);
+    });
+
+    it('窝口不大于孔径时退化为最小深度，不会生成零厚度', () => {
+      const params = cloneParams(DEFAULT_PARAMS);
+      params.lidScrewRecessType = 'countersunk';
+      params.lidScrewRecessDiameter = params.lidScrewDiameter;
+
+      const [min, max] = boxOf(params);
+      expect(max[2] - min[2]).toBeGreaterThan(0);
+    });
+
+    it('窝的孔位与螺丝孔一致', () => {
+      const params = cloneParams(DEFAULT_PARAMS);
+      params.lidScrewRecessType = 'counterbore';
+      params.lidScrewRecessDiameter = 6.2;
+
+      const [min, max] = boxOf(params);
+      const offset = screwOffset(params, screwDiameterMax(params));
+      expect(min[0]).toBeCloseTo(offset - 3.1, 6);
+      expect(max[0]).toBeCloseTo(params.width - offset + 3.1, 6);
+    });
   });
 });

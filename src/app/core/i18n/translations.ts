@@ -315,9 +315,18 @@ export const ZH = {
   'params.lidTopChamfer': '嵌入边顶端倒角 (mm)',
   'params.lidTopChamferHint':
     '盖板上那圈插进基座的嵌入边，其顶端外缘的 45° 斜面，便于对准滑入；0＝关闭，mm',
-  'params.lidScrewCountersink': '螺丝沉头倒角 (mm)',
-  'params.lidScrewCountersinkHint':
-    '盖板顶面螺丝孔口的 45° 锥坑，让沉头螺丝的螺帽沉进去、不凸出表面；0＝关闭。取值是径向扩展量、深度与之相等，会被夹到 0.2–2.5mm。仅对盖板螺丝生效。',
+  'params.lidScrewRecessType': '螺丝沉头窝',
+  'params.lidScrewRecessTypeHint':
+    '盖板外表面螺丝孔口的沉头窝形式，让螺丝头/螺帽沉进去、不凸出表面。无：不开窝，螺丝头直接压在表面上。圆柱沉头窝：平底圆柱坑，把螺栓头整颗藏进盖板，深度可单独调。锥坑：45° 圆锥坑，配沉头螺丝，深度由窝口直径与孔径之差算出。仅对盖板螺丝生效。',
+  'params.lidScrewRecessType.none': '无',
+  'params.lidScrewRecessType.counterbore': '圆柱沉头窝（藏螺栓头）',
+  'params.lidScrewRecessType.countersunk': '锥坑（沉头螺丝）',
+  'params.lidScrewRecessDiameter': '沉头窝直径 (mm)',
+  'params.lidScrewRecessDiameterHint':
+    '窝口的直径，mm。圆柱窝要大于螺丝头/螺帽的外接圆才藏得住（M3 六角头螺栓约 6.2）；锥坑模式下它是大端直径，深度 =（直径 − 孔径）/ 2，固定 45°。',
+  'params.lidScrewRecessDepth': '沉头窝深度 (mm)',
+  'params.lidScrewRecessDepthHint':
+    '圆柱沉头窝的坑深，mm，仅圆柱窝模式可调（锥坑深度由直径算出）。太浅藏不住螺丝头，太深会削弱盖板；实际取值会被夹到 0.2mm 与「盖板厚度 − 0.4mm」之间，不会打穿。',
   'params.chamferHint':
     '底边倒角在与打印床接触的底边做 45° 倒角，缓解首层「象脚」溢出。基座底边倒角开启时，壁挂挂耳沿自身轮廓同步倒角，与主体底边连续。嵌入边顶端倒角会按嵌入边高度与圆角半径自动限制，不会削穿。',
 
@@ -666,9 +675,18 @@ export const EN: Record<TranslationKey, string> = {
   'params.lidTopChamfer': 'Insert lip top chamfer (mm)',
   'params.lidTopChamferHint':
     '45° bevel on the top outer edge of the lid insert lip, making it easier to align and slide in; 0 = off, mm',
-  'params.lidScrewCountersink': 'Screw countersink (mm)',
-  'params.lidScrewCountersinkHint':
-    'A 45° conical recess at the screw hole on the lid top face, so a countersunk head sits flush instead of sticking out; 0 = off. The value is the radial expansion and the depth equals it, clamped to 0.2–2.5 mm. Applies to lid screws only.',
+  'params.lidScrewRecessType': 'Screw head recess',
+  'params.lidScrewRecessTypeHint':
+    'Shape of the recess at the screw hole on the lid outer face, so the screw head or nut sits below the surface instead of sticking out. None: no recess, the head bears on the surface. Counterbore: a flat-bottomed cylindrical pocket that hides a bolt head entirely, with its own depth control. Countersunk: a 45° cone for countersunk screws, its depth derived from the mouth diameter and the hole diameter. Applies to lid screws only.',
+  'params.lidScrewRecessType.none': 'None',
+  'params.lidScrewRecessType.counterbore': 'Counterbore (hides bolt head)',
+  'params.lidScrewRecessType.countersunk': 'Countersunk cone',
+  'params.lidScrewRecessDiameter': 'Recess diameter (mm)',
+  'params.lidScrewRecessDiameterHint':
+    'Mouth diameter of the recess, mm. A counterbore must exceed the circumscribed circle of the screw head or nut to hide it (about 6.2 for an M3 hex head bolt); in countersunk mode this is the wide end and the depth is (diameter − hole diameter) / 2, fixed at 45°.',
+  'params.lidScrewRecessDepth': 'Recess depth (mm)',
+  'params.lidScrewRecessDepthHint':
+    'Depth of a counterbore pocket, mm; counterbore mode only (the cone depth is derived from the diameter). Too shallow and the head still sticks out, too deep and the lid weakens. The value is clamped between 0.2 mm and (lid thickness − 0.4 mm) so it cannot punch through.',
   'params.chamferHint':
     'Bed chamfers cut a 45° bevel along the edge touching the print bed, which reduces first-layer “elephant foot” flare. When the base bed chamfer is on, wall mount tabs are chamfered along their own outline so they stay continuous with the main bed edge. The insert lip top chamfer is automatically limited by the lip height and corner radius, so it cannot cut through.',
 
