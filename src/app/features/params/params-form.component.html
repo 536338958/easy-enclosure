@@ -1195,3 +1195,193 @@
     </div>
   </div>
 </form>
+
+  <div class="accordian" [class.active]="activeTab() === 12">
+    <p class="accordian-header" (click)="setActiveTab(12)">
+      {{ t('params.clamps')
+      }}<span class="accordian-icon">{{ activeTab() === 12 ? '-' : '+' }}</span>
+    </p>
+    <div class="accordian-body">
+      @for (clamp of params().cableClamps; track $index) {
+        <div class="sub-params">
+          <button class="remove-btn" type="button" (click)="removeCableClamp($index)">
+            {{ t('params.remove') }}
+          </button>
+          <p>
+            {{ t('params.clamps') }} {{ $index + 1 }}
+          </p>
+
+          <div class="input-group">
+            <label
+              >{{ t('params.mountSurface') }}<app-help-tip [hintKey]="'params.mountSurfaceHint'"
+            /></label>
+            <select
+              [value]="clamp.surface || 'bottom'"
+              (change)="updateCableClamp($index, { surface: $any($event.target).value })"
+            >
+              <option value="bottom">{{ t('surface.bottom') }}</option>
+              <option value="top">{{ t('surface.top') }}</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label
+              >{{ t('params.offsetXRight') }}<app-help-tip [hintKey]="'params.offsetXFloorHint'"
+            /></label>
+            <input
+              type="number"
+              [value]="clamp.x"
+              (keydown.enter)="$any($event.target).blur()"
+              (blur)="updateCableClamp($index, { x: +$any($event.target).value })"
+            />
+          </div>
+          <div class="input-group">
+            <label
+              >{{ t('params.offsetYBack') }}<app-help-tip [hintKey]="'params.offsetYFloorHint'"
+            /></label>
+            <input
+              type="number"
+              [value]="clamp.y"
+              (keydown.enter)="$any($event.target).blur()"
+              (blur)="updateCableClamp($index, { y: +$any($event.target).value })"
+            />
+          </div>
+          <div class="input-group">
+            <label
+              >{{ t('params.clampLength') }}<app-help-tip [hintKey]="'params.clampLengthHint'"
+            /></label>
+            <input
+              type="number"
+              min="5"
+              step="0.5"
+              [value]="clamp.length"
+              (keydown.enter)="$any($event.target).blur()"
+              (blur)="updateCableClamp($index, { length: +$any($event.target).value })"
+            />
+          </div>
+          <div class="input-group">
+            <label
+              >{{ t('params.clampMountHeight')
+              }}<app-help-tip [hintKey]="'params.clampMountHeightHint'"
+            /></label>
+            <input
+              type="number"
+              min="1"
+              step="0.5"
+              [value]="clamp.mountHeight"
+              (keydown.enter)="$any($event.target).blur()"
+              (blur)="updateCableClamp($index, { mountHeight: +$any($event.target).value })"
+            />
+          </div>
+          <div class="input-group">
+            <label
+              >{{ t('params.clampWallHeight')
+              }}<app-help-tip [hintKey]="'params.clampWallHeightHint'"
+            /></label>
+            <input
+              type="number"
+              min="0.5"
+              step="0.5"
+              [value]="clamp.wallHeight"
+              (keydown.enter)="$any($event.target).blur()"
+              (blur)="updateCableClamp($index, { wallHeight: +$any($event.target).value })"
+            />
+          </div>
+          <div class="input-group">
+            <label
+              >{{ t('params.clampWallThickness')
+              }}<app-help-tip [hintKey]="'params.clampWallThicknessHint'"
+            /></label>
+            <input
+              type="number"
+              min="1"
+              step="0.5"
+              [value]="clamp.wallThickness"
+              (keydown.enter)="$any($event.target).blur()"
+              (blur)="updateCableClamp($index, { wallThickness: +$any($event.target).value })"
+            />
+          </div>
+          <div class="input-group">
+            <label
+              >{{ t('params.clampOuterDiameter')
+              }}<app-help-tip [hintKey]="'params.clampOuterDiameterHint'"
+            /></label>
+            <input
+              type="number"
+              min="2"
+              step="0.5"
+              [value]="clamp.mountOuterDiameter"
+              (keydown.enter)="$any($event.target).blur()"
+              (blur)="updateCableClamp($index, { mountOuterDiameter: +$any($event.target).value })"
+            />
+          </div>
+          <div class="input-group">
+            <label
+              >{{ t('params.clampScrewDiameter')
+              }}<app-help-tip [hintKey]="'params.clampScrewDiameterHint'"
+            /></label>
+            <input
+              type="number"
+              min="0.5"
+              step="0.1"
+              [value]="clamp.mountScrewDiameter"
+              (keydown.enter)="$any($event.target).blur()"
+              (blur)="updateCableClamp($index, { mountScrewDiameter: +$any($event.target).value })"
+            />
+          </div>
+          <div class="input-group">
+            <label
+              >{{ t('params.clampTopHeight')
+              }}<app-help-tip [hintKey]="'params.clampTopHeightHint'"
+            /></label>
+            <input
+              type="number"
+              min="0.5"
+              step="0.5"
+              [value]="clamp.topHeight"
+              (keydown.enter)="$any($event.target).blur()"
+              (blur)="updateCableClamp($index, { topHeight: +$any($event.target).value })"
+            />
+          </div>
+          <div class="input-group">
+            <label
+              >{{ t('params.clampTopScrewDiameter')
+              }}<app-help-tip [hintKey]="'params.clampTopScrewDiameterHint'"
+            /></label>
+            <input
+              type="number"
+              min="0.5"
+              step="0.1"
+              [value]="clamp.topScrewDiameter"
+              (keydown.enter)="$any($event.target).blur()"
+              (blur)="updateCableClamp($index, { topScrewDiameter: +$any($event.target).value })"
+            />
+          </div>
+          <div class="input-group">
+            <label
+              >{{ t('params.wallRotation') }}<app-help-tip [hintKey]="'params.wallRotationHint'"
+            /></label>
+            <input
+              type="number"
+              step="1"
+              [value]="clamp.rotation"
+              (keydown.enter)="$any($event.target).blur()"
+              (blur)="updateCableClamp($index, { rotation: +$any($event.target).value })"
+            />
+          </div>
+          <div class="input-group checkbox-group">
+            <label
+              >{{ t('params.clampRidges') }}<app-help-tip [hintKey]="'params.clampRidgesHint'"
+            /></label>
+            <input
+              type="checkbox"
+              [checked]="clamp.ridges !== false"
+              (change)="updateCableClamp($index, { ridges: $any($event.target).checked })"
+            />
+          </div>
+        </div>
+      }
+      <button type="button" class="add-btn" (click)="addCableClamp()">
+        {{ t('params.addClamp') }}
+      </button>
+    </div>
+  </div>

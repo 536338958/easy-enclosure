@@ -25,6 +25,7 @@ import {
 import type { Entity } from '@jscad/regl-renderer/types/geometry-utils-V2/entity';
 
 import { base } from '../../core/enclosure/base';
+import { cableClamps } from '../../core/enclosure/clamp';
 import { dinRailMountsPair } from '../../core/enclosure/dinrailmount';
 import { internalWalls } from '../../core/enclosure/internalwalls';
 import { lid } from '../../core/enclosure/lid';
@@ -143,6 +144,20 @@ const dinRailDeps = [
   'wallMountScrewDiameter',
   'wallMountCount',
   'showDinRailMount',
+];
+const cableClampDeps = [
+  'cableClamps',
+  'length',
+  'width',
+  'height',
+  'floor',
+  'roof',
+  'wall',
+  'waterProof',
+  'lidScrews',
+  'insertThickness',
+  'insertClearance',
+  'insertHeight',
 ];
 const gridDeps = [
   'showGrid',
@@ -352,6 +367,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
   private lidMountsModel: Geom3 | null = null;
   private internalWallsModel: Geom3 | null = null;
   private dinRailModel: Geom3 | null = null;
+  private cableClampsModel: Geom3 | null = null;
 
   private model: Geom3 | null = null;
   private renderOptions: RenderOptions | null = null;
@@ -969,6 +985,16 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       this.internalWallsModel = translate(mountsPos, internalWalls(params));
     }
 
+    if (this.checkDeps(diff, cableClampDeps) && (params.cableClamps?.length ?? 0) > 0) {
+      const clampsPos: Vec3 = waterProof
+        ? [-width / 2, -length / 2, 0]
+        : [-(width + SPACING / 2), -length / 2, 0];
+      const rawClamps = cableClamps(params);
+      this.cableClampsModel = rawClamps ? translate(clampsPos, rawClamps) : null;
+    } else if (this.checkDeps(diff, cableClampDeps)) {
+      this.cableClampsModel = null;
+    }
+
     // showLid / showBase 只影响组装，不影响几何本身，因此上面各部件仍走缓存重建
     const result: Geom3[] = [];
     if (this.lidModel && params.showLid) {
@@ -989,6 +1015,9 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     }
     if (this.internalWallsModel && internalWallParams.length > 0 && params.showBase) {
       result.push(this.internalWallsModel);
+    }
+    if (this.cableClampsModel && (params.cableClamps?.length ?? 0) > 0 && params.showBase) {
+      result.push(this.cableClampsModel);
     }
     if (this.dinRailModel && dinMountEnabled && showDinRailMount) {
       result.push(this.dinRailModel);

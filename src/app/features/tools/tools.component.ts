@@ -20,6 +20,7 @@ import {
 import { ExportFormatService } from '../../core/export/export-format.service';
 
 import { base } from '../../core/enclosure/base';
+import { cableClampTops, cableClampsOnBase, cableClampsOnLid } from '../../core/enclosure/clamp';
 import { dinRailMountGeometry } from '../../core/enclosure/dinrailmount';
 import { internalWalls } from '../../core/enclosure/internalwalls';
 import { lid } from '../../core/enclosure/lid';
@@ -78,6 +79,7 @@ export class ToolsComponent {
   readonly hasSeal = computed(() => this.state.params().waterProof);
   readonly hasDinRailMount = computed(() => this.state.params().dinRailMount);
   readonly hasPcbMounts = computed(() => this.state.params().pcbMounts.length > 0);
+  readonly hasCableClamps = computed(() => (this.state.params().cableClamps?.length ?? 0) > 0);
 
   readonly exportBase = signal(true);
   readonly exportLid = signal(true);
@@ -85,6 +87,7 @@ export class ToolsComponent {
   // 支柱已经并进基座 / 盖板里了，默认不再单独导出一份
   readonly exportPcbMounts = signal(false);
   readonly exportDinRail = signal(true);
+  readonly exportCableClamps = signal(true);
 
   readonly selectedCount = computed(() => {
     let count = 0;
@@ -93,6 +96,7 @@ export class ToolsComponent {
     if (this.hasSeal() && this.exportSeal()) count++;
     if (this.hasPcbMounts() && this.exportPcbMounts()) count++;
     if (this.hasDinRailMount() && this.exportDinRail()) count++;
+    if (this.hasCableClamps() && this.exportCableClamps()) count++;
     return count;
   });
 
@@ -188,6 +192,7 @@ export class ToolsComponent {
     this.exportSeal.set(true);
     this.exportPcbMounts.set(false);
     this.exportDinRail.set(true);
+    this.exportCableClamps.set(true);
   }
 
   /** 完整外壳：沿用勾选面板的默认组合 */
@@ -239,6 +244,10 @@ export class ToolsComponent {
         if (currentParams.internalWalls.length > 0) {
           baseParts.push(internalWalls(currentParams));
         }
+        const baseClamps = cableClampsOnBase(currentParams);
+        if (baseClamps) {
+          baseParts.push(baseClamps);
+        }
 
         files.push({
           name: `enclosure-base-${tsStr}.${ext}`,
@@ -248,7 +257,11 @@ export class ToolsComponent {
 
       if (this.exportLid()) {
         const lidMounts = pcbMountsOnLid(currentParams);
-        const lidGeometry = lidMounts ? union([lid(currentParams), lidMounts]) : lid(currentParams);
+        const lidClamps = cableClampsOnLid(currentParams);
+        const lidParts: Geom3[] = [lid(currentParams)];
+        if (lidMounts) lidParts.push(lidMounts);
+        if (lidClamps) lidParts.push(lidClamps);
+        const lidGeometry = lidParts.length > 1 ? union(lidParts) : lidParts[0];
         files.push({
           name: `enclosure-lid-${tsStr}.${ext}`,
           blob: this.geometryToBlob(lidGeometry),
@@ -287,6 +300,16 @@ export class ToolsComponent {
         });
       }
 
+      if (this.hasCableClamps() && this.exportCableClamps()) {
+        const clampTops = cableClampTops(currentParams);
+        if (clampTops) {
+          files.push({
+            name: `enclosure-cable-clamp-straps-${tsStr}.${ext}`,
+            blob: this.geometryToBlob(clampTops, `enclosure-cable-clamp-straps-${tsStr}`),
+          });
+        }
+      }
+
       if (files.length === 1) {
         this.saveFile(files[0].blob, files[0].name);
       } else if (files.length > 1) {
@@ -309,6 +332,7 @@ export class ToolsComponent {
     if (this.exportLid()) fileCount++;
     if (this.hasSeal() && this.exportSeal()) fileCount++;
     if (this.hasDinRailMount() && this.exportDinRail()) fileCount++;
+    if (this.hasCableClamps() && this.exportCableClamps()) fileCount++;
     if (this.hasPcbMounts() && this.exportPcbMounts()) {
       const params = this.state.params();
       const hasBaseMounts = params.pcbMounts.some((m) => (m.surface ?? 'bottom') !== 'top');

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import type {
+  CableClamp,
   DinRailOrientation,
   Hole,
   InternalWall,
@@ -10,6 +11,7 @@ import type {
   SnapFit,
   Ventilation,
 } from '../../core/params';
+import { DEFAULT_CABLE_CLAMP } from '../../core/params';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
 import {
   screwDiameterMax,
@@ -368,5 +370,27 @@ export class ParamsFormComponent {
 
   parseIntValue(rawValue: string): number {
     return parseInt(rawValue, 10);
+  }
+
+  addCableClamp(): void {
+    const current = this.state.params();
+    const next: CableClamp = { ...DEFAULT_CABLE_CLAMP, x: 0, y: 0 };
+    this.state.patchParams({ cableClamps: [...(current.cableClamps ?? []), next] });
+  }
+
+  removeCableClamp(index: number): void {
+    const current = this.state.params();
+    this.state.patchParams({
+      cableClamps: (current.cableClamps ?? []).filter((_, i) => i !== index),
+    });
+  }
+
+  updateCableClamp(index: number, patch: Partial<CableClamp>): void {
+    const current = this.state.params();
+    this.state.patchParams({
+      cableClamps: (current.cableClamps ?? []).map((item, i) =>
+        i === index ? { ...item, ...patch } : item,
+      ),
+    });
   }
 }
