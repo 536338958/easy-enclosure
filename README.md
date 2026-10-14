@@ -7,7 +7,9 @@ EasyEnclosure 是一款开源的 3D 建模软件，专门用于设计可 3D 打�
 DIY 小装置制作定制外壳。
 
 > 本仓库基于 **v1.4.2** 稳定基线持续开发（该版本错误较少、可实际使用），在此之上逐轮叠加
-> 功能与修复。上游原版见 [bruceborrett/easy-enclosure](https://github.com/bruceborrett/easy-enclosure)。
+> 功能与修复；当前版本号 **v1.6.1**（与上游对齐以便对照，**代码内容是 v1.4.2 + 本分支自有迭代**，
+> 不等于上游 1.6.1）。上游原版见
+> [bruceborrett/easy-enclosure](https://github.com/bruceborrett/easy-enclosure)。
 
 ### **[立即在线体验 · Easy Enclosure — 简易外壳设计器](https://536338958.github.io/easy-enclosure/)**
 
@@ -49,7 +51,7 @@ DIY 小装置制作定制外壳。
 
 ## 质量保障
 
-- **237 个单元测试**（`npm test`）：覆盖通风四模式、线缆夹、PCB 预览与碰撞检测、倒角、尺寸等
+- **239 个单元测试**（`npm test`）：覆盖通风四模式、线缆夹、PCB 预览与碰撞检测、倒角、尺寸等
 - **几何验证脚本**（`npm run verify`）：秒级检查挂耳切角、内腔地板、嵌入边倒角闭合、
   盖板装配间隙与 3D 干涉，无需起浏览器
 - **STL 流形检查工具**（`docs/stl-manifold-check.py`）：统计非流形边并定位，
@@ -95,7 +97,7 @@ npm run build
 ### 测试与几何验证
 
 ```bash
-npm test          # 单元测试（237 例）
+npm test          # 单元测试（239 例）
 npm run verify    # 几何自检：切角 / 地板 / 倒角闭合 / 装配干涉
 ```
 
