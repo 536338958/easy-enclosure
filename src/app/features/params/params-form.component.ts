@@ -18,6 +18,7 @@ import {
 } from '../../core/enclosure/dimensions';
 import { mountFilletSize } from '../../core/enclosure/pcbmount';
 import { WALL_MOUNT_CHAMFER_MAX, WALL_MOUNT_CHAMFER_MIN } from '../../core/enclosure/wallmount';
+import { HelpTipComponent } from './help-tip.component';
 import { I18nService } from '../../core/i18n/i18n.service';
 import type { TranslationKey } from '../../core/i18n/translations';
 
@@ -30,6 +31,7 @@ type MessageState = { key: TranslationKey; vars: Record<string, string | number>
   selector: 'app-params-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './params-form.component.html',
+  imports: [HelpTipComponent],
   styleUrl: './params-form.component.css',
 })
 export class ParamsFormComponent {

@@ -10,7 +10,7 @@
     </p>
     <div class="accordian-body">
       <div class="input-group">
-        <label>{{ t('params.length') }}</label>
+        <label>{{ t('params.length') }}<app-help-tip [hintKey]="'params.lengthHint'" /></label>
         <input
           type="number"
           min="1"
@@ -18,10 +18,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('length', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.lengthHint') }}</small>
+        
       </div>
       <div class="input-group">
-        <label>{{ t('params.width') }}</label>
+        <label>{{ t('params.width') }}<app-help-tip [hintKey]="'params.widthHint'" /></label>
         <input
           type="number"
           min="1"
@@ -29,10 +29,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('width', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.widthHint') }}</small>
+        
       </div>
       <div class="input-group">
-        <label>{{ t('params.height') }}</label>
+        <label>{{ t('params.height') }}<app-help-tip [hintKey]="'params.heightHint'" /></label>
         <input
           type="number"
           min="1"
@@ -40,10 +40,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('height', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.heightHint') }}</small>
+        
       </div>
       <div class="input-group">
-        <label>{{ t('params.floor') }}</label>
+        <label>{{ t('params.floor') }}<app-help-tip [hintKey]="'params.floorHint'" /></label>
         <input
           type="number"
           min="1"
@@ -51,10 +51,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('floor', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.floorHint') }}</small>
+        
       </div>
       <div class="input-group">
-        <label>{{ t('params.wall') }}</label>
+        <label>{{ t('params.wall') }}<app-help-tip [hintKey]="'params.wallHint'" /></label>
         <input
           type="number"
           min="1"
@@ -62,10 +62,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('wall', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.wallHint') }}</small>
+        
       </div>
       <div class="input-group">
-        <label>{{ t('params.roof') }}</label>
+        <label>{{ t('params.roof') }}<app-help-tip [hintKey]="'params.roofHint'" /></label>
         <input
           type="number"
           min="1"
@@ -73,10 +73,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('roof', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.roofHint') }}</small>
+        
       </div>
       <div class="input-group">
-        <label>{{ t('params.cornerRadius') }}</label>
+        <label>{{ t('params.cornerRadius') }}<app-help-tip [hintKey]="'params.cornerRadiusHint'" /></label>
         <input
           type="number"
           min="1"
@@ -84,7 +84,7 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('cornerRadius', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.cornerRadiusHint') }}</small>
+        
       </div>
     </div>
   </div>
@@ -103,7 +103,7 @@
         />
       </div>
       <div class="input-group">
-        <label>{{ t('params.pcbWidth') }}</label>
+        <label>{{ t('params.pcbWidth') }}<app-help-tip [hintKey]="'params.pcbWidthHint'" /></label>
         <input
           type="number"
           min="1"
@@ -112,10 +112,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setPcbPreviewNumber('width', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.pcbWidthHint') }}</small>
+        
       </div>
       <div class="input-group">
-        <label>{{ t('params.pcbLength') }}</label>
+        <label>{{ t('params.pcbLength') }}<app-help-tip [hintKey]="'params.pcbLengthHint'" /></label>
         <input
           type="number"
           min="1"
@@ -124,10 +124,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setPcbPreviewNumber('length', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.pcbLengthHint') }}</small>
+        
       </div>
       <div class="input-group">
-        <label>{{ t('params.pcbThickness') }}</label>
+        <label>{{ t('params.pcbThickness') }}<app-help-tip [hintKey]="'params.pcbThicknessHint'" /></label>
         <input
           type="number"
           min="0.1"
@@ -136,10 +136,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setPcbPreviewNumber('thickness', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.pcbThicknessHint') }}</small>
+        
       </div>
       <div class="input-group">
-        <label>{{ t('params.pcbComponentHeight') }}</label>
+        <label>{{ t('params.pcbComponentHeight') }}<app-help-tip [hintKey]="'params.pcbComponentHeightHint'" /></label>
         <input
           type="number"
           min="0"
@@ -148,10 +148,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setPcbPreviewNumber('componentHeight', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.pcbComponentHeightHint') }}</small>
+        
       </div>
       <div class="input-group">
-        <label>{{ t('params.offsetXLeft') }}</label>
+        <label>{{ t('params.offsetXLeft') }}<app-help-tip [hintKey]="'params.offsetXLeftBaseHint'" /></label>
         <input
           type="number"
           step="0.1"
@@ -159,10 +159,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setPcbPreviewNumber('x', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.offsetXLeftBaseHint') }}</small>
+        
       </div>
       <div class="input-group">
-        <label>{{ t('params.offsetYFront') }}</label>
+        <label>{{ t('params.offsetYFront') }}<app-help-tip [hintKey]="'params.offsetYFrontBaseHint'" /></label>
         <input
           type="number"
           step="0.1"
@@ -170,7 +170,7 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setPcbPreviewNumber('y', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.offsetYFrontBaseHint') }}</small>
+        
       </div>
       <p class="input-group-full hint">{{ t('params.pcbPreviewHint') }}</p>
     </div>
@@ -186,7 +186,7 @@
           <b>{{ t('params.lidInsert') }}</b>
         </p>
         <div class="input-group">
-          <label>{{ t('params.insertThickness') }}</label>
+          <label>{{ t('params.insertThickness') }}<app-help-tip [hintKey]="'params.insertThicknessHint'" /></label>
           <input
             type="number"
             min="1"
@@ -195,10 +195,10 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setNumberParam('insertThickness', $any($event.target).value)"
           />
-          <small class="hint">{{ t('params.insertThicknessHint') }}</small>
+          
         </div>
         <div class="input-group">
-          <label>{{ t('params.insertHeight') }}</label>
+          <label>{{ t('params.insertHeight') }}<app-help-tip [hintKey]="'params.insertHeightHint'" /></label>
           <input
             type="number"
             min="1"
@@ -207,10 +207,10 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setNumberParam('insertHeight', $any($event.target).value)"
           />
-          <small class="hint">{{ t('params.insertHeightHint') }}</small>
+          
         </div>
         <div class="input-group">
-          <label>{{ t('params.insertClearance') }}</label>
+          <label>{{ t('params.insertClearance') }}<app-help-tip [hintKey]="'params.insertClearanceHint'" /></label>
           <input
             type="number"
             min="0.01"
@@ -219,7 +219,7 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setNumberParam('insertClearance', $any($event.target).value)"
           />
-          <small class="hint">{{ t('params.insertClearanceHint') }}</small>
+          
         </div>
       </div>
 
@@ -236,7 +236,7 @@
           />
         </div>
         <div class="input-group">
-          <label>{{ t('params.snapFitPreset') }}</label>
+          <label>{{ t('params.snapFitPreset') }}<app-help-tip [hintKey]="'params.snapFitPresetHint'" /></label>
           <select
             [value]="params().snapFit.preset"
             (change)="setSnapFitPreset($any($event.target).value)"
@@ -251,10 +251,10 @@
               {{ t('params.snapFitPreset8') }}
             </option>
           </select>
-          <small class="hint">{{ t('params.snapFitPresetHint') }}</small>
+          
         </div>
         <div class="input-group">
-          <label>{{ t('params.snapFitEndPercent') }}</label>
+          <label>{{ t('params.snapFitEndPercent') }}<app-help-tip [hintKey]="'params.snapFitEndPercentHint'" /></label>
           <input
             type="number"
             min="0"
@@ -264,10 +264,10 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setSnapFitNumber('endPercent', $any($event.target).value)"
           />
-          <small class="hint">{{ t('params.snapFitEndPercentHint') }}</small>
+          
         </div>
         <div class="input-group">
-          <label>{{ t('params.snapFitWidth') }}</label>
+          <label>{{ t('params.snapFitWidth') }}<app-help-tip [hintKey]="'params.snapFitWidthHint'" /></label>
           <input
             type="number"
             min="1"
@@ -276,10 +276,10 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setSnapFitNumber('width', $any($event.target).value)"
           />
-          <small class="hint">{{ t('params.snapFitWidthHint') }}</small>
+          
         </div>
         <div class="input-group">
-          <label>{{ t('params.snapFitDepth') }}</label>
+          <label>{{ t('params.snapFitDepth') }}<app-help-tip [hintKey]="'params.snapFitDepthHint'" /></label>
           <input
             type="number"
             min="0.2"
@@ -288,10 +288,10 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setSnapFitNumber('depth', $any($event.target).value)"
           />
-          <small class="hint">{{ t('params.snapFitDepthHint') }}</small>
+          
         </div>
         <div class="input-group">
-          <label>{{ t('params.snapFitHeight') }}</label>
+          <label>{{ t('params.snapFitHeight') }}<app-help-tip [hintKey]="'params.snapFitHeightHint'" /></label>
           <input
             type="number"
             min="0.4"
@@ -300,10 +300,10 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setSnapFitNumber('height', $any($event.target).value)"
           />
-          <small class="hint">{{ t('params.snapFitHeightHint') }}</small>
+          
         </div>
         <div class="input-group">
-          <label>{{ t('params.snapFitClearance') }}</label>
+          <label>{{ t('params.snapFitClearance') }}<app-help-tip [hintKey]="'params.snapFitClearanceHint'" /></label>
           <input
             type="number"
             min="0"
@@ -312,7 +312,7 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setSnapFitNumber('clearance', $any($event.target).value)"
           />
-          <small class="hint">{{ t('params.snapFitClearanceHint') }}</small>
+          
         </div>
         <p class="input-group-full hint">{{ t('params.snapFitHint') }}</p>
       </div>
@@ -333,7 +333,7 @@
 
         @if (params().lidScrews) {
           <div class="input-group input-group-full">
-            <label>{{ t('params.lidScrewHoleType') }}</label>
+            <label>{{ t('params.lidScrewHoleType') }}<app-help-tip [hintKey]="'params.lidScrewHoleTypeHint'" /></label>
             <select
               [value]="params().lidScrewHoleType"
               (change)="setStringParam('lidScrewHoleType', $any($event.target).value)"
@@ -342,12 +342,12 @@
               <option value="blind">{{ t('params.lidScrewHoleType.blind') }}</option>
               <option value="nut-pocket">{{ t('params.lidScrewHoleType.nut-pocket') }}</option>
             </select>
-            <small class="hint">{{ t('params.lidScrewHoleTypeHint') }}</small>
+            
           </div>
 
           @if (params().lidScrewHoleType === 'blind') {
             <div class="input-group">
-              <label>{{ t('params.lidScrewHoleDepth') }}</label>
+              <label>{{ t('params.lidScrewHoleDepth') }}<app-help-tip [hintKey]="'params.lidScrewHoleDepthHint'" /></label>
               <input
                 type="number"
                 min="1"
@@ -357,13 +357,13 @@
                 (keydown.enter)="$any($event.target).blur()"
                 (blur)="setNumberParam('lidScrewHoleDepth', $any($event.target).value)"
               />
-              <small class="hint">{{ t('params.lidScrewHoleDepthHint') }}</small>
+              
             </div>
           }
 
           @if (params().lidScrewHoleType === 'nut-pocket') {
             <div class="input-group">
-              <label>{{ t('params.lidScrewNutWidth') }}</label>
+              <label>{{ t('params.lidScrewNutWidth') }}<app-help-tip [hintKey]="'params.lidScrewNutWidthHint'" /></label>
               <input
                 type="number"
                 min="1"
@@ -372,11 +372,11 @@
                 (keydown.enter)="$any($event.target).blur()"
                 (blur)="setNumberParam('lidScrewNutWidth', $any($event.target).value)"
               />
-              <small class="hint">{{ t('params.lidScrewNutWidthHint') }}</small>
+              
             </div>
 
             <div class="input-group">
-              <label>{{ t('params.lidScrewNutDepth') }}</label>
+              <label>{{ t('params.lidScrewNutDepth') }}<app-help-tip [hintKey]="'params.lidScrewNutDepthHint'" /></label>
               <input
                 type="number"
                 min="0.5"
@@ -385,12 +385,12 @@
                 (keydown.enter)="$any($event.target).blur()"
                 (blur)="setNumberParam('lidScrewNutDepth', $any($event.target).value)"
               />
-              <small class="hint">{{ t('params.lidScrewNutDepthHint') }}</small>
+              
             </div>
           }
 
           <div class="input-group">
-            <label>{{ t('params.lidScrewDiameter') }}</label>
+            <label>{{ t('params.lidScrewDiameter') }}<app-help-tip [hintKey]="'params.lidScrewDiameterHint'" /></label>
             <input
               type="number"
               min="1"
@@ -399,11 +399,11 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="setNumberParam('lidScrewDiameter', $any($event.target).value)"
             />
-            <small class="hint">{{ t('params.lidScrewDiameterHint') }}</small>
+            
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.baseLidScrewDiameter') }}</label>
+            <label>{{ t('params.baseLidScrewDiameter') }}<app-help-tip [hintKey]="'params.baseLidScrewDiameterHint'" /></label>
             <input
               type="number"
               min="1"
@@ -412,11 +412,11 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="setNumberParam('baseLidScrewDiameter', $any($event.target).value)"
             />
-            <small class="hint">{{ t('params.baseLidScrewDiameterHint') }}</small>
+            
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.lidScrewOffset') }}</label>
+            <label>{{ t('params.lidScrewOffset') }}<app-help-tip [hintKey]="'params.lidScrewOffsetHint'" [hintValue]="effectiveScrewOffset()" /></label>
             <input
               type="number"
               min="0"
@@ -425,13 +425,11 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="setNumberParam('lidScrewOffset', $any($event.target).value)"
             />
-            <small class="hint">
-              {{ t('params.lidScrewOffsetHint', { value: effectiveScrewOffset() }) }}
-            </small>
+            <small class="hint">{{ t('params.autoValueNote', { value: effectiveScrewOffset() }) }}</small>
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.lidScrewProtrusion') }}</label>
+            <label>{{ t('params.lidScrewProtrusion') }}<app-help-tip [hintKey]="'params.lidScrewProtrusionHint'" [hintValue]="effectiveScrewProtrusion()" /></label>
             <input
               type="number"
               min="0"
@@ -440,9 +438,7 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="setNumberParam('lidScrewProtrusion', $any($event.target).value)"
             />
-            <small class="hint">
-              {{ t('params.lidScrewProtrusionHint', { value: effectiveScrewProtrusion() }) }}
-            </small>
+            <small class="hint">{{ t('params.autoValueNote', { value: effectiveScrewProtrusion() }) }}</small>
           </div>
         }
       </div>
@@ -463,7 +459,7 @@
 
         @if (params().waterProof) {
           <div class="input-group">
-            <label>{{ t('params.sealThickness') }}</label>
+            <label>{{ t('params.sealThickness') }}<app-help-tip [hintKey]="'params.sealThicknessHint'" /></label>
             <input
               type="number"
               min="1"
@@ -472,7 +468,7 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="setNumberParam('sealThickness', $any($event.target).value)"
             />
-            <small class="hint">{{ t('params.sealThicknessHint') }}</small>
+            
           </div>
         }
       </div>
@@ -499,27 +495,27 @@
           </p>
 
           <div class="input-group">
-            <label>{{ t('params.offsetXLeft') }}</label>
+            <label>{{ t('params.offsetXLeft') }}<app-help-tip [hintKey]="'params.offsetXFloorHint'" /></label>
             <input
               type="number"
               [value]="wallItem.x"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateInternalWall($index, { x: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.offsetXFloorHint') }}</small>
+            
           </div>
           <div class="input-group">
-            <label>{{ t('params.offsetYFront') }}</label>
+            <label>{{ t('params.offsetYFront') }}<app-help-tip [hintKey]="'params.offsetYFloorHint'" /></label>
             <input
               type="number"
               [value]="wallItem.y"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateInternalWall($index, { y: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.offsetYFloorHint') }}</small>
+            
           </div>
           <div class="input-group">
-            <label>{{ t('params.wallHeight') }}</label>
+            <label>{{ t('params.wallHeight') }}<app-help-tip [hintKey]="'params.wallHeightHint'" /></label>
             <input
               type="number"
               min="0.1"
@@ -528,10 +524,10 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateInternalWall($index, { height: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.wallHeightHint') }}</small>
+            
           </div>
           <div class="input-group">
-            <label>{{ t('params.wallLength') }}</label>
+            <label>{{ t('params.wallLength') }}<app-help-tip [hintKey]="'params.wallLengthHint'" /></label>
             <input
               type="number"
               min="0.1"
@@ -540,10 +536,10 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateInternalWall($index, { length: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.wallLengthHint') }}</small>
+            
           </div>
           <div class="input-group">
-            <label>{{ t('params.wallThickness') }}</label>
+            <label>{{ t('params.wallThickness') }}<app-help-tip [hintKey]="'params.wallThicknessHint'" /></label>
             <input
               type="number"
               min="0.1"
@@ -552,10 +548,10 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateInternalWall($index, { thickness: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.wallThicknessHint') }}</small>
+            
           </div>
           <div class="input-group">
-            <label>{{ t('params.wallRotation') }}</label>
+            <label>{{ t('params.wallRotation') }}<app-help-tip [hintKey]="'params.wallRotationHint'" /></label>
             <input
               type="number"
               step="1"
@@ -563,7 +559,7 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateInternalWall($index, { rotation: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.wallRotationHint') }}</small>
+            
           </div>
         </div>
       }
@@ -579,7 +575,7 @@
     </p>
     <div class="accordian-body">
       <div class="input-group">
-        <label>{{ t('params.mountFillet') }}</label>
+        <label>{{ t('params.mountFillet') }}<app-help-tip [hintKey]="'params.mountFilletHint'" /></label>
         <select
           [value]="params().pcbMountFillet.style"
           (change)="setPcbMountFilletStyle($any($event.target).value)"
@@ -588,11 +584,11 @@
           <option value="round">{{ t('params.mountFilletRound') }}</option>
           <option value="chamfer">{{ t('params.mountFilletChamfer') }}</option>
         </select>
-        <small class="hint">{{ t('params.mountFilletHint') }}</small>
+        
       </div>
       @if (params().pcbMountFillet.style !== 'none') {
         <div class="input-group">
-          <label>{{ t('params.mountFilletSize') }}</label>
+          <label>{{ t('params.mountFilletSize') }}<app-help-tip [hintKey]="'params.mountFilletSizeHint'" [hintValue]="effectiveMountFillet()" /></label>
           <input
             type="number"
             min="0"
@@ -601,9 +597,7 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setPcbMountFilletSize($any($event.target).value)"
           />
-          <small class="hint">
-            {{ t('params.mountFilletSizeHint', { value: effectiveMountFillet() }) }}
-          </small>
+          
         </div>
       }
 
@@ -622,7 +616,7 @@
           </p>
 
           <div class="input-group">
-            <label>{{ t('params.mountSurface') }}</label>
+            <label>{{ t('params.mountSurface') }}<app-help-tip [hintKey]="'params.mountSurfaceHint'" /></label>
             <select
               [value]="mount.surface || 'bottom'"
               (change)="updatePcbMount($index, { surface: $any($event.target).value })"
@@ -633,57 +627,57 @@
                 </option>
               }
             </select>
-            <small class="hint">{{ t('params.mountSurfaceHint') }}</small>
+            
           </div>
           <div class="input-group">
-            <label>{{ offsetHLabel(mount.surface || 'bottom') }}</label>
+            <label>{{ offsetHLabel(mount.surface || 'bottom') }}<app-help-tip [hintKey]="'params.offsetFaceHint'" /></label>
             <input
               type="number"
               [value]="mount.x"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updatePcbMount($index, { x: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.offsetFaceHint') }}</small>
+            
           </div>
           <div class="input-group">
-            <label>{{ offsetVLabel(mount.surface || 'bottom') }}</label>
+            <label>{{ offsetVLabel(mount.surface || 'bottom') }}<app-help-tip [hintKey]="'params.offsetFaceHint'" /></label>
             <input
               type="number"
               [value]="mount.y"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updatePcbMount($index, { y: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.offsetFaceHint') }}</small>
+            
           </div>
           <div class="input-group">
-            <label>{{ t('params.mountHeight') }}</label>
+            <label>{{ t('params.mountHeight') }}<app-help-tip [hintKey]="'params.mountHeightHint'" /></label>
             <input
               type="number"
               [value]="mount.height"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updatePcbMount($index, { height: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.mountHeightHint') }}</small>
+            
           </div>
           <div class="input-group">
-            <label>{{ t('params.mountOuterDiameter') }}</label>
+            <label>{{ t('params.mountOuterDiameter') }}<app-help-tip [hintKey]="'params.mountOuterDiameterHint'" /></label>
             <input
               type="number"
               [value]="mount.outerDiameter"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updatePcbMount($index, { outerDiameter: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.mountOuterDiameterHint') }}</small>
+            
           </div>
           <div class="input-group">
-            <label>{{ t('params.mountScrewDiameter') }}</label>
+            <label>{{ t('params.mountScrewDiameter') }}<app-help-tip [hintKey]="'params.mountScrewDiameterHint'" /></label>
             <input
               type="number"
               [value]="mount.screwDiameter"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updatePcbMount($index, { screwDiameter: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.mountScrewDiameterHint') }}</small>
+            
           </div>
         </div>
       }
@@ -713,7 +707,7 @@
           </p>
 
           <div class="input-group">
-            <label>{{ t('params.holeShape') }}</label>
+            <label>{{ t('params.holeShape') }}<app-help-tip [hintKey]="'params.holeShapeHint'" /></label>
             <select
               [value]="hole.shape"
               (change)="updateHole($index, { shape: $any($event.target).value })"
@@ -722,11 +716,11 @@
               <option value="square">{{ t('params.holeShapeSquare') }}</option>
               <option value="rectangle">{{ t('params.holeShapeRectangle') }}</option>
             </select>
-            <small class="hint">{{ t('params.holeShapeHint') }}</small>
+            
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.holeSurface') }}</label>
+            <label>{{ t('params.holeSurface') }}<app-help-tip [hintKey]="'params.holeSurfaceHint'" /></label>
             <select
               [value]="hole.surface"
               (change)="updateHole($index, { surface: $any($event.target).value })"
@@ -737,67 +731,67 @@
                 </option>
               }
             </select>
-            <small class="hint">{{ t('params.holeSurfaceHint') }}</small>
+            
           </div>
 
           <div class="input-group">
-            <label>{{ offsetHLabel(hole.surface) }}</label>
+            <label>{{ offsetHLabel(hole.surface) }}<app-help-tip [hintKey]="'params.offsetFaceHint'" /></label>
             <input
               type="number"
               [value]="hole.x"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateHole($index, { x: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.offsetFaceHint') }}</small>
+            
           </div>
 
           <div class="input-group">
-            <label>{{ offsetVLabel(hole.surface) }}</label>
+            <label>{{ offsetVLabel(hole.surface) }}<app-help-tip [hintKey]="'params.offsetFaceHint'" /></label>
             <input
               type="number"
               [value]="hole.y"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateHole($index, { y: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.offsetFaceHint') }}</small>
+            
           </div>
 
           @if (hole.shape === 'rectangle' || hole.shape === 'square') {
             <div class="input-group">
-              <label>{{ t('params.holeWidth') }}</label>
+              <label>{{ t('params.holeWidth') }}<app-help-tip [hintKey]="'params.holeWidthHint'" /></label>
               <input
                 type="number"
                 [value]="hole.width"
                 (keydown.enter)="$any($event.target).blur()"
                 (blur)="updateHole($index, { width: +$any($event.target).value })"
               />
-              <small class="hint">{{ t('params.holeWidthHint') }}</small>
+              
             </div>
           }
 
           @if (hole.shape === 'rectangle') {
             <div class="input-group">
-              <label>{{ t('params.holeLength') }}</label>
+              <label>{{ t('params.holeLength') }}<app-help-tip [hintKey]="'params.holeLengthHint'" /></label>
               <input
                 type="number"
                 [value]="hole.length"
                 (keydown.enter)="$any($event.target).blur()"
                 (blur)="updateHole($index, { length: +$any($event.target).value })"
               />
-              <small class="hint">{{ t('params.holeLengthHint') }}</small>
+              
             </div>
           }
 
           @if (hole.shape === 'circle') {
             <div class="input-group">
-              <label>{{ t('params.holeDiameter') }}</label>
+              <label>{{ t('params.holeDiameter') }}<app-help-tip [hintKey]="'params.holeDiameterHint'" /></label>
               <input
                 type="number"
                 [value]="hole.diameter"
                 (keydown.enter)="$any($event.target).blur()"
                 (blur)="updateHole($index, { diameter: +$any($event.target).value })"
               />
-              <small class="hint">{{ t('params.holeDiameterHint') }}</small>
+              
             </div>
           }
         </div>
@@ -828,7 +822,7 @@
           </p>
 
           <div class="input-group">
-            <label>{{ t('params.ventSurface') }}</label>
+            <label>{{ t('params.ventSurface') }}<app-help-tip [hintKey]="'params.ventSurfaceHint'" /></label>
             <select
               [value]="vent.surface"
               (change)="updateVentilation($index, { surface: $any($event.target).value })"
@@ -852,11 +846,11 @@
                 {{ t('surface.right') }}
               </option>
             </select>
-            <small class="hint">{{ t('params.ventSurfaceHint') }}</small>
+            
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.ventOrientation') }}</label>
+            <label>{{ t('params.ventOrientation') }}<app-help-tip [hintKey]="'params.ventOrientationHint'" /></label>
             <select
               [value]="vent.orientation"
               (change)="updateVentilation($index, { orientation: $any($event.target).value })"
@@ -868,11 +862,11 @@
                 {{ t('params.ventOrientationVertical') }}
               </option>
             </select>
-            <small class="hint">{{ t('params.ventOrientationHint') }}</small>
+            
           </div>
 
           <div class="input-group">
-            <label>{{ offsetHLabel(vent.surface) }}</label>
+            <label>{{ offsetHLabel(vent.surface) }}<app-help-tip [hintKey]="'params.offsetFaceHint'" /></label>
             <input
               type="number"
               step="0.5"
@@ -880,11 +874,11 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { x: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.offsetFaceHint') }}</small>
+            
           </div>
 
           <div class="input-group">
-            <label>{{ offsetVLabel(vent.surface) }}</label>
+            <label>{{ offsetVLabel(vent.surface) }}<app-help-tip [hintKey]="'params.offsetFaceHint'" /></label>
             <input
               type="number"
               step="0.5"
@@ -892,11 +886,11 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { y: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.offsetFaceHint') }}</small>
+            
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.ventSlotWidth') }}</label>
+            <label>{{ t('params.ventSlotWidth') }}<app-help-tip [hintKey]="'params.ventSlotWidthHint'" /></label>
             <input
               type="number"
               min="0.4"
@@ -905,11 +899,11 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { slotWidth: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.ventSlotWidthHint') }}</small>
+            
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.ventSlotLength') }}</label>
+            <label>{{ t('params.ventSlotLength') }}<app-help-tip [hintKey]="'params.ventSlotLengthHint'" /></label>
             <input
               type="number"
               min="0"
@@ -918,11 +912,11 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { slotLength: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.ventSlotLengthHint') }}</small>
+            
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.ventSlotGap') }}</label>
+            <label>{{ t('params.ventSlotGap') }}<app-help-tip [hintKey]="'params.ventSlotGapHint'" /></label>
             <input
               type="number"
               min="0.4"
@@ -931,11 +925,11 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { slotGap: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.ventSlotGapHint') }}</small>
+            
           </div>
 
           <div class="input-group">
-            <label>{{ t('params.ventSlotCount') }}</label>
+            <label>{{ t('params.ventSlotCount') }}<app-help-tip [hintKey]="'params.ventSlotCountHint'" /></label>
             <input
               type="number"
               min="1"
@@ -944,7 +938,7 @@
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { slotCount: +$any($event.target).value })"
             />
-            <small class="hint">{{ t('params.ventSlotCountHint') }}</small>
+            
           </div>
         </div>
       }
@@ -973,7 +967,7 @@
 
       @if (params().wallMounts) {
         <div class="input-group">
-          <label>{{ t('params.wallMountCount') }}</label>
+          <label>{{ t('params.wallMountCount') }}<app-help-tip [hintKey]="'params.wallMountCountHint'" /></label>
           <select
             [value]="params().wallMountCount"
             (change)="setNumberParam('wallMountCount', $any($event.target).value)"
@@ -981,11 +975,11 @@
             <option [value]="2">2</option>
             <option [value]="4">4</option>
           </select>
-          <small class="hint">{{ t('params.wallMountCountHint') }}</small>
+          
         </div>
 
         <div class="input-group">
-          <label>{{ t('params.wallMountScrewDiameter') }}</label>
+          <label>{{ t('params.wallMountScrewDiameter') }}<app-help-tip [hintKey]="'params.wallMountScrewDiameterHint'" /></label>
           <input
             type="number"
             min="1"
@@ -994,11 +988,11 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setNumberParam('wallMountScrewDiameter', $any($event.target).value)"
           />
-          <small class="hint">{{ t('params.wallMountScrewDiameterHint') }}</small>
+          
         </div>
 
         <div class="input-group">
-          <label>{{ t('params.wallMountChamfer') }}</label>
+          <label>{{ t('params.wallMountChamfer') }}<app-help-tip [hintKey]="'params.wallMountChamferHint'" [hintMin]="chamferAngleMin" [hintMax]="chamferAngleMax" /></label>
           <input
             type="number"
             [min]="chamferAngleMin"
@@ -1014,9 +1008,7 @@
           @if (chamferAngleError()) {
             <small class="hint text-red-600">{{ chamferAngleError() }}</small>
           }
-          <small class="hint">
-            {{ t('params.wallMountChamferHint', { min: chamferAngleMin, max: chamferAngleMax }) }}
-          </small>
+
         </div>
       }
     </div>
@@ -1039,7 +1031,7 @@
 
       @if (params().dinRailMount) {
         <div class="input-group">
-          <label>{{ t('params.dinRailOrientation') }}</label>
+          <label>{{ t('params.dinRailOrientation') }}<app-help-tip [hintKey]="'params.dinRailOrientationHint'" /></label>
           <select
             [value]="params().dinRailOrientation"
             (change)="setStringParam('dinRailOrientation', $any($event.target).value)"
@@ -1048,11 +1040,11 @@
               <option [value]="orientation">{{ dinRailOrientationLabel(orientation) }}</option>
             }
           </select>
-          <small class="hint">{{ t('params.dinRailOrientationHint') }}</small>
+          
         </div>
 
         <div class="input-group">
-          <label>{{ t('params.dinRailMountWidth') }}</label>
+          <label>{{ t('params.dinRailMountWidth') }}<app-help-tip [hintKey]="'params.dinRailMountWidthHint'" /></label>
           <input
             type="number"
             min="10"
@@ -1062,11 +1054,11 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setNumberParam('dinRailMountWidth', $any($event.target).value)"
           />
-          <small class="hint">{{ t('params.dinRailMountWidthHint') }}</small>
+          
         </div>
 
         <div class="input-group">
-          <label>{{ t('params.dinRailScrewDiameter') }}</label>
+          <label>{{ t('params.dinRailScrewDiameter') }}<app-help-tip [hintKey]="'params.dinRailScrewDiameterHint'" /></label>
           <input
             type="number"
             min="1"
@@ -1075,7 +1067,7 @@
             (keydown.enter)="$any($event.target).blur()"
             (blur)="setNumberParam('dinRailScrewDiameter', $any($event.target).value)"
           />
-          <small class="hint">{{ t('params.dinRailScrewDiameterHint') }}</small>
+          
         </div>
       }
     </div>
@@ -1087,7 +1079,7 @@
     </p>
     <div class="accordian-body">
       <div class="input-group">
-        <label>{{ t('params.baseBedChamfer') }}</label>
+        <label>{{ t('params.baseBedChamfer') }}<app-help-tip [hintKey]="'params.baseBedChamferHint'" /></label>
         <input
           type="number"
           min="0"
@@ -1096,10 +1088,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('baseBedChamfer', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.baseBedChamferHint') }}</small>
+        
       </div>
       <div class="input-group">
-        <label>{{ t('params.lidBedChamfer') }}</label>
+        <label>{{ t('params.lidBedChamfer') }}<app-help-tip [hintKey]="'params.lidBedChamferHint'" /></label>
         <input
           type="number"
           min="0"
@@ -1108,10 +1100,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('lidBedChamfer', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.lidBedChamferHint') }}</small>
+        
       </div>
       <div class="input-group">
-        <label>{{ t('params.lidTopChamfer') }}</label>
+        <label>{{ t('params.lidTopChamfer') }}<app-help-tip [hintKey]="'params.lidTopChamferHint'" /></label>
         <input
           type="number"
           min="0"
@@ -1120,10 +1112,10 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('lidTopChamfer', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.lidTopChamferHint') }}</small>
+        
       </div>
       <div class="input-group">
-        <label>{{ t('params.lidScrewCountersink') }}</label>
+        <label>{{ t('params.lidScrewCountersink') }}<app-help-tip [hintKey]="'params.lidScrewCountersinkHint'" /></label>
         <input
           type="number"
           min="0"
@@ -1132,7 +1124,7 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('lidScrewCountersink', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.lidScrewCountersinkHint') }}</small>
+        
       </div>
       <p class="input-group-full hint">{{ t('params.chamferHint') }}</p>
     </div>
@@ -1189,7 +1181,7 @@
         <p class="input-group-full hint">{{ t('params.showDinRailMountHint') }}</p>
       }
       <div class="input-group input-group-full">
-        <label>{{ t('params.gridSpacing') }}</label>
+        <label>{{ t('params.gridSpacing') }}<app-help-tip [hintKey]="'params.gridSpacingHint'" /></label>
         <input
           type="number"
           min="1"
@@ -1198,7 +1190,7 @@
           (keydown.enter)="$any($event.target).blur()"
           (blur)="setNumberParam('gridSpacing', $any($event.target).value)"
         />
-        <small class="hint">{{ t('params.gridSpacingHint') }}</small>
+        
       </div>
     </div>
   </div>

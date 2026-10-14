@@ -164,6 +164,7 @@ export const ZH = {
   'params.baseLidScrewDiameter': '底座孔径',
   'params.baseLidScrewDiameterHint': '基座螺丝柱的孔径（自攻咬合，略小），mm',
   'params.lidScrewOffset': '孔位距边',
+  'params.autoValueNote': '0＝自动，当前生效 {value}',
   'params.lidScrewOffsetHint':
     '螺丝孔中心到相邻两边的距离，mm。0＝自动（由圆角与孔径推算）。与螺丝柱凸出量互不影响：改凸出量只改变内腔角落那块实体的大小，孔位纹丝不动。当前生效 {value} mm。',
   'params.lidScrewProtrusion': '螺丝柱凸出量',
@@ -466,7 +467,8 @@ export const EN: Record<TranslationKey, string> = {
   'params.baseLidScrewDiameterHint':
     'Hole diameter in the base screw posts (self-tapping bite, slightly smaller), mm',
   'params.lidScrewOffset': 'Hole inset from edge',
-  'params.lidScrewOffsetHint':
+    'params.autoValueNote': '0 = auto, currently {value}',
+'params.lidScrewOffsetHint':
     'Distance from the hole centre to the two adjacent edges, mm. 0 = auto (derived from the corner radius and hole diameter). Independent of the screw post protrusion: changing the protrusion only resizes that corner block, the hole never moves. Currently {value} mm.',
   'params.lidScrewProtrusion': 'Screw post protrusion',
   'params.lidScrewProtrusionHint':
