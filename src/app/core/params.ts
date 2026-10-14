@@ -98,6 +98,40 @@ export type LidScrewHoleType = 'blind' | 'nut-pocket' | 'through';
 /** DIN 导轨（TH35）相对外壳的走向 */
 export type DinRailOrientation = 'horizontal' | 'vertical';
 
+export type CableClamp = {
+  surface?: Surface;
+  x: number;
+  y: number;
+  length: number;
+  wallHeight: number;
+  wallThickness: number;
+  mountScrewDiameter: number;
+  mountOuterDiameter: number;
+  mountHeight: number;
+  rotation: number;
+  topHeight: number;
+  topScrewDiameter: number;
+  ridges?: boolean;
+  ridgeCount?: number;
+};
+
+export const DEFAULT_CABLE_CLAMP: CableClamp = {
+  surface: 'bottom',
+  x: 0,
+  y: 0,
+  length: 15,
+  wallHeight: 5,
+  wallThickness: 5,
+  mountScrewDiameter: 2,
+  mountOuterDiameter: 6,
+  mountHeight: 8,
+  rotation: 0,
+  topHeight: 2.5,
+  topScrewDiameter: 2.6,
+  ridges: true,
+  ridgeCount: 2,
+};
+
 export type Params = {
   length: number;
   width: number;
@@ -118,6 +152,7 @@ export type Params = {
   cornerRadius: number;
   holes: Hole[];
   pcbMounts: PCBMount[];
+  cableClamps: CableClamp[];
   internalWalls: InternalWall[];
   wallMounts: boolean;
   wallMountCount: number;
@@ -347,6 +382,7 @@ export const DEFAULT_PARAMS: Params = {
   dinRailMount: false,
   dinRailOrientation: 'horizontal',
   dinRailMountWidth: 15,
+  cableClamps: [],
   dinRailScrewDiameter: 3.98,
   showDinRailMount: true,
 };
