@@ -76,7 +76,8 @@ export const ZH = {
   'renderer.generating': '生成中…',
   'renderer.collision': '⚠ PCB 与外壳发生碰撞：',
   'renderer.collisionWalls': '板体/元件超出内腔（撞到侧壁或内隔板）',
-  'renderer.collisionCeiling': '元件顶部顶到盖板',
+    'renderer.collisionVolume': '超出 {value} mm³',
+'renderer.collisionCeiling': '元件顶部顶到盖板',
 
   'params.startOver': '从头开始',
     'params.clamps': '线缆夹',
@@ -408,7 +409,8 @@ export const EN: Record<TranslationKey, string> = {
   'renderer.collision': '⚠ PCB collides with the enclosure:',
   'renderer.collisionWalls':
     'Board or components exceed the cavity (hitting a side or internal wall)',
-  'renderer.collisionCeiling': 'Component tops hit the lid',
+    'renderer.collisionVolume': 'overlap {value} mm³',
+'renderer.collisionCeiling': 'Component tops hit the lid',
 
   'params.startOver': 'Start over',
     'params.clamps': 'Cable clamps',

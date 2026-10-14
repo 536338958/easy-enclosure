@@ -37,6 +37,16 @@
       @if (pcbCollision().hitsCeiling) {
         <span>{{ t('renderer.collisionCeiling') }}</span>
       }
+      @if (pcbCollision().overlapVolume > 0) {
+        <span>
+          ·
+          {{
+            t('renderer.collisionVolume', {
+              value: pcbCollision().overlapVolume.toFixed(1),
+            })
+          }}
+        </span>
+      }
     </div>
   }
 </div>

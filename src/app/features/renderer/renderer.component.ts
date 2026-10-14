@@ -388,10 +388,16 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
   // state.loading 此前没有任何消费端：复杂参数下主线程被几何运算占满，
   // 界面看起来就是「卡死」。这里把它透出给模板做生成中提示。
   readonly loading = this.state.loading;
-  readonly pcbCollision = signal<{ collides: boolean; hitsWalls: boolean; hitsCeiling: boolean }>({
+  readonly pcbCollision = signal<{
+    collides: boolean;
+    hitsWalls: boolean;
+    hitsCeiling: boolean;
+    overlapVolume: number;
+  }>({
     collides: false,
     hitsWalls: false,
     hitsCeiling: false,
+    overlapVolume: 0,
   });
 
   constructor() {
@@ -407,8 +413,8 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     this.scheduleModelRender(this.state.params());
   }
 
-  t(key: TranslationKey): string {
-    return this.i18n.t(key);
+  t(key: TranslationKey, vars?: Record<string, string | number>): string {
+    return this.i18n.t(key, vars);
   }
 
   ngOnDestroy(): void {
@@ -881,7 +887,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
 
   private buildPcbEntities(params: Params): Entity[] {
     if (!params.pcbPreview.enabled) {
-      this.pcbCollision.set({ collides: false, hitsWalls: false, hitsCeiling: false });
+      this.pcbCollision.set({ collides: false, hitsWalls: false, hitsCeiling: false, overlapVolume: 0 });
       return [];
     }
 
@@ -1026,7 +1032,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     if (result.length === 0) {
       // 两部分都被隐藏时不能沿用上一帧的模型，否则开关看起来像失灵
       this.model = null;
-      this.pcbCollision.set({ collides: false, hitsWalls: false, hitsCeiling: false });
+      this.pcbCollision.set({ collides: false, hitsWalls: false, hitsCeiling: false, overlapVolume: 0 });
       this.surfaceLabels.set([]);
       if (this.renderOptions) {
         const emptyBounds: [Vec3Tuple, Vec3Tuple] = [
