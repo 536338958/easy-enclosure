@@ -327,6 +327,8 @@ type SurfaceAnchor = {
     '(pointerup)': 'onPointerUp($event)',
     '(mousedown)': 'onMouseDown($event)',
     '(wheel)': 'onWheel($event)',
+    // 右键拖动走的是旋转分支，若放任浏览器弹菜单，一转视角就被打断（与上游一致）
+    '(contextmenu)': '$event.preventDefault()',
   },
   templateUrl: './renderer.component.html',
 })

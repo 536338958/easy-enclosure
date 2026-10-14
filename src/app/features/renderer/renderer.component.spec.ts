@@ -266,5 +266,15 @@ describe('RendererComponent', () => {
       expect(middle.defaultPrevented).toBeTrue();
       expect(left.defaultPrevented).toBeFalse();
     });
+
+    it('右键菜单被拦掉，不打断右键拖动旋转', () => {
+      const fixture = TestBed.createComponent(RendererComponent);
+      fixture.detectChanges();
+
+      const event = new MouseEvent('contextmenu', { cancelable: true });
+      fixture.nativeElement.dispatchEvent(event);
+
+      expect(event.defaultPrevented).toBeTrue();
+    });
   });
 });
