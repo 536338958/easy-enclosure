@@ -30,7 +30,12 @@ import { dinRailMountsPair } from '../../core/enclosure/dinrailmount';
 import { internalWalls } from '../../core/enclosure/internalwalls';
 import { lid } from '../../core/enclosure/lid';
 import { pcbMountsOnBase, pcbMountsOnLid } from '../../core/enclosure/pcbmount';
-import { pcbBoard, pcbComponentZone, pcbCollision } from '../../core/enclosure/pcbpreview';
+import {
+  pcbBoard,
+  pcbComponentZone,
+  pcbCollision,
+  type PCBCollisionResult,
+} from '../../core/enclosure/pcbpreview';
 import { waterProofSeal } from '../../core/enclosure/waterproofseal';
 import { I18nService } from '../../core/i18n/i18n.service';
 import type { TranslationKey } from '../../core/i18n/translations';
@@ -99,8 +104,26 @@ const baseDeps = [
   'lidScrewNutWidth',
   'lidScrewNutDepth',
 ];
-const sealDeps = [
+// 碰撞检测的依赖：PCB 板 / 元件区 vs 基座 / 内隔板 / 支柱 / 线缆夹 / 天花板。
+// 改通风、壁挂、显示开关等无关参数时，碰撞结果直接复用上次的缓存（D 优化）
+const collisionDeps = [
+  'width',
   'length',
+  'height',
+  'wall',
+  'floor',
+  'roof',
+  'waterProof',
+  'insertThickness',
+  'insertHeight',
+  'insertClearance',
+  'lidScrews',
+  'internalWalls',
+  'pcbMounts',
+  'cableClamps',
+  'pcbPreview',
+];
+const sealDeps = [  'length',
   'width',
   'wall',
   'cornerRadius',
@@ -404,6 +427,13 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     hitsCeiling: false,
     overlapVolume: 0,
   });
+  // 碰撞检测延后计算（D 优化）：重建时先按上次结果渲染 PCB 板与净空区，
+  // 依赖变化时延迟 300ms 补算 —— 碰撞的布尔运算（重模型 ≈150~250ms）不再阻塞重建。
+  private collisionHandle: ReturnType<typeof setTimeout> | null = null;
+  private collisionSeq = 0;
+  private lastCollision: PCBCollisionResult | null = null;
+  private coreEntities: Entity[] = [];
+  private pcbEntities: Entity[] = [];
 
   constructor() {
     effect(() => {
@@ -432,6 +462,10 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     if (this.renderDelayHandle !== null) {
       clearTimeout(this.renderDelayHandle);
       this.renderDelayHandle = null;
+    }
+    if (this.collisionHandle !== null) {
+      clearTimeout(this.collisionHandle);
+      this.collisionHandle = null;
     }
     if (this.wheelInteractionHandle !== null) {
       clearTimeout(this.wheelInteractionHandle);
@@ -903,14 +937,20 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     return [vector[0] / magnitude, vector[1] / magnitude, vector[2] / magnitude];
   }
 
-  private buildPcbEntities(params: Params): Entity[] {
+  /**
+   * 构建 PCB 板体与元件净空区实体。碰撞结果由调用方传入（延后补算，见 collisionDeps），
+   * 颜色按传入的结果着色 —— 结果补算完成后再调一次本方法即可刷新颜色。
+   */
+  private buildPcbEntities(params: Params, collision: PCBCollisionResult): Entity[] {
     if (!params.pcbPreview.enabled) {
       this.pcbCollision.set({ collides: false, hitsWalls: false, hitsCeiling: false, overlapVolume: 0 });
+      if (this.collisionHandle !== null) {
+        clearTimeout(this.collisionHandle);
+        this.collisionHandle = null;
+      }
+      this.lastCollision = null;
       return [];
     }
-
-    const collision = pcbCollision(params, this.baseModelLocal ?? undefined);
-    this.pcbCollision.set(collision);
 
     // 板体在基座本地坐标系中构建，平移到与基座相同的位置
     const boardColor: [number, number, number, number] = collision.collides
@@ -1077,11 +1117,46 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     if (axisEntity) {
       entities.push(axisEntity);
     }
+    // 核心（非 PCB）实体单独留存：碰撞补算完成后只需替换 PCB 实体段
+    this.coreEntities = entities.slice();
 
-    // 碰撞检测照常跑，只是基座隐藏时不把 PCB 悬空画出来
-    const pcbEntities = this.buildPcbEntities(params);
-    if (pcbEntities.length > 0 && params.showBase) {
-      entities.push(...pcbEntities);
+    // 碰撞检测照常跑，只是基座隐藏时不把 PCB 悬空画出来。
+    // 碰撞结果按依赖缓存 + 延后补算（D 优化）：改通风 / 壁挂 / 显示开关等无关参数时
+    // 直接复用上次结果；依赖变化时先按旧结果渲染，300ms 后补算并原位替换 PCB 实体。
+    const collisionDirty = this.lastCollision === null || this.checkDeps(diff, collisionDeps);
+    this.pcbEntities = this.buildPcbEntities(params, this.lastCollision ?? {
+      collides: false,
+      hitsWalls: false,
+      hitsCeiling: false,
+      overlapVolume: 0,
+    });
+    if (this.pcbEntities.length > 0 && params.showBase) {
+      entities.push(...this.pcbEntities);
+    }
+    if (params.pcbPreview.enabled && collisionDirty) {
+      const seq = ++this.collisionSeq;
+      if (this.collisionHandle !== null) {
+        clearTimeout(this.collisionHandle);
+      }
+      this.collisionHandle = setTimeout(() => {
+        if (seq !== this.collisionSeq) {
+          return; // 已有更新的一次渲染接手，这次的结果作废
+        }
+        const collision = pcbCollision(params, this.baseModelLocal ?? undefined);
+        this.lastCollision = collision;
+        this.pcbCollision.set(collision);
+        // 碰撞状态翻转后板体 / 净空区颜色要跟着变：只重建 PCB 实体并原位替换。
+        // coreEntities 取成员值（可能已被更新的一次渲染刷新过），不取闭包里的旧引用
+        this.pcbEntities = this.buildPcbEntities(params, collision);
+        if (this.renderOptions) {
+          const list = [...this.coreEntities];
+          if (this.pcbEntities.length > 0 && params.showBase) {
+            list.push(...this.pcbEntities);
+          }
+          this.renderOptions.entities = list;
+          this.updateView = true;
+        }
+      }, 300);
     }
 
     // Re-frame the camera when the grid becomes visible (so it lands in view)
