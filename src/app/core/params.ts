@@ -8,6 +8,10 @@ export type Hole = {
   surface: Surface;
   x: number;
   y: number;
+  /** 孔型：through = 透孔（缺省，兼容旧预设）；blind = 不透孔，由外壁向内只钻 blindDepth */
+  holeType?: 'through' | 'blind';
+  /** 不透孔深度（mm），由外壁向内量；超出壁厚会被夹住保证不打穿 */
+  blindDepth?: number;
 };
 
 export type PCBMount = {

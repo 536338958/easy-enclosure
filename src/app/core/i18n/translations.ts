@@ -251,6 +251,14 @@ export const ZH = {
   'params.holeShapeRectangle': '长方形',
   'params.holeSurface': '所在面',
   'params.holeSurfaceHint': '开孔开在哪个面上',
+  'params.holeHoleType': '孔型',
+  'params.holeHoleTypeHint':
+    '透孔 = 打穿壁面；不透孔 = 由外壁向内只钻设定深度，孔底留在壁内。深度超过壁厚会被自动夹住，保证不打穿',
+  'params.holeHoleTypeThrough': '透孔',
+  'params.holeHoleTypeBlind': '不透孔',
+  'params.holeBlindDepth': '孔深 (mm，由外壁向内)',
+  'params.holeBlindDepthHint':
+    '从所在面的外壁向内量。自动夹紧到 0.2 ～ 壁厚−0.4，保证孔底不打穿；留空按壁厚一半处理',
   'params.holeWidth': '宽度',
   'params.holeWidthHint': '方/矩形孔的边长（水平方向），mm',
   'params.holeLength': '长度',
@@ -614,6 +622,14 @@ export const EN: Record<TranslationKey, string> = {
   'params.holeShapeRectangle': 'Rectangle',
   'params.holeSurface': 'Face',
   'params.holeSurfaceHint': 'Which face the hole is cut on',
+  'params.holeHoleType': 'Hole type',
+  'params.holeHoleTypeHint':
+    'Through = pierces the wall; Blind = drilled from the outer surface to the set depth only, the bottom stays inside the wall. Depths beyond the wall are clamped so the hole never breaks through',
+  'params.holeHoleTypeThrough': 'Through',
+  'params.holeHoleTypeBlind': 'Blind',
+  'params.holeBlindDepth': 'Depth (mm, from outer surface)',
+  'params.holeBlindDepthHint':
+    'Measured inward from the outer surface of the face. Auto-clamped to 0.2 – wall−0.4 so the bottom never breaks through; empty = half the wall thickness',
   'params.holeWidth': 'Width',
   'params.holeWidthHint': 'Edge length of the square / rectangular hole (horizontal), mm',
   'params.holeLength': 'Length',

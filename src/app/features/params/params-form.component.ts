@@ -168,6 +168,8 @@ export class ParamsFormComponent {
       length: 10,
       y: 0,
       x: 0,
+      holeType: 'through',
+      blindDepth: 1,
     };
     this.state.patchParams({ holes: [...current.holes, next] });
   }

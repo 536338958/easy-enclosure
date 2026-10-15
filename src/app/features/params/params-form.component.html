@@ -773,8 +773,35 @@
                 </option>
               }
             </select>
-            
+
           </div>
+
+          <div class="input-group">
+            <label>{{ t('params.holeHoleType') }}<app-help-tip [hintKey]="'params.holeHoleTypeHint'" /></label>
+            <select
+              [value]="hole.holeType ?? 'through'"
+              (change)="updateHole($index, {
+                holeType: $any($event.target).value,
+                blindDepth: hole.blindDepth ?? 1
+              })"
+            >
+              <option value="through">{{ t('params.holeHoleTypeThrough') }}</option>
+              <option value="blind">{{ t('params.holeHoleTypeBlind') }}</option>
+            </select>
+          </div>
+          @if ((hole.holeType ?? 'through') === 'blind') {
+            <div class="input-group">
+              <label>{{ t('params.holeBlindDepth') }}<app-help-tip [hintKey]="'params.holeBlindDepthHint'" /></label>
+              <input
+                type="number"
+                min="0.2"
+                step="0.2"
+                [value]="hole.blindDepth ?? 1"
+                (keydown.enter)="$any($event.target).blur()"
+                (blur)="updateHole($index, { blindDepth: +$any($event.target).value })"
+              />
+            </div>
+          }
 
           <div class="input-group">
             <label>{{ offsetHLabel(hole.surface) }}<app-help-tip [hintKey]="'params.offsetFaceHint'" /></label>

@@ -25,6 +25,14 @@ const TOP_HOLE_DEPTH_TOLERANCE = 0.2;
  */
 const SIDE_HOLE_DEPTH_TOLERANCE = 0.2;
 
+// —— 不透孔（blind）——
+// 盲孔切割体从外壁向外多伸这么多，打破与外壁面的共面（共面留残渣，本项目血泪规则）
+const HOLE_BLIND_TOLERANCE = 0.2;
+// 盲孔深度的下限（太浅打不出来）
+const HOLE_BLIND_MIN_DEPTH = 0.2;
+// 盲孔底最少保留的壁厚，保证孔底不打穿
+const HOLE_BLIND_RESIDUAL = 0.4;
+
 export const holes = (
   params: Params,
   surfacesFilter: Surface[] = ['bottom', 'left', 'right', 'back', 'front'],
@@ -34,10 +42,12 @@ export const holes = (
     width,
     height,
     roof,
+    floor,
     wall,
     insertHeight,
     insertThickness,
     insertClearance,
+    waterProof,
     holes: holeParams,
   } = params;
 
@@ -60,6 +70,28 @@ export const holes = (
       const totalWallThickness = insertThickness + insertClearance * 2 + wall * 2;
       // 两端各留一点余量，避免防水开启时孔端面与壁面齐平而打不穿
       let holeDepth = totalWallThickness + SIDE_HOLE_DEPTH_TOLERANCE * 2;
+
+      // 不透孔：由外壁向内只钻 blindDepth。
+      // 各面的「外壁」：前→y=length、后→y=0、右→x=width、左→x=0、底→z=0、盖板顶→z=0。
+      // 深度夹紧到 [0.2, 壁厚−0.4]，保证孔底留在壁内不打穿；壁厚太薄时退化为壁厚的一半。
+      const isBlind = (hole.holeType ?? 'through') === 'blind';
+      let blindDepth = 0;
+      if (isBlind) {
+        const maxDepth =
+          surface === 'top'
+            ? roof
+            : surface === 'bottom'
+              ? floor
+              : params.waterProof
+                ? totalWallThickness
+                : wall;
+        const hi = maxDepth - HOLE_BLIND_RESIDUAL;
+        const req = hole.blindDepth ?? Math.max(maxDepth / 2, HOLE_BLIND_MIN_DEPTH);
+        blindDepth =
+          hi >= HOLE_BLIND_MIN_DEPTH
+            ? Math.min(Math.max(req, HOLE_BLIND_MIN_DEPTH), hi)
+            : Math.max(maxDepth / 2, HOLE_BLIND_MIN_DEPTH);
+      }
 
       // 统一偏移约定（与通风槽一致）：
       //   hole.x = 面内「水平」偏移，+ 指向 +世界轴（前/后面→+X=左面；左/右面→+Y=前面）
@@ -103,6 +135,24 @@ export const holes = (
         rot = [0, 0, 0];
       } else {
         throw new Error(`Invalid surface: ${surface}`);
+      }
+
+      // 不透孔：覆盖切割深度与穿透轴上的定位 —— 切割体从外壁向外伸 TOL、
+      // 向内只到 blindDepth，孔底（平底）留在壁内
+      if (isBlind) {
+        holeDepth = blindDepth + HOLE_BLIND_TOLERANCE;
+        if (surface === 'front') {
+          y = length + (HOLE_BLIND_TOLERANCE - blindDepth) / 2;
+        } else if (surface === 'back') {
+          y = (blindDepth - HOLE_BLIND_TOLERANCE) / 2;
+        } else if (surface === 'right') {
+          x = width + (HOLE_BLIND_TOLERANCE - blindDepth) / 2;
+        } else if (surface === 'left') {
+          x = (blindDepth - HOLE_BLIND_TOLERANCE) / 2;
+        } else {
+          // bottom / top：外壁都在 z = 0
+          z = (blindDepth - HOLE_BLIND_TOLERANCE) / 2;
+        }
       }
 
       if (hole.shape === 'square') {
