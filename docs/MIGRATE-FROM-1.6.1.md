@@ -48,9 +48,9 @@
 > 偏移语义改上游（用户决定保留本地旧语义）；防水槽按 lidScrews 选形状族（UI 不可达）；
 > 真等距内缩 / clover 解析式 / 叶加厚（clover 数学死结，已放弃）。
 >
-> **推送状态**：`main` 与 `restart/v1.4.2` 均已推到 GitHub（截至 `accb114` = v1.6.1，
-> 含 tag `v1.6.1` 与 Release 附件 `easy-enclosure-v1.6.1.zip`）。
-> `ba6e59b`（第 15 轮）**尚未推送** —— 用户计划「再攒几轮后迭代版本号再上传新 Release」。
+> **推送状态**：`main` 与 `restart/v1.4.2` 均已同步到 `74116c5`（v1.6.1-2），
+> tag `v1.6.1-2` + Release 附件 `easy-enclosure-v1.6.1-2.zip` 已发布
+> （https://github.com/536338958/easy-enclosure/releases/tag/v1.6.1-2）。
 
 ---
 
