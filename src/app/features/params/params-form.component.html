@@ -1008,6 +1008,34 @@
               (blur)="updateVentilation($index, { slotCount: +$any($event.target).value })"
             />
           </div>
+          <div class="input-group">
+            <label
+              >{{ t('params.ventRangeWidth')
+              }}<app-help-tip [hintKey]="'params.ventRangeWidthHint'"
+            /></label>
+            <input
+              type="number"
+              min="0"
+              step="0.5"
+              [value]="vent.rangeWidth ?? 0"
+              (keydown.enter)="$any($event.target).blur()"
+              (blur)="updateVentilation($index, { rangeWidth: +$any($event.target).value })"
+            />
+          </div>
+          <div class="input-group">
+            <label
+              >{{ t('params.ventRangeLength')
+              }}<app-help-tip [hintKey]="'params.ventRangeLengthHint'"
+            /></label>
+            <input
+              type="number"
+              min="0"
+              step="0.5"
+              [value]="vent.rangeLength ?? 0"
+              (keydown.enter)="$any($event.target).blur()"
+              (blur)="updateVentilation($index, { rangeLength: +$any($event.target).value })"
+            />
+          </div>
         </div>
       }
       <button type="button" class="add-btn" (click)="addVentilation()">

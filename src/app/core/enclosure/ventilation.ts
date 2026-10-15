@@ -1,5 +1,6 @@
 import type { Geom3 } from '@jscad/modeling/src/geometries/types';
-import { union } from '@jscad/modeling/src/operations/booleans';
+import measureVolume from '@jscad/modeling/src/measurements/measureVolume';
+import { intersect, union } from '@jscad/modeling/src/operations/booleans';
 import { hull } from '@jscad/modeling/src/operations/hulls';
 import { rotateX, rotateZ, translate } from '@jscad/modeling/src/operations/transforms';
 import { cuboid, cylinder } from '@jscad/modeling/src/primitives';
@@ -137,6 +138,39 @@ const buildPanel = (
   return isFlat ? grid : rotateX(degToRad(90), grid);
 };
 
+/**
+ * 开孔范围（裁剪盒）：把面板与范围盒求交，范围外的开孔被裁掉、压线的截成平头。
+ *
+ * 坐标系与面板的规范姿态一致：布局平面内 X = 面的水平轴、Y = 面的竖直轴，Z = 穿透方向。
+ * rangeA/rangeB 任一为 0 表示该轴不限制（盒体在该轴直接取面尺寸再放宽）。
+ *
+ * 盒体在布局两轴上外扩 0.02mm：槽端/孔缘恰好压在范围边界时，切割面与模型面
+ * 会严格共面 —— 这是本项目验证过的布尔残渣来源，外扩一点点打破共面
+ * （与 CHAMFER_TOOL_EXPAND 同一招，0.01mm 的边界误差不可感知）。
+ * 裁出空面板时返回 null，调用方据此跳过该通风项。
+ */
+const clipToRange = (
+  panel: Geom3,
+  rangeA: number,
+  rangeB: number,
+  fullA: number,
+  fullB: number,
+  penSize: number,
+  isFlat: boolean,
+): Geom3 | null => {
+  if (rangeA <= 0 && rangeB <= 0) {
+    return panel;
+  }
+  const ax = rangeA > 0 ? rangeA + 0.02 : fullA + 2;
+  const by = rangeB > 0 ? rangeB + 0.02 : fullB + 2;
+  // flat：布局 XY、穿透 Z；非 flat：布局 XZ（水平 X、竖直 Z）、穿透 Y
+  const box = isFlat
+    ? cuboid({ size: [ax, by, penSize + 2] })
+    : cuboid({ size: [ax, penSize + 2, by] });
+  const clipped = intersect(panel, box);
+  return measureVolume(clipped) > 1e-6 ? clipped : null;
+};
+
 // 为单个通风项生成切割体；若该项不属于当前 target（lid/base）则返回 null
 const buildOne = (item: Ventilation, params: Params, target: 'lid' | 'base'): Geom3 | null => {
   const { width, length, height, roof, floor } = params;
@@ -149,7 +183,8 @@ const buildOne = (item: Ventilation, params: Params, target: 'lid' | 'base'): Ge
     return null;
   }
 
-  const { mode, angle: rawAngle, rows: rawRows } = normalizeVentilation(item);
+  const { mode, angle: rawAngle, rows: rawRows, rangeWidth: rawRW, rangeLength: rawRL } =
+    normalizeVentilation(item);
   const angle = clampAngle(rawAngle);
   const cols = Math.max(Math.floor(item.slotCount), 1);
   const rows = Math.max(Math.floor(rawRows), 1);
@@ -165,12 +200,18 @@ const buildOne = (item: Ventilation, params: Params, target: 'lid' | 'base'): Ge
   // 槽长轴所在平面内的两条轴，各自的可用尺寸
   const fullA = isFlat ? width : surface === 'left' || surface === 'right' ? length : width;
   const fullB = isFlat ? length : height;
+  // 开孔范围：0 = 该轴不限制；填了则夹到面尺寸内
+  const rangeA = rawRW > 0 ? Math.min(rawRW, fullA) : 0;
+  const rangeB = rawRL > 0 ? Math.min(rawRL, fullB) : 0;
   const t = degToRad(angle);
   const ca = Math.abs(Math.cos(t));
   const sa = Math.abs(Math.sin(t));
-  // 沿槽方向可容纳的最大长度；某方向投影为 0 时该方向不限制
-  const limitA = ca > 1e-6 ? fullA / ca : Infinity;
-  const limitB = sa > 1e-6 ? fullB / sa : Infinity;
+  // 沿槽方向可容纳的最大长度；某方向投影为 0 时该方向不限制。
+  // 自动槽长优先取范围给的余量：设了范围，自动长度就按范围算（没设才用整面）
+  const spanA = rangeA > 0 ? rangeA : fullA;
+  const spanB = rangeB > 0 ? rangeB : fullB;
+  const limitA = ca > 1e-6 ? spanA / ca : Infinity;
+  const limitB = sa > 1e-6 ? spanB / sa : Infinity;
   const avail = Math.min(limitA, limitB);
   const slotLen = item.slotLength > 0 ? item.slotLength : Math.max(avail * 0.6, sw);
 
@@ -178,18 +219,27 @@ const buildOne = (item: Ventilation, params: Params, target: 'lid' | 'base'): Ge
     const depth = (isTop ? roof : floor) + 2;
     const zc = (isTop ? roof : floor) / 2;
     const panel = buildPanel(mode, sw, slotLen, depth, pitch, angle, cols, rows, true);
-    return translate([width / 2 + item.x, length / 2 + item.y, zc], panel);
+    const clipped = clipToRange(panel, rangeA, rangeB, fullA, fullB, depth, true);
+    if (!clipped) {
+      return null;
+    }
+    return translate([width / 2 + item.x, length / 2 + item.y, zc], clipped);
   }
 
   const panel = buildPanel(mode, sw, slotLen, sideWall, pitch, angle, cols, rows, false);
+  // 非 flat 的规范姿态：布局 XZ（X = 水平，Z = 竖直），穿透 Y
+  const clipped = clipToRange(panel, rangeA, rangeB, fullA, fullB, sideWall, false);
+  if (!clipped) {
+    return null;
+  }
 
   if (surface === 'front' || surface === 'back') {
     const y = surface === 'front' ? length - sideWall / 2 : sideWall / 2;
-    return translate([width / 2 + item.x, y, height / 2 + item.y], panel);
+    return translate([width / 2 + item.x, y, height / 2 + item.y], clipped);
   }
 
   // left / right：先在「法向为 Y」的规范平面构建，再绕 Z 旋转 90° 使法向变为 X
-  const rotated = rotateZ(degToRad(90), panel);
+  const rotated = rotateZ(degToRad(90), clipped);
   const x = surface === 'left' ? width - sideWall / 2 : sideWall / 2;
   // 旋转后：原 X(水平) → Y(长度方向)。item.x 水平偏移映射到 Y，item.y 竖直偏移映射到 Z
   return translate([x, length / 2 + item.x, height / 2 + item.y], rotated);

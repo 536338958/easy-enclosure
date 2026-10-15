@@ -157,4 +157,67 @@ describe('ventilation', () => {
     expect(front.d).toBeGreaterThan(2);
     expect(front.h).toBeGreaterThan(2);
   });
+
+  describe('开孔范围（裁剪盒）', () => {
+    it('limits the vent to the given range on the top face', () => {
+      const free = size(cut('top', { angle: 0, slotLength: 60, slotCount: 10, slotGap: 2 }));
+      const clipped = size(cut('top', { angle: 0, slotLength: 60, slotCount: 10, slotGap: 2, rangeWidth: 50, rangeLength: 50 }));
+
+      // 未设范围：槽阵按参数铺开（宽 60、堆叠跨 38）
+      expect(free.w).toBeCloseTo(60, 3);
+      // 设了 50x50：两个方向的跨度都不得超过 50（+0.02 外扩容差）
+      expect(clipped.w).toBeLessThanOrEqual(50.02 + 1e-6);
+      expect(clipped.d).toBeLessThanOrEqual(50.02 + 1e-6);
+      expect(clipped.w).toBeLessThan(free.w);
+    });
+
+    it('trims slots crossing the range edge to a flat end', () => {
+      // 单槽 55 长、范围宽 30：槽被裁到 30 以内，端头是平的
+      const g = cut('top', { angle: 0, slotLength: 55, slotCount: 1, rangeWidth: 30 });
+      const s = size(g);
+      expect(s.w).toBeCloseTo(30.02, 1);
+    });
+
+    it('keeps behaviour identical when the range is 0', () => {
+      const withField = cut('top', { angle: 0, slotCount: 5, rangeWidth: 0, rangeLength: 0 });
+      const withoutField = cut('top', { angle: 0, slotCount: 5 });
+      expect(size(withField).w).toBeCloseTo(size(withoutField).w, 6);
+      expect(size(withField).d).toBeCloseTo(size(withoutField).d, 6);
+    });
+
+    it('uses the range for the auto slot length', () => {
+      // slotLength=0（自动）＝可用长度 60%：设 30x30 范围后，自动槽长 = 30×0.6 = 18
+      const g = cut('top', { angle: 0, slotLength: 0, slotCount: 1, rangeWidth: 30, rangeLength: 30 });
+      expect(size(g).w).toBeCloseTo(18, 3);
+    });
+
+    it('drops the whole vent when the range falls into a gap', () => {
+      // 范围与内容同为中心对称（x/y 一起动），所以空集只发生在：
+      // 偶数条槽的中心正好是间隙，且范围比间隙还小 —— 框不到任何开孔
+      const params = makeParams({
+        surface: 'top',
+        slotWidth: 2,
+        slotCount: 2,
+        slotGap: 3,
+        rangeWidth: 0.4,
+        rangeLength: 0.4,
+      });
+      expect(ventilationCut(params, 'lid')).toBeNull();
+    });
+
+    it('clips wall vents too', () => {
+      const clipped = size(cut('front', { angle: 0, slotLength: 60, slotCount: 8, rangeWidth: 40, rangeLength: 12 }));
+      // 前面：水平轴 = 宽（范围 40），竖直轴 = 高（范围 12）
+      expect(clipped.w).toBeLessThanOrEqual(40.02 + 1e-6);
+      expect(clipped.h).toBeLessThanOrEqual(12.02 + 1e-6);
+    });
+
+    it('clips grid modes as well', () => {
+      // 圆孔网格 8x8、间距 6 → 跨约 42+6；裁到 24x24 内
+      const g = cut('top', { mode: 'circleGrid', slotWidth: 3, slotCount: 8, rows: 8, rangeWidth: 24, rangeLength: 24 });
+      const s = size(g);
+      expect(s.w).toBeLessThanOrEqual(24.02);
+      expect(s.d).toBeLessThanOrEqual(24.02);
+    });
+  });
 });

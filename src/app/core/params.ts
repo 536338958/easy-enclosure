@@ -78,6 +78,13 @@ export type Ventilation = {
   slotCount: number;
   /** 网格模式的行数；缺省按 3 处理 */
   rows?: number;
+  /**
+   * 开孔范围（裁剪盒）：开孔只在范围内生效。
+   * 两轴与面的「水平/竖直」轴对齐（不随槽角度旋转），默认以面为中心、随 x/y 一起偏移；
+   * 0 = 不限制（整面可用）。范围外的开孔被裁掉，压线的被截成平头。
+   */
+  rangeWidth?: number;
+  rangeLength?: number;
   // 在所在面内的偏移：x = 水平方向，y = 竖直/纵向
   x: number;
   y: number;
@@ -91,12 +98,14 @@ export type Ventilation = {
  */
 export const normalizeVentilation = (
   item: Ventilation,
-): Required<Pick<Ventilation, 'mode' | 'angle' | 'rows'>> => ({
+): Required<Pick<Ventilation, 'mode' | 'angle' | 'rows' | 'rangeWidth' | 'rangeLength'>> => ({
   mode: VENTILATION_MODES.includes(item.mode as VentilationMode)
     ? (item.mode as VentilationMode)
     : 'slot',
   angle: item.angle ?? (item.orientation === 'vertical' ? 90 : 0),
   rows: Math.max(Math.floor(item.rows ?? 3), 1),
+  rangeWidth: Math.max(item.rangeWidth ?? 0, 0),
+  rangeLength: Math.max(item.rangeLength ?? 0, 0),
 });
 
 export type SnapFit = {
