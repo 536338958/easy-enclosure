@@ -135,20 +135,19 @@ describe('holes', () => {
       expect(left.x1).toBeCloseTo(100 + 0.2, 6);
     });
 
-    describe('孔口倒角', () => {
+    describe('孔口倒角（仅方孔 / 矩形孔，圆孔已按用户决定关闭）', () => {
       const mkChamfer = (over: any) => {
         const params = base();
-        params.holes = [{ shape: 'circle', surface: 'front', diameter: 8, width: 8, length: 8, x: 0, y: 0, ...over }];
+        params.holes = [{ shape: 'square', surface: 'front', diameter: 8, width: 8, length: 8, x: 0, y: 0, ...over }];
         return holes(params, ['front']);
       };
 
       it('widens the cutter at the outer surface by the chamfer size', () => {
         const plain = bbox(mkChamfer({}));
         const cham = bbox(mkChamfer({ chamfer: true }));
-        // 前面：面内两轴 = X / Z。锥体沿 45° 向外延伸 0.2mm 破共面，
-        // 最外端半径 = r + 0.6 + 0.2 = 4.8 → 包围盒跨 9.6
-        expect(cham.x1 - cham.x0).toBeCloseTo(8 + 1.6, 3);
-        expect(cham.z1 - cham.z0).toBeCloseTo(8 + 1.6, 3);
+        // 前面：面内两轴 = X / Z。方孔开口在外壁扩 0.6 → 面内跨 8 + 1.2 = 9.2
+        expect(cham.x1 - cham.x0).toBeCloseTo(8 + 1.2, 3);
+        expect(cham.z1 - cham.z0).toBeCloseTo(8 + 1.2, 3);
         expect(plain.x1 - plain.x0).toBeCloseTo(8, 3);
       });
 
@@ -158,15 +157,13 @@ describe('holes', () => {
         expect(cham.y0).toBeCloseTo(80 - 6.08 - 0.2, 6);
       });
 
-      it('orients the cone outward on the left wall too', () => {
-        // 左壁外壁 x=width。锥体沿 45° 从外壁(x=100, 半径 r+0.6) 向内收拢到
-        // x=99.4 (半径 r)，并反向延伸到 x=100.2 (半径 r+0.8)。
-        // 在 x=99.7 处锥半径 = 4.3：半径 4.2 的点必须在切割体内（锥向朝内）；
-        // 在 x=99.9 处锥半径 = 4.5：半径 4.6 的点必须在锥外（锥向错误时这两点结论互换）
+      it('orients the chamfer outward on the left wall too', () => {
+        // 左壁外壁 x=width。大口盒体在外侧（x ∈ [100, 100.2]），
+        // 小口盒体在内侧（x=99.4 起）——翻转错误时两点结论互换
         const params = base();
         params.waterProof = true;
         params.holes = [
-          { shape: 'circle', surface: 'left', diameter: 8, width: 8, length: 8, x: 0, y: 0, chamfer: true },
+          { shape: 'square', surface: 'left', diameter: 8, width: 8, length: 8, x: 0, y: 0, chamfer: true },
         ];
         const cutter = holes(params, ['left']);
         const inCutter = (x: number, y: number, z: number) => {
@@ -176,13 +173,30 @@ describe('holes', () => {
         const cy = params.length / 2;
         const cz = params.height / 2;
 
-        expect(inCutter(99.7, cy + 4.2, cz)).toBeTrue();
-        expect(inCutter(99.9, cy + 4.6, cz)).toBeFalse();
+        // 大口盒体区域：面内半径 4.4（大口半宽 4.6 以内、小口 4.0 以外）
+        expect(inCutter(100.1, cy + 4.4, cz)).toBeTrue();
+        // 大口半宽只有 4.6，面内半径 4.8 的点在大口盒体外
+        expect(inCutter(100.1, cy + 4.8, cz)).toBeFalse();
         // 贯穿深度不被倒角改变
         const b = bbox(cutter);
         expect(b.x1).toBeCloseTo(100 + 0.2, 6);
         expect(b.x0).toBeCloseTo(100 - 6.08 - 0.2, 6);
       });
+
+      it('ignores chamfer on circle holes (disabled for performance)', () => {
+        const plain = bbox(mkChamferCircle({}));
+        const forced = bbox(mkChamferCircle({ chamfer: true }));
+        // 圆孔即使预设里带 chamfer: true 也必须与无倒角逐位一致
+        expect(forced.x1 - forced.x0).toBeCloseTo(plain.x1 - plain.x0, 6);
+        expect(forced.y1 - forced.y0).toBeCloseTo(plain.y1 - plain.y0, 6);
+        expect(forced.z1 - forced.z0).toBeCloseTo(plain.z1 - plain.z0, 6);
+      });
+
+      const mkChamferCircle = (over: any) => {
+        const params = base();
+        params.holes = [{ shape: 'circle', surface: 'front', diameter: 8, width: 8, length: 8, x: 0, y: 0, ...over }];
+        return holes(params, ['front']);
+      };
     });
   });
 });
