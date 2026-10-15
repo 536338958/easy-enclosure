@@ -12,6 +12,8 @@ export type Hole = {
   holeType?: 'through' | 'blind';
   /** 不透孔深度（mm），由外壁向内量；超出壁厚会被夹住保证不打穿 */
   blindDepth?: number;
+  /** 孔口 45° 导入倒角（宽 0.6mm），在外壁孔口扩一圈，便于螺丝/LED 导入 */
+  chamfer?: boolean;
 };
 
 export type PCBMount = {

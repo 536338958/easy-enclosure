@@ -1,4 +1,8 @@
 import measureBoundingBox from '@jscad/modeling/src/measurements/measureBoundingBox';
+import measureVolume from '@jscad/modeling/src/measurements/measureVolume';
+import { intersect } from '@jscad/modeling/src/operations/booleans';
+import { cuboid } from '@jscad/modeling/src/primitives';
+import { translate } from '@jscad/modeling/src/operations/transforms';
 import { DEFAULT_PARAMS, cloneParams } from '../params';
 import { holes } from './holes';
 
@@ -109,6 +113,74 @@ describe('holes', () => {
       // 透孔：两端各多 0.2 余量
       expect(b.y0).toBeCloseTo(80 - total - 0.2, 6);
       expect(b.y1).toBeCloseTo(80 + 0.2, 6);
+    });
+
+    // 回归：right 的切割体在 x≈0 一侧、left 在 x≈width 一侧（与透孔同面）
+    it('places left/right blind holes on the same wall as through holes', () => {
+      const mk = (surface: 'left' | 'right') => {
+        const params = base();
+        params.waterProof = true;
+        params.holes = [
+          { shape: 'circle', surface, diameter: 8, width: 8, length: 8, x: 0, y: 0, holeType: 'blind', blindDepth: 3 },
+        ];
+        return bbox(holes(params, [surface]));
+      };
+      const right = mk('right');
+      // right 外壁 x=0：盲孔从 x=0 向内 3mm、向外 0.2
+      expect(right.x0).toBeCloseTo(-0.2, 6);
+      expect(right.x1).toBeCloseTo(3, 6);
+      const left = mk('left');
+      // left 外壁 x=width=100
+      expect(left.x0).toBeCloseTo(100 - 3, 6);
+      expect(left.x1).toBeCloseTo(100 + 0.2, 6);
+    });
+
+    describe('孔口倒角', () => {
+      const mkChamfer = (over: any) => {
+        const params = base();
+        params.holes = [{ shape: 'circle', surface: 'front', diameter: 8, width: 8, length: 8, x: 0, y: 0, ...over }];
+        return holes(params, ['front']);
+      };
+
+      it('widens the cutter at the outer surface by the chamfer size', () => {
+        const plain = bbox(mkChamfer({}));
+        const cham = bbox(mkChamfer({ chamfer: true }));
+        // 前面：面内两轴 = X / Z。倒角后孔口半径多 0.6
+        expect(cham.x1 - cham.x0).toBeCloseTo(8 + 1.2, 3);
+        expect(cham.z1 - cham.z0).toBeCloseTo(8 + 1.2, 3);
+        expect(plain.x1 - plain.x0).toBeCloseTo(8, 3);
+      });
+
+      it('keeps the through depth untouched by the chamfer', () => {
+        const cham = bbox(mkChamfer({ chamfer: true }));
+        expect(cham.y1).toBeCloseTo(80 + 0.2, 6);
+        expect(cham.y0).toBeCloseTo(80 - 6.08 - 0.2, 6);
+      });
+
+      it('orients the cone outward on the left wall too', () => {
+        // 左壁外壁 x=width。倒角锥从外壁(x=100, 半径 r+0.6) 收拢到 x=99.4 (半径 r)。
+        // 在锥体中段 x=99.7 处锥半径 = 4.3：半径 4.2 的点必须在切割体内（翻转错误则
+        // 该处只有半径 4 的孔圆柱，点会落在体外）——以此锁定锥的大口朝外
+        const params = base();
+        params.waterProof = true;
+        params.holes = [
+          { shape: 'circle', surface: 'left', diameter: 8, width: 8, length: 8, x: 0, y: 0, chamfer: true },
+        ];
+        const cutter = holes(params, ['left']);
+        const inCutter = (x: number, y: number, z: number) => {
+          const box = translate([x, y, z], cuboid({ size: [0.04, 0.04, 0.04] }));
+          return measureVolume(intersect(cutter, box)) > 0.3 * 0.04 ** 3;
+        };
+        const cy = params.length / 2;
+        const cz = params.height / 2;
+
+        expect(inCutter(100 - 0.3, cy + 4.2, cz)).toBeTrue();
+        expect(inCutter(100 - 0.3, cy + 4.45, cz)).toBeFalse();
+        // 贯穿深度不被倒角改变
+        const b = bbox(cutter);
+        expect(b.x1).toBeCloseTo(100 + 0.2, 6);
+        expect(b.x0).toBeCloseTo(100 - 6.08 - 0.2, 6);
+      });
     });
   });
 });

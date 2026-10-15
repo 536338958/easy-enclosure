@@ -802,6 +802,14 @@
               />
             </div>
           }
+          <div class="input-group grid-toggle-group input-group-full">
+            <label>{{ t('params.holeChamfer') }}<app-help-tip [hintKey]="'params.holeChamferHint'" /></label>
+            <input
+              type="checkbox"
+              [checked]="hole.chamfer ?? false"
+              (change)="updateHole($index, { chamfer: $any($event.target).checked })"
+            />
+          </div>
 
           <div class="input-group">
             <label>{{ offsetHLabel(hole.surface) }}<app-help-tip [hintKey]="'params.offsetFaceHint'" /></label>

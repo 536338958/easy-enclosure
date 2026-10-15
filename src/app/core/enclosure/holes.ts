@@ -2,6 +2,7 @@ import { rotate, translate } from '@jscad/modeling/src/operations/transforms';
 import { degToRad } from '@jscad/modeling/src/utils';
 import { cuboid, cylinder } from '@jscad/modeling/src/primitives';
 import { union } from '@jscad/modeling/src/operations/booleans';
+import { hull } from '@jscad/modeling/src/operations/hulls';
 
 import { Params } from '../params';
 import { Geom3 } from '@jscad/modeling/src/geometries/types';
@@ -32,6 +33,8 @@ const HOLE_BLIND_TOLERANCE = 0.2;
 const HOLE_BLIND_MIN_DEPTH = 0.2;
 // 盲孔底最少保留的壁厚，保证孔底不打穿
 const HOLE_BLIND_RESIDUAL = 0.4;
+// 孔口 45° 导入倒角的宽度（mm）
+const HOLE_CHAMFER_SIZE = 0.6;
 
 export const holes = (
   params: Params,
@@ -138,7 +141,8 @@ export const holes = (
       }
 
       // 不透孔：覆盖切割深度与穿透轴上的定位 —— 切割体从外壁向外伸 TOL、
-      // 向内只到 blindDepth，孔底（平底）留在壁内
+      // 向内只到 blindDepth，孔底（平底）留在壁内。
+      // 注意左右面的几何归属与透孔一致：right 的切割体在 x≈0 一侧、left 在 x≈width 一侧
       if (isBlind) {
         holeDepth = blindDepth + HOLE_BLIND_TOLERANCE;
         if (surface === 'front') {
@@ -146,13 +150,56 @@ export const holes = (
         } else if (surface === 'back') {
           y = (blindDepth - HOLE_BLIND_TOLERANCE) / 2;
         } else if (surface === 'right') {
-          x = width + (HOLE_BLIND_TOLERANCE - blindDepth) / 2;
-        } else if (surface === 'left') {
           x = (blindDepth - HOLE_BLIND_TOLERANCE) / 2;
+        } else if (surface === 'left') {
+          x = width + (HOLE_BLIND_TOLERANCE - blindDepth) / 2;
         } else {
           // bottom / top：外壁都在 z = 0
           z = (blindDepth - HOLE_BLIND_TOLERANCE) / 2;
         }
+      }
+
+      // 孔口倒角：45° 导入锥，在外壁孔口扩一圈（宽 HOLE_CHAMFER_SIZE）。
+      // 规范姿态：孔轴沿 Z、外壁在 z=0、材料在 +Z，大口朝外（略伸入空气破共面）。
+      // back / left 的旋转把规范 +Z 映向「朝外」，锥体需翻转（大口仍朝外）。
+      if (hole.chamfer) {
+        const c = HOLE_CHAMFER_SIZE;
+        let outer: [number, number, number];
+        if (surface === 'front') {
+          outer = [x, length, z];
+        } else if (surface === 'back') {
+          outer = [x, 0, z];
+        } else if (surface === 'right') {
+          outer = [0, y, z];
+        } else if (surface === 'left') {
+          outer = [width, y, z];
+        } else {
+          outer = [x, y, 0];
+        }
+        const bigEndAtMinusZ = surface !== 'back' && surface !== 'left';
+        const zBig = bigEndAtMinusZ ? -HOLE_BLIND_TOLERANCE / 2 : HOLE_BLIND_TOLERANCE / 2;
+        const zSmall = bigEndAtMinusZ ? c - 0.01 : -(c - 0.01);
+        let ch: Geom3;
+        if (hole.shape === 'circle') {
+          const r = hole.diameter / 2;
+          ch = hull(
+            translate(
+              [0, 0, zBig],
+              cylinder({ radius: r + c, height: HOLE_BLIND_TOLERANCE, segments: 24 }),
+            ),
+            translate([0, 0, zSmall], cylinder({ radius: r, height: 0.02, segments: 24 })),
+          );
+        } else {
+          const inPlane = hole.shape === 'rectangle' ? hole.length : hole.width;
+          ch = hull(
+            translate(
+              [0, 0, zBig],
+              cuboid({ size: [hole.width + 2 * c, inPlane + 2 * c, HOLE_BLIND_TOLERANCE] }),
+            ),
+            translate([0, 0, zSmall], cuboid({ size: [hole.width, inPlane, 0.02] })),
+          );
+        }
+        result.push(translate(outer, rotate(rot, ch)));
       }
 
       if (hole.shape === 'square') {
