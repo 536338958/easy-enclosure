@@ -1,6 +1,6 @@
 import { rotate, translate } from '@jscad/modeling/src/operations/transforms';
 import { degToRad } from '@jscad/modeling/src/utils';
-import { cuboid, cylinder } from '@jscad/modeling/src/primitives';
+import { cuboid, cylinder, cylinderElliptic } from '@jscad/modeling/src/primitives';
 import { union } from '@jscad/modeling/src/operations/booleans';
 import { hull } from '@jscad/modeling/src/operations/hulls';
 
@@ -160,8 +160,12 @@ export const holes = (
       }
 
       // 孔口倒角：45° 导入锥，在外壁孔口扩一圈（宽 HOLE_CHAMFER_SIZE）。
-      // 规范姿态：孔轴沿 Z、外壁在 z=0、材料在 +Z，大口朝外（略伸入空气破共面）。
+      // 规范姿态：孔轴沿 Z、外壁在 z=0、材料在 +Z。
+      // 用单个 cylinderElliptic 直锥：45° 线穿过 (z=0, r+c) 与 (z=c, r)，
+      // 并沿 45° 继续向外伸 TOL 到空气里（破共面，且锥面在 z=0 处半径恰为 r+c）。
       // back / left 的旋转把规范 +Z 映向「朝外」，锥体需翻转（大口仍朝外）。
+      // 段数 16：0.6mm 宽的装饰性倒角上弦高误差 <0.08mm 不可见，
+      // 但能让倒角锥的三角形数（进而 holes() 的 union 成本）降 ~1/3 —— 见 docs/HOLE-CHAMFER-PERF.md
       if (hole.chamfer) {
         const c = HOLE_CHAMFER_SIZE;
         let outer: [number, number, number];
@@ -177,20 +181,24 @@ export const holes = (
           outer = [x, y, 0];
         }
         const bigEndAtMinusZ = surface !== 'back' && surface !== 'left';
-        const zBig = bigEndAtMinusZ ? -HOLE_BLIND_TOLERANCE / 2 : HOLE_BLIND_TOLERANCE / 2;
-        const zSmall = bigEndAtMinusZ ? c - 0.01 : -(c - 0.01);
+        const coneH = c + HOLE_BLIND_TOLERANCE;
+        const rBig = hole.diameter / 2 + c + HOLE_BLIND_TOLERANCE;
         let ch: Geom3;
         if (hole.shape === 'circle') {
-          const r = hole.diameter / 2;
-          ch = hull(
-            translate(
-              [0, 0, zBig],
-              cylinder({ radius: r + c, height: HOLE_BLIND_TOLERANCE, segments: 24 }),
-            ),
-            translate([0, 0, zSmall], cylinder({ radius: r, height: 0.02, segments: 24 })),
+          ch = translate(
+            [0, 0, ((bigEndAtMinusZ ? 1 : -1) * (c - HOLE_BLIND_TOLERANCE)) / 2],
+            cylinderElliptic({
+              startRadius: bigEndAtMinusZ ? [rBig, rBig] : [hole.diameter / 2, hole.diameter / 2],
+              endRadius: bigEndAtMinusZ ? [hole.diameter / 2, hole.diameter / 2] : [rBig, rBig],
+              height: coneH,
+              segments: 16,
+            }),
           );
         } else {
+          // 方 / 矩形：盒体 hull 锥台（盒体便宜，无需换算）
           const inPlane = hole.shape === 'rectangle' ? hole.length : hole.width;
+          const zBig = bigEndAtMinusZ ? -HOLE_BLIND_TOLERANCE / 2 : HOLE_BLIND_TOLERANCE / 2;
+          const zSmall = bigEndAtMinusZ ? c - 0.01 : -(c - 0.01);
           ch = hull(
             translate(
               [0, 0, zBig],

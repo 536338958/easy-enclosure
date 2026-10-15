@@ -145,9 +145,10 @@ describe('holes', () => {
       it('widens the cutter at the outer surface by the chamfer size', () => {
         const plain = bbox(mkChamfer({}));
         const cham = bbox(mkChamfer({ chamfer: true }));
-        // 前面：面内两轴 = X / Z。倒角后孔口半径多 0.6
-        expect(cham.x1 - cham.x0).toBeCloseTo(8 + 1.2, 3);
-        expect(cham.z1 - cham.z0).toBeCloseTo(8 + 1.2, 3);
+        // 前面：面内两轴 = X / Z。锥体沿 45° 向外延伸 0.2mm 破共面，
+        // 最外端半径 = r + 0.6 + 0.2 = 4.8 → 包围盒跨 9.6
+        expect(cham.x1 - cham.x0).toBeCloseTo(8 + 1.6, 3);
+        expect(cham.z1 - cham.z0).toBeCloseTo(8 + 1.6, 3);
         expect(plain.x1 - plain.x0).toBeCloseTo(8, 3);
       });
 
@@ -158,9 +159,10 @@ describe('holes', () => {
       });
 
       it('orients the cone outward on the left wall too', () => {
-        // 左壁外壁 x=width。倒角锥从外壁(x=100, 半径 r+0.6) 收拢到 x=99.4 (半径 r)。
-        // 在锥体中段 x=99.7 处锥半径 = 4.3：半径 4.2 的点必须在切割体内（翻转错误则
-        // 该处只有半径 4 的孔圆柱，点会落在体外）——以此锁定锥的大口朝外
+        // 左壁外壁 x=width。锥体沿 45° 从外壁(x=100, 半径 r+0.6) 向内收拢到
+        // x=99.4 (半径 r)，并反向延伸到 x=100.2 (半径 r+0.8)。
+        // 在 x=99.7 处锥半径 = 4.3：半径 4.2 的点必须在切割体内（锥向朝内）；
+        // 在 x=99.9 处锥半径 = 4.5：半径 4.6 的点必须在锥外（锥向错误时这两点结论互换）
         const params = base();
         params.waterProof = true;
         params.holes = [
@@ -174,8 +176,8 @@ describe('holes', () => {
         const cy = params.length / 2;
         const cz = params.height / 2;
 
-        expect(inCutter(100 - 0.3, cy + 4.2, cz)).toBeTrue();
-        expect(inCutter(100 - 0.3, cy + 4.45, cz)).toBeFalse();
+        expect(inCutter(99.7, cy + 4.2, cz)).toBeTrue();
+        expect(inCutter(99.9, cy + 4.6, cz)).toBeFalse();
         // 贯穿深度不被倒角改变
         const b = bbox(cutter);
         expect(b.x1).toBeCloseTo(100 + 0.2, 6);
