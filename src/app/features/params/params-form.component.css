@@ -272,3 +272,25 @@ select:focus-visible {
     transform: translateY(0);
   }
 }
+
+/* 通风项标题：可点击聚焦（预览只显示该项的范围框） */
+.sub-params p.vent-item-header {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease;
+}
+
+.sub-params p.vent-item-header:hover {
+  color: #0f766e;
+}
+
+.sub-params p.vent-item-header.editing {
+  color: #b45309;
+}
+
+.sub-params p.vent-item-header .vent-item-hint {
+  display: block;
+  font-size: 10px;
+  font-weight: normal;
+  color: #94a3b8;
+}

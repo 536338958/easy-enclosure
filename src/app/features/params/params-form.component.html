@@ -910,8 +910,13 @@
           >
             X
           </button>
-          <p>
+          <p
+            class="vent-item-header"
+            [class.editing]="editingVentIndex() === $index"
+            (click)="toggleEditingVent($index)"
+          >
             <b>{{ t('params.ventItem', { n: $index + 1 }) }}</b>
+            <span class="vent-item-hint">{{ t('params.ventItemEditHint') }}</span>
           </p>
 
           <div class="input-group">

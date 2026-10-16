@@ -28,6 +28,8 @@ type MessageState = { key: TranslationKey; vars: Record<string, string | number>
 })
 export class ParamsFormComponent {
   private readonly state = inject(EnclosureStateService);
+  /** 正在编辑的通风项下标（透传给模板；null = 未聚焦，预览显示全部范围框） */
+  readonly editingVentIndex = this.state.editingVentIndex;
   private readonly i18n = inject(I18nService);
 
   readonly activeTab = signal<number | null>(null);
@@ -282,11 +284,23 @@ export class ParamsFormComponent {
       y: 0,
     };
     this.state.patchParams({ ventilation: [...current.ventilation, next] });
+    // 新增的项自动进入编辑态（预览聚焦它的范围框）
+    this.state.setEditingVentIndex(current.ventilation.length);
   }
 
   removeVentilation(index: number): void {
     const current = this.params();
     this.state.patchParams({ ventilation: current.ventilation.filter((_, i) => i !== index) });
+    // 被移除的项若正在编辑，清除编辑态（下标移位后指向会错）
+    if (this.state.editingVentIndex() === index) {
+      this.state.setEditingVentIndex(null);
+    }
+  }
+
+  /** 点击通风项标题：聚焦该项（预览只显示它的范围框），再点一次恢复显示全部 */
+  toggleEditingVent(index: number): void {
+    const current = this.state.editingVentIndex();
+    this.state.setEditingVentIndex(current === index ? null : index);
   }
 
   updateVentilation(index: number, patch: Partial<Ventilation>): void {

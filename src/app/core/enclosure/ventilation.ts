@@ -294,38 +294,42 @@ export const ventRangeBox = (params: Params, item: Ventilation): Geom3 | null =>
   const centerH = params.width / 2 + item.x;
   const centerV = params.length / 2 + item.y;
 
+  // 悬浮偏移 1.5mm：top 悬在盖板上方（预览中盖板边缘朝上一侧，与 rim 同向可见）、
+  // bottom 悬在腔内（默认俯视相机看得到）、四个墙面沿各自外法向悬在墙外。
+  const FLOAT = 1.5;
   if (surface === 'top') {
     return cuboid({
       size: [ra, rb, params.roof],
-      center: [centerH, centerV, params.roof / 2],
+      center: [centerH, centerV, params.roof + FLOAT],
     });
   }
   if (surface === 'bottom') {
     return cuboid({
       size: [ra, rb, params.floor],
-      center: [centerH, centerV, params.floor / 2],
+      center: [centerH, centerV, params.floor + FLOAT],
     });
   }
   if (surface === 'front') {
     return cuboid({
       size: [ra, sideWall, rb],
-      center: [centerH, params.length - sideWall / 2, params.height / 2 + item.y],
+      center: [centerH, params.length + FLOAT, params.height / 2 + item.y],
     });
   }
   if (surface === 'back') {
     return cuboid({
       size: [ra, sideWall, rb],
-      center: [centerH, sideWall / 2, params.height / 2 + item.y],
+      center: [centerH, -FLOAT, params.height / 2 + item.y],
     });
   }
   if (surface === 'right') {
+    // right 墙在 x∈[0, sideWall]，外侧面 x=0 → 框悬到 x = -FLOAT 一侧
     return cuboid({
       size: [sideWall, ra, rb],
-      center: [sideWall / 2, centerV, params.height / 2 + item.y],
+      center: [-FLOAT, centerV, params.height / 2 + item.y],
     });
   }
   return cuboid({
     size: [sideWall, ra, rb],
-    center: [params.width - sideWall / 2, centerV, params.height / 2 + item.y],
+    center: [params.width + FLOAT, centerV, params.height / 2 + item.y],
   });
 };

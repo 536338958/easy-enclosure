@@ -433,11 +433,22 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
   // 异步渲染序号：worker 往返期间若有更新的渲染入场，丢弃过期结果
   private renderSeq = 0;
   private readonly geometry = inject(GeometryBuilder);
+  // 最近一次成功渲染的参数快照：编辑态切换只需重排实体（几何全走缓存）
+  private lastRenderedParams: Params | null = null;
 
   constructor() {
     effect(() => {
       const currentParams = this.state.params();
       this.scheduleModelRender(currentParams);
+    });
+
+    // 编辑态切换（通风项聚焦）：几何全走缓存，只重排「开孔范围」框的显隐
+    effect(() => {
+      const index = this.state.editingVentIndex();
+      if (!this.isViewReady || this.lastRenderedParams === null) {
+        return;
+      }
+      void this.renderModel(this.lastRenderedParams, [], false, false);
     });
   }
 
@@ -989,11 +1000,19 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     return entities;
   }
 
-  /** 通风「开孔范围」预览框：半透明，随所在部件显隐（top → 盖板，其余 → 基座） */
+  /**
+   * 通风「开孔范围」预览框：半透明，随所在部件显隐（top → 盖板，其余 → 基座）。
+   * 编辑态过滤：正在编辑的通风项才显示范围框（null = 未聚焦，全部显示）；
+   * 框沿法向外移 1.5mm 悬浮在面上方 —— 内嵌实体会被表面遮挡（第 30 轮结论）。
+   */
   private buildVentRangeEntities(params: Params): Entity[] {
     const entities: Entity[] = [];
-    const color: [number, number, number, number] = [0.95, 0.55, 0.1, 0.1];
-    params.ventilation.forEach((item) => {
+    const color: [number, number, number, number] = [1.0, 0.45, 0.05, 0.3];
+    const editing = this.state.editingVentIndex();
+    params.ventilation.forEach((item, index) => {
+      if (editing !== null && editing !== index) {
+        return;
+      }
       const gate = item.surface === 'top' ? params.showLid : params.showBase;
       if (!gate) {
         return;
@@ -1241,6 +1260,8 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       drawCommands: rendererDrawCommands,
       entities,
     };
+
+    this.lastRenderedParams = params;
 
     if (!this.renderer && this.containerRef?.nativeElement) {
       this.renderer = prepareRender({

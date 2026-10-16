@@ -10,6 +10,17 @@ export class EnclosureStateService {
 
   readonly holeCount = computed(() => this.params().holes.length);
 
+  /**
+   * 正在编辑的通风项下标（性能可视化用，第 30 轮）：
+   * 预览中的「开孔范围」橙框只显示正在编辑的那一项（null = 全部显示）。
+   * 这是纯 UI 状态，不属于 Params（不进预设）。
+   */
+  readonly editingVentIndex = signal<number | null>(null);
+
+  setEditingVentIndex(index: number | null): void {
+    this.editingVentIndex.set(index);
+  }
+
   setLoading(isLoading: boolean): void {
     this.loading.set(isLoading);
   }

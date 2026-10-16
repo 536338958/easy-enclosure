@@ -242,12 +242,13 @@ describe('ventRangeBox（开孔范围预览框）', () => {
     const box = ventRangeBox(params, item);
     expect(box).not.toBeNull();
     const [[x0, y0, z0], [x1, y1, z1]] = measureBoundingBox(box as never);
-    // 中心 = (50+10, 40+5)，跨 50×40，厚度 = roof
+    // 中心 = (50+10, 40+5)，跨 50×40，厚度 = roof；悬浮在盖板上方（z 中心 = roof + 1.5）
     expect((x0 + x1) / 2).toBeCloseTo(60, 3);
     expect((y0 + y1) / 2).toBeCloseTo(45, 3);
     expect(x1 - x0).toBeCloseTo(50, 3);
     expect(y1 - y0).toBeCloseTo(40, 3);
     expect(z1 - z0).toBeCloseTo(params.roof, 3);
+    expect((z0 + z1) / 2).toBeCloseTo(params.roof + 1.5, 3);
   });
 
   it('clamps the range to the face size', () => {
@@ -272,6 +273,8 @@ describe('ventRangeBox（开孔范围预览框）', () => {
     expect(f1[0] - f0[0]).toBeCloseTo(40, 3); // X 跨 = 范围水平
     expect(f1[2] - f0[2]).toBeCloseTo(10, 3); // Z 跨 = 范围竖直
     expect(f1[1] - f0[1]).toBeCloseTo(sideWall, 3); // Y 跨 = 穿透厚度
+    // 悬浮：沿外法向（+Y）外移 1.5mm，悬在前墙外侧
+    expect((f0[1] + f1[1]) / 2).toBeCloseTo(params.length + 1.5, 3);
     // 左面：水平 = 长（Y），竖直 = 高（Z），厚度沿 X
     const left = ventRangeBox(params, {
       surface: 'left', slotWidth: 2, slotLength: 0, slotGap: 2, slotCount: 3,
