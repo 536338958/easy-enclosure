@@ -6,7 +6,7 @@ import type Mat4 from '@jscad/modeling/src/maths/mat4/type';
 import { circle, cuboid, rectangle } from '@jscad/modeling/src/primitives';
 import { degToRad } from '@jscad/modeling/src/utils';
 import measureBoundingBox from '@jscad/modeling/src/measurements/measureBoundingBox';
-import type { Geom3 } from '@jscad/modeling/src/geometries/types';
+import type { Geom2, Geom3 } from '@jscad/modeling/src/geometries/types';
 
 /**
  * 圆角/圆弧的默认细分段数。
@@ -86,7 +86,19 @@ const roundedCorner2d = (r: number, s = seg(48)) => {
   );
 };
 
+// 内容键缓存（性能 E-①）：同一 (l, w, r, s) 组合在一次会话里被反复构造
+// （lid 的嵌入边外圈 / 嵌入边内圈 / 顶端倒角 slab 各一次，base 内腔再来一组），
+// 单次 ~12ms。Geom2 是不可变数据，跨调用复用安全（JSCAD 操作均返回新几何）。
+// 拖动参数会产生大量一次性键：超上限整表清空，防止内存膨胀。
+const cloverCache = new Map<string, Geom2>();
+const CLOVER_CACHE_MAX = 64;
+
 export const clover2d = (l: number, w: number, r = 8, s = seg(48)) => {
+  const key = `clover|${l.toFixed(3)}|${w.toFixed(3)}|${r.toFixed(3)}|${s}`;
+  const cached = cloverCache.get(key);
+  if (cached) {
+    return cached;
+  }
   const cornersRemoved = subtract(
     roundedCube2d(l, w, r, s),
     translate([0, 0], roundedCube2d(r, r, r, s)),
@@ -106,6 +118,10 @@ export const clover2d = (l: number, w: number, r = 8, s = seg(48)) => {
     translate([0, w - r * 2], rotateZ(degToRad(270), rc)),
     translate([r * 2, w], rotateZ(degToRad(270), rc)),
   );
+  if (cloverCache.size >= CLOVER_CACHE_MAX) {
+    cloverCache.clear();
+  }
+  cloverCache.set(key, rounded);
   return rounded;
 };
 

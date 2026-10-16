@@ -111,4 +111,24 @@ describe('enclosure utils（2D 剖面挤出）', () => {
     expect(maxY).toBeCloseTo(80, 1);
     expect(maxZ).toBeCloseTo(10, 1);
   });
+
+  describe('clover2d 内容键缓存（性能 E-①）', () => {
+    it('returns the same instance for identical args (cache hit)', () => {
+      const a = clover2d(60, 40, 3, 48);
+      const b = clover2d(60, 40, 3, 48);
+      expect(b).toBe(a); // 同一实例 = 缓存命中，构造被跳过
+    });
+
+    it('builds separately for different args', () => {
+      const a = clover2d(60, 40, 3, 48);
+      const b = clover2d(61, 40, 3, 48);
+      expect(b).not.toBe(a);
+    });
+
+    it('treats the segment count as part of the cache key', () => {
+      const a = clover2d(60, 40, 3, 48);
+      const b = clover2d(60, 40, 3, 24);
+      expect(b).not.toBe(a); // 交互期(24段)与全质量(48段)各归各，不串线
+    });
+  });
 });
