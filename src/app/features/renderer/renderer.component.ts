@@ -24,20 +24,13 @@ import {
 } from '@jscad/regl-renderer';
 import type { Entity } from '@jscad/regl-renderer/types/geometry-utils-V2/entity';
 
-import { base } from '../../core/enclosure/base';
-import { cableClamps } from '../../core/enclosure/clamp';
-import { dinRailMountsPair } from '../../core/enclosure/dinrailmount';
-import { internalWalls } from '../../core/enclosure/internalwalls';
-import { lid } from '../../core/enclosure/lid';
-import { pcbMountsOnBase, pcbMountsOnLid } from '../../core/enclosure/pcbmount';
 import {
   pcbBoard,
   pcbComponentZone,
-  pcbCollision,
   type PCBCollisionResult,
 } from '../../core/enclosure/pcbpreview';
-import { isInteractiveQuality, setInteractiveQuality } from '../../core/enclosure/quality';
-import { waterProofSeal } from '../../core/enclosure/waterproofseal';
+import { buildParts, type BuiltParts, type PartName } from './geometry-parts';
+import { GeometryBuilder } from './geometry-builder';
 import { I18nService } from '../../core/i18n/i18n.service';
 import type { TranslationKey } from '../../core/i18n/translations';
 import type { Params } from '../../core/params';
@@ -431,16 +424,14 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     hitsCeiling: false,
     overlapVolume: 0,
   });
-  // 碰撞检测延后计算（D 优化）：重建时先按上次结果渲染 PCB 板与净空区，
-  // 依赖变化时延迟 300ms 补算 —— 碰撞的布尔运算（重模型 ≈150~250ms）不再阻塞重建。
-  private collisionHandle: ReturnType<typeof setTimeout> | null = null;
-  private collisionSeq = 0;
+  // 碰撞结果缓存（D 优化）：依赖未变时复用上次结果；依赖变化时随精修在 worker 里算
   private lastCollision: PCBCollisionResult | null = null;
-  private coreEntities: Entity[] = [];
-  private pcbEntities: Entity[] = [];
   // 交互期低段数预览（B 优化）：拖动中先出快模，停手后精修
   private interactiveHandle: ReturnType<typeof setTimeout> | null = null;
   private destroyed = false;
+  // 异步渲染序号：worker 往返期间若有更新的渲染入场，丢弃过期结果
+  private renderSeq = 0;
+  private readonly geometry = inject(GeometryBuilder);
 
   constructor() {
     effect(() => {
@@ -475,10 +466,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       clearTimeout(this.interactiveHandle);
       this.interactiveHandle = null;
     }
-    if (this.collisionHandle !== null) {
-      clearTimeout(this.collisionHandle);
-      this.collisionHandle = null;
-    }
+    this.geometry.dispose();
     if (this.wheelInteractionHandle !== null) {
       clearTimeout(this.wheelInteractionHandle);
       this.wheelInteractionHandle = null;
@@ -672,16 +660,13 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     }
 
     // 交互期（参数拖动中）：短延迟后用低段数快速出一版预览，
-    // 保证拖动过程中持续有反馈（质量降、延迟低，见 quality.ts）
+    // 保证拖动过程中持续有反馈（画质开关由 worker 侧的 buildParts 管理）
     this.interactiveHandle = setTimeout(() => {
       this.interactiveHandle = null;
       if (this.destroyed) {
         return;
       }
-      setInteractiveQuality(true);
-      void this.renderModel(params, paramsDiff, true).finally(() => {
-        setInteractiveQuality(false);
-      });
+      void this.renderModel(params, paramsDiff, true, true);
     }, RendererComponent.INTERACTIVE_DELAY);
 
     // 停手 250ms 后全段数精修一次（force 全量重建，交付最终产物）
@@ -690,8 +675,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       if (this.destroyed) {
         return;
       }
-      void this.renderModel(params, paramsDiff, true).finally(() => {
-        setInteractiveQuality(false);
+      void this.renderModel(params, paramsDiff, true, false).finally(() => {
         this.state.setLoading(false);
         // Params 是不可变的：每次更新都由 updateParam/patchParams 生成新对象，
         // 嵌套数组经 map/filter 重建，不存在就地修改，因此直接持有引用即可，
@@ -978,10 +962,6 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
   private buildPcbEntities(params: Params, collision: PCBCollisionResult): Entity[] {
     if (!params.pcbPreview.enabled) {
       this.pcbCollision.set({ collides: false, hitsWalls: false, hitsCeiling: false, overlapVolume: 0 });
-      if (this.collisionHandle !== null) {
-        clearTimeout(this.collisionHandle);
-        this.collisionHandle = null;
-      }
       this.lastCollision = null;
       return [];
     }
@@ -1008,9 +988,16 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     return entities;
   }
 
-  private async renderModel(params: Params, diff: string[], force = false): Promise<void> {
-    // force（交互期精修 / 低段数预览后收尾）时忽略 diff 差异，全量重建
+  private async renderModel(
+    params: Params,
+    diff: string[],
+    force = false,
+    interactive = false,
+  ): Promise<void> {
+    // force（交互期快模 / 精修）时忽略 diff 差异，全量重建
     const effDiff = force ? Object.keys(params) : diff;
+    // 异步序号：worker 往返期间若有更新的渲染入场，丢弃本次过期结果
+    const seq = ++this.renderSeq;
     let lidPos: Vec3;
     let basePos: Vec3;
     let sealPos: Vec3;
@@ -1026,10 +1013,51 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       showDinRailMount,
     } = params;
 
+    // —— 收集本次需要重建的部件（依赖判断保持同步，几何交给 worker）——
+    const wanted: PartName[] = [];
+    if (this.checkDeps(effDiff, lidDeps)) {
+      wanted.push('lid');
+    }
+    if (this.checkDeps(effDiff, baseDeps)) {
+      wanted.push('base');
+    }
+    if (this.checkDeps(effDiff, sealDeps) && waterProof) {
+      wanted.push('seal');
+    }
+    if (this.checkDeps(effDiff, dinRailDeps) && dinMountEnabled && showDinRailMount) {
+      wanted.push('dinRail');
+    }
+    if (this.checkDeps(effDiff, mountDeps) && pcbMountParams.length > 0) {
+      wanted.push('baseMounts', 'lidMounts');
+    }
+    if (this.checkDeps(effDiff, internalWallDeps) && internalWallParams.length > 0) {
+      wanted.push('internalWalls');
+    }
+    if (this.checkDeps(effDiff, cableClampDeps) && (params.cableClamps?.length ?? 0) > 0) {
+      wanted.push('cableClamps');
+    }
+    // 碰撞检测依赖变化时随精修一起算（交互期快模不算，避免拖慢 worker 队列）
+    const collisionDirty = this.lastCollision === null || this.checkDeps(effDiff, collisionDeps);
+    if (params.pcbPreview.enabled && collisionDirty && !interactive) {
+      wanted.push('collision');
+    }
+
+    // —— 几何构建（Worker；不可用时自动回退同步）——
+    let built: BuiltParts;
+    try {
+      built = await this.geometry.build(params, wanted, interactive);
+    } catch {
+      built = buildParts(params, wanted, interactive);
+    }
+    if (seq !== this.renderSeq || this.destroyed) {
+      return; // 已有更新的渲染入场（或组件已销毁），本次结果作废
+    }
+
+    // —— 用拿到的几何走原有组装逻辑（位置计算留在主线程）——
     if (this.checkDeps(effDiff, lidDeps)) {
       lidPos = waterProof ? [width / 2 + SPACING, -length / 2, 0] : [SPACING / 2, -length / 2, 0];
       this.lidOrigin = lidPos;
-      this.lidModel = translate(lidPos, lid(params));
+      this.lidModel = translate(lidPos, built.parts.lid as Geom3);
     }
 
     if (this.checkDeps(effDiff, baseDeps)) {
@@ -1037,14 +1065,14 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
         ? [-width / 2, -length / 2, 0]
         : [-(width + SPACING / 2), -length / 2, 0];
       this.baseOrigin = basePos;
-      this.baseModelLocal = base(params);
+      this.baseModelLocal = built.parts.base as Geom3;
       this.baseModel = translate(basePos, this.baseModelLocal);
     }
 
     if (this.checkDeps(effDiff, sealDeps) && waterProof) {
       sealPos = [-width - width / 2 - SPACING, -length / 2, 0];
       this.sealOrigin = sealPos;
-      this.sealModel = translate(sealPos, waterProofSeal(params));
+      this.sealModel = translate(sealPos, built.parts.seal as Geom3);
     } else if (this.checkDeps(effDiff, sealDeps) && !waterProof) {
       this.sealModel = null;
     }
@@ -1052,7 +1080,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     if (this.checkDeps(effDiff, dinRailDeps) && dinMountEnabled && showDinRailMount) {
       // 摆在盖板右侧，整体左边缘贴着「盖板右边缘 + SPACING」
       const lidX = waterProof ? width / 2 + SPACING : SPACING / 2;
-      const rawDin = dinRailMountsPair(params);
+      const rawDin = built.parts.dinRail as Geom3;
       const dinBounds = measureBoundingBox(rawDin) as [Vec3Tuple, Vec3Tuple];
       const minX = dinBounds[0][0];
       const dinRailPos: Vec3 = [lidX + width + SPACING - minX, 0, 0];
@@ -1071,8 +1099,8 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
         ? [width / 2 + SPACING, -length / 2, 0]
         : [SPACING / 2, -length / 2, 0];
 
-      const baseMounts = pcbMountsOnBase(params);
-      const lidMounts = pcbMountsOnLid(params);
+      const baseMounts = built.parts.baseMounts;
+      const lidMounts = built.parts.lidMounts;
 
       this.baseMountsModel = baseMounts ? translate(baseMountsPos, baseMounts) : null;
       this.lidMountsModel = lidMounts ? translate(lidMountsPos, lidMounts) : null;
@@ -1082,17 +1110,23 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       mountsPos = waterProof
         ? [-width / 2, -length / 2, 0]
         : [-(width + SPACING / 2), -length / 2, 0];
-      this.internalWallsModel = translate(mountsPos, internalWalls(params));
+      this.internalWallsModel = translate(mountsPos, built.parts.internalWalls as Geom3);
     }
 
     if (this.checkDeps(effDiff, cableClampDeps) && (params.cableClamps?.length ?? 0) > 0) {
       const clampsPos: Vec3 = waterProof
         ? [-width / 2, -length / 2, 0]
         : [-(width + SPACING / 2), -length / 2, 0];
-      const rawClamps = cableClamps(params);
+      const rawClamps = built.parts.cableClamps;
       this.cableClampsModel = rawClamps ? translate(clampsPos, rawClamps) : null;
     } else if (this.checkDeps(effDiff, cableClampDeps)) {
       this.cableClampsModel = null;
+    }
+
+    // 碰撞结果随精修一起回来了：更新信号，板体/净空区按新结果着色
+    if (built.collision) {
+      this.lastCollision = built.collision;
+      this.pcbCollision.set(built.collision);
     }
 
     // showLid / showBase 只影响组装，不影响几何本身，因此上面各部件仍走缓存重建
@@ -1153,46 +1187,17 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     if (axisEntity) {
       entities.push(axisEntity);
     }
-    // 核心（非 PCB）实体单独留存：碰撞补算完成后只需替换 PCB 实体段
-    this.coreEntities = entities.slice();
 
-    // 碰撞检测照常跑，只是基座隐藏时不把 PCB 悬空画出来。
-    // 碰撞结果按依赖缓存 + 延后补算（D 优化）：改通风 / 壁挂 / 显示开关等无关参数时
-    // 直接复用上次结果；依赖变化时先按旧结果渲染，300ms 后补算并原位替换 PCB 实体。
-    const collisionDirty = this.lastCollision === null || this.checkDeps(effDiff, collisionDeps);
-    this.pcbEntities = this.buildPcbEntities(params, this.lastCollision ?? {
+    // PCB 板与净空区：碰撞结果已随本次构建回来（或复用上次缓存），按它着色。
+    // 基座隐藏时不把 PCB 悬空画出来
+    const pcbEntities = this.buildPcbEntities(params, this.lastCollision ?? {
       collides: false,
       hitsWalls: false,
       hitsCeiling: false,
       overlapVolume: 0,
     });
-    if (this.pcbEntities.length > 0 && params.showBase) {
-      entities.push(...this.pcbEntities);
-    }
-    if (params.pcbPreview.enabled && collisionDirty && !isInteractiveQuality()) {
-      const seq = ++this.collisionSeq;
-      if (this.collisionHandle !== null) {
-        clearTimeout(this.collisionHandle);
-      }
-      this.collisionHandle = setTimeout(() => {
-        if (seq !== this.collisionSeq) {
-          return; // 已有更新的一次渲染接手，这次的结果作废
-        }
-        const collision = pcbCollision(params, this.baseModelLocal ?? undefined);
-        this.lastCollision = collision;
-        this.pcbCollision.set(collision);
-        // 碰撞状态翻转后板体 / 净空区颜色要跟着变：只重建 PCB 实体并原位替换。
-        // coreEntities 取成员值（可能已被更新的一次渲染刷新过），不取闭包里的旧引用
-        this.pcbEntities = this.buildPcbEntities(params, collision);
-        if (this.renderOptions) {
-          const list = [...this.coreEntities];
-          if (this.pcbEntities.length > 0 && params.showBase) {
-            list.push(...this.pcbEntities);
-          }
-          this.renderOptions.entities = list;
-          this.updateView = true;
-        }
-      }, 300);
+    if (pcbEntities.length > 0 && params.showBase) {
+      entities.push(...pcbEntities);
     }
 
     // Re-frame the camera when the grid becomes visible (so it lands in view)

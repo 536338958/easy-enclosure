@@ -163,6 +163,33 @@ describe('RendererComponent', () => {
       expect(maxX).toBeCloseTo(105, 6);
     });
 
+    it('builds and renders the default model through the async builder pipeline', async () => {
+      // A-2 验收：renderModel → GeometryBuilder（worker 或自动回退）→ 组装 → model
+      // 这条链路必须产出完整模型（与同步构建等价）
+      const fixture = TestBed.createComponent(RendererComponent);
+      (fixture.componentInstance as any).renderer = () => {};
+      (fixture.componentInstance as any).renderOptions = {
+        camera: {},
+        drawCommands: {},
+        entities: [],
+      };
+
+      await (fixture.componentInstance as any).renderModel(
+        cloneParams(DEFAULT_PARAMS),
+        Object.keys(DEFAULT_PARAMS),
+        true,
+        false,
+      );
+
+      const model = (fixture.componentInstance as any).model as {
+        polygons: unknown[];
+      } | null;
+      expect(model).not.toBeNull();
+      expect(model!.polygons.length).toBeGreaterThan(0);
+      const options = (fixture.componentInstance as any).renderOptions;
+      expect(options.entities.length).toBeGreaterThan(0);
+    });
+
     it('omits the base when showBase is false', async () => {
       const fixture = TestBed.createComponent(RendererComponent);
       const [minX, maxX] = await renderParts(

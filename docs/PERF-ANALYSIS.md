@@ -67,12 +67,18 @@
   针对性降段数或合并切割体；
 - 收益：中（可能省 100~200ms）；代价：中；风险：低（纯性能不动几何）。
 
-### A. 重建挪进 Web Worker（体验上限最高，代价最大）
+### A. 重建挪进 Web Worker —— 🔄 进行中（第 25~26 轮完成 A-1/A-2）
 
 - 做法：JSCAD 几何管线整体搬进 Worker，主线程只发参数、收结果；
 - 收益：**重建期间 UI 完全不冻结**（旋转/缩放照常），任何模型都不卡；
-- 代价：大（Worker 打包、消息协议、Angular 信号同步、进度提示）；
-  风险：中（regl-renderer 在主线程，几何与渲染分离后要管好生命周期）。
+- 进度：**A-1 ✅**（buildParts 纯函数 + worker 薄壳 + GeometryBuilder 服务，
+  Worker 不可用自动回退同步）；**A-2 ✅**（renderModel 异步化：依赖判断收集部件 →
+  worker 构建 → 主线程组装，renderSeq 防过期、destroyed 兜底；Karma 280 全绿，
+  含「异步管线产出完整模型」端到端验收）；
+  剩余 **A-3**：紧凑序列化（可选）、导出路径复用 worker（可选）、文档收尾。
+- 备注：headless Chrome 的 --virtual-time-budget 截图与 Worker 消息不兼容
+  （虚拟时间不等 worker 回包，视口永远空白）——这是截图工具限制，
+  Karma 真实 Chrome 端到端测试已证明链路正常。
 
 ### C. 内容键记忆化（补充性）
 
