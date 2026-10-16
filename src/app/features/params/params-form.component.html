@@ -231,10 +231,14 @@
           <label>{{ t('params.snapFitEnable') }}</label>
           <input
             type="checkbox"
+            [disabled]="params().waterProof"
             [checked]="params().snapFit.enabled"
             (change)="setSnapFitEnabled($any($event.target).checked)"
           />
         </div>
+        @if (params().waterProof) {
+          <p class="input-group-full hint">{{ t('params.snapFitWaterproofHint') }}</p>
+        }
         <div class="input-group">
           <label>{{ t('params.snapFitPreset') }}<app-help-tip [hintKey]="'params.snapFitPresetHint'" /></label>
           <select
@@ -1062,6 +1066,17 @@
               [value]="vent.slotCount"
               (keydown.enter)="$any($event.target).blur()"
               (blur)="updateVentilation($index, { slotCount: +$any($event.target).value })"
+            />
+          </div>
+          <div class="input-group grid-toggle-group input-group-full">
+            <label
+              >{{ t('params.ventAutoFitCount')
+              }}<app-help-tip [hintKey]="'params.ventAutoFitCountHint'"
+            /></label>
+            <input
+              type="checkbox"
+              [checked]="vent.autoFitCount ?? true"
+              (change)="updateVentilation($index, { autoFitCount: $any($event.target).checked })"
             />
           </div>
           <div class="input-group">

@@ -306,6 +306,10 @@ export const ZH = {
   'params.ventSlotGapHint': '相邻两条槽之间的间隙，mm',
   'params.ventSlotCount': '槽数量',
   'params.ventSlotCountHint': '这组通风槽的条数',
+  'params.ventAutoFitCount': '数量自动适配范围',
+  'params.ventAutoFitCountHint':
+    '开启后，设了开孔范围时本组条数/行数自动收缩到完整落在范围内（两端不被裁掉半截）；关闭则按填写的数量排布，超出的部分被裁掉',
+  'params.snapFitWaterproofHint': '防水开启时无法启用卡扣：密封圈与卡扣占用同一条嵌入边卡槽',
   'params.ventRangeWidth': '开孔范围·水平 (mm)',
   'params.ventRangeWidthHint':
     '开孔只在这个范围内生效：范围外的开孔被裁掉、压线的截成平头（预览中以半透明橙框显示范围）。0 = 不限制（整面可用）。范围以面中心为默认中心、随 X/Y 偏移一起移动，始终与面的水平轴对齐、不随槽角度旋转',
@@ -684,6 +688,11 @@ export const EN: Record<TranslationKey, string> = {
   'params.ventSlotGapHint': 'Gap between two neighbouring slots, mm',
   'params.ventSlotCount': 'Slot count',
   'params.ventSlotCountHint': 'How many slots this group has',
+  'params.ventAutoFitCount': 'Auto-fit count to range',
+  'params.ventAutoFitCountHint':
+    'When on, this group\'s count shrinks automatically to fit inside the vent range (no half-trimmed ends); when off, vents are laid out as filled in and anything beyond the range is trimmed',
+  'params.snapFitWaterproofHint':
+    'Snap-fit cannot be enabled while waterproof is on: the seal ring and the snap beads share the same insert rim groove',
   'params.ventRangeWidth': 'Vent range · horizontal (mm)',
   'params.ventRangeWidthHint':
     'Vents only exist inside this range: vents outside are removed, ones crossing the edge are trimmed flat (the range is shown as a translucent orange box in the preview). 0 = no limit (whole face). The range is centred on the face, moves with the X/Y offsets, stays aligned with the face axes and does not rotate with the slot angle',

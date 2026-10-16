@@ -191,6 +191,61 @@ describe('ventilation', () => {
       expect(size(g).w).toBeCloseTo(18, 3);
     });
 
+    it('auto-adapts the slot count to fit the range', () => {
+      // 8 条 sw2/gap2（pitch 4）需跨 38；范围竖直 20 → 收缩到 floor((20-2)/4)+1 = 5 条
+      const g = cut('top', {
+        angle: 0, slotWidth: 2, slotLength: 0, slotGap: 2, slotCount: 8,
+        rangeWidth: 60, rangeLength: 20, x: 0, y: 0,
+      });
+      const s = size(g);
+      // 5 条的堆叠跨 = 4×4 + 2 = 18 ≤ 20 ✓ 完整落在范围内
+      expect(s.d).toBeCloseTo(18, 3);
+      expect(s.d).toBeLessThanOrEqual(20.02);
+    });
+
+    it('auto-adapts grid rows and cols to fit the range', () => {
+      // 圆孔网格 8×8、sw3/gap3（pitch 6）跨 45；范围 24×24 → 收缩到 4×4
+      const g = cut('top', {
+        mode: 'circleGrid', slotWidth: 3, slotCount: 8, rows: 8,
+        rangeWidth: 24, rangeLength: 24, x: 0, y: 0,
+      });
+      const s = size(g);
+      // 4×4 孔阵跨 = 3×6 + 3 = 21 ≤ 24 ✓
+      expect(s.w).toBeCloseTo(21, 3);
+      expect(s.d).toBeCloseTo(21, 3);
+    });
+
+    it('keeps the requested count when autoFitCount is off (clipped instead)', () => {
+      // per-item 开关关闭：条数照设（8 条跨 38 > 范围 20），超出部分被裁掉半截
+      const g = cut('top', {
+        angle: 0, slotWidth: 2, slotLength: 0, slotGap: 2, slotCount: 8,
+        rangeWidth: 60, rangeLength: 20, x: 0, y: 0, autoFitCount: false,
+      });
+      const s = size(g);
+      // 裁剪语义：堆叠跨被裁到范围 20 以内，两端槽截成平头
+      expect(s.d).toBeLessThanOrEqual(20.02);
+      expect(s.d).toBeGreaterThan(18); // 裁剪后仍比自动收缩(18)更占满范围
+    });
+
+    it('does not shrink the count when no range is set', () => {
+      const g = cut('top', { angle: 0, slotWidth: 2, slotLength: 0, slotGap: 2, slotCount: 8 });
+      const s = size(g);
+      expect(s.d).toBeCloseTo(8 * 2 + 7 * 2, 3); // 8 条全保留，跨 30
+    });
+
+    it('guarantees vents inside the range when auto-fit is on', () => {
+      // 自动适配后的新语义：设范围时条数收缩，范围内保证有开孔 —— 不再空集
+      const params = makeParams({
+        surface: 'top',
+        slotWidth: 2,
+        slotCount: 2,
+        slotGap: 3,
+        rangeWidth: 2,
+        rangeLength: 2,
+      });
+      expect(ventilationCut(params, 'lid')).not.toBeNull();
+    });
+
     it('drops the whole vent when the range falls into a gap', () => {
       // 范围与内容同为中心对称（x/y 一起动），所以空集只发生在：
       // 偶数条槽的中心正好是间隙，且范围比间隙还小 —— 框不到任何开孔
@@ -201,6 +256,7 @@ describe('ventilation', () => {
         slotGap: 3,
         rangeWidth: 0.4,
         rangeLength: 0.4,
+        autoFitCount: false, // 裁剪语义（自动适配开启时数量会收缩、不再空集）
       });
       expect(ventilationCut(params, 'lid')).toBeNull();
     });

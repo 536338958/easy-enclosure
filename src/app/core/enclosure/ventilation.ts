@@ -188,8 +188,8 @@ const buildOne = (item: Ventilation, params: Params, target: 'lid' | 'base'): Ge
   const { mode, angle: rawAngle, rows: rawRows, rangeWidth: rawRW, rangeLength: rawRL } =
     normalizeVentilation(item);
   const angle = clampAngle(rawAngle);
-  const cols = Math.max(Math.floor(item.slotCount), 1);
-  const rows = Math.max(Math.floor(rawRows), 1);
+  const colsRequested = Math.max(Math.floor(item.slotCount), 1);
+  const rowsRequested = Math.max(Math.floor(rawRows), 1);
   const sw = Math.max(item.slotWidth, 0.2);
   const gap = Math.max(item.slotGap, 0);
   // 蜂窝的最近邻距离必须是「√3·R + 肋宽」（R = sw/2，√3·R 是两条平行边的间距）。
@@ -216,6 +216,36 @@ const buildOne = (item: Ventilation, params: Params, target: 'lid' | 'base'): Ge
   const limitB = sa > 1e-6 ? spanB / sa : Infinity;
   const avail = Math.min(limitA, limitB);
   const slotLen = item.slotLength > 0 ? item.slotLength : Math.max(avail * 0.6, sw);
+
+  // 数量自动适配范围（第 34 轮重做）：设了范围的轴上，阵列条数/行数自动收缩到
+  // 「完整落在范围内」，免得两端的开孔被裁掉半截。未设范围的轴不收缩。
+  // per-item 开关 autoFitCount（缺省 true）：false = 恢复裁剪语义（数量照设，两端裁平头）。
+  // 槽模式的堆叠方向垂直于槽轴：范围矩形沿堆叠方向的有效跨度 =
+  // A·|sin t| + B·|cos t|（轴向随槽角度旋转，与裁剪盒同一套约定）。
+  let cols = colsRequested;
+  let rows = rowsRequested;
+  if ((rangeA > 0 || rangeB > 0) && (item.autoFitCount ?? true)) {
+    if (mode === 'slot') {
+      const extent =
+        (rangeA > 0 ? rangeA : fullA) * Math.abs(Math.sin(t)) +
+        (rangeB > 0 ? rangeB : fullB) * Math.abs(Math.cos(t));
+      const maxCols =
+        extent >= sw ? Math.floor((extent - sw) / pitch) + 1 : 1;
+      cols = Math.max(Math.min(cols, maxCols), 1);
+    } else {
+      // 网格模式：列沿 A、行沿 B，各自适配
+      const maxCols =
+        (rangeA > 0 ? rangeA : fullA) >= sw
+          ? Math.floor(((rangeA > 0 ? rangeA : fullA) - sw) / pitch) + 1
+          : 1;
+      const rowPitch = mode === 'hexGrid' ? (pitch * Math.sqrt(3)) / 2 : pitch;
+      const effB = rangeB > 0 ? rangeB : fullB;
+      const maxRows =
+        effB >= sw ? Math.floor((effB - sw) / rowPitch) + 1 : 1;
+      cols = Math.max(Math.min(cols, maxCols), 1);
+      rows = Math.max(Math.min(rows, maxRows), 1);
+    }
+  }
 
   if (isFlat) {
     const depth = (isTop ? roof : floor) + 2;

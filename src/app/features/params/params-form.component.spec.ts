@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
+import { cloneParams, DEFAULT_PARAMS } from '../../core/params';
 import { EnclosureStateService } from '../../core/state/enclosure-state.service';
 import { ParamsFormComponent } from './params-form.component';
 
@@ -74,6 +75,38 @@ describe('ParamsFormComponent', () => {
     component.onLidScrewsChange(false);
     expect(state.params().lidScrews).toBeFalse();
     expect(state.params().waterProof).toBeFalse();
+  });
+
+  it('forces snap-fit off when waterproof is enabled', () => {
+    const params = cloneParams(DEFAULT_PARAMS);
+    params.snapFit.enabled = true;
+    state.setParams(params);
+
+    component.onWaterproofChange(true);
+
+    expect(state.params().waterProof).toBeTrue();
+    expect(state.params().snapFit.enabled).toBeFalse();
+  });
+
+  it('refuses to enable snap-fit while waterproof is on', () => {
+    const params = cloneParams(DEFAULT_PARAMS);
+    params.waterProof = true;
+    params.snapFit.enabled = false;
+    state.setParams(params);
+
+    component.setSnapFitEnabled(true);
+
+    expect(state.params().snapFit.enabled).toBeFalse();
+  });
+
+  it('allows snap-fit again after waterproof is turned off', () => {
+    const params = cloneParams(DEFAULT_PARAMS);
+    params.waterProof = false;
+    state.setParams(params);
+
+    component.setSnapFitEnabled(true);
+
+    expect(state.params().snapFit.enabled).toBeTrue();
   });
 
   it('ignores empty numeric input', () => {

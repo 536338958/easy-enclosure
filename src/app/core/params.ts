@@ -93,6 +93,12 @@ export type Ventilation = {
    */
   rangeWidth?: number;
   rangeLength?: number;
+  /**
+   * 数量自动适配开孔范围（第 34 轮重做，第 35 轮改为每项独立开关）：
+   * 设范围时条数/行数自动收缩到完整落在范围内。缺省 true；
+   * false = 恢复裁剪语义（数量照设，两端开孔被裁掉半截）。
+   */
+  autoFitCount?: boolean;
   // 在所在面内的偏移：x = 水平方向，y = 竖直/纵向
   x: number;
   y: number;
