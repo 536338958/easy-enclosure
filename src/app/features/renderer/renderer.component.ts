@@ -29,6 +29,7 @@ import {
   pcbComponentZone,
   type PCBCollisionResult,
 } from '../../core/enclosure/pcbpreview';
+import { ventRangeBox } from '../../core/enclosure/ventilation';
 import { buildParts, type BuiltParts, type PartName } from './geometry-parts';
 import { GeometryBuilder } from './geometry-builder';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -988,6 +989,24 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     return entities;
   }
 
+  /** 通风「开孔范围」预览框：半透明，随所在部件显隐（top → 盖板，其余 → 基座） */
+  private buildVentRangeEntities(params: Params): Entity[] {
+    const entities: Entity[] = [];
+    const color: [number, number, number, number] = [0.95, 0.55, 0.1, 0.1];
+    params.ventilation.forEach((item) => {
+      const gate = item.surface === 'top' ? params.showLid : params.showBase;
+      if (!gate) {
+        return;
+      }
+      const box = ventRangeBox(params, item);
+      if (!box) {
+        return;
+      }
+      entities.push(...(entitiesFromSolids({}, colorize(color, box)) as Entity[]));
+    });
+    return entities;
+  }
+
   private async renderModel(
     params: Params,
     diff: string[],
@@ -1198,6 +1217,12 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     });
     if (pcbEntities.length > 0 && params.showBase) {
       entities.push(...pcbEntities);
+    }
+
+    // 通风「开孔范围」预览框（第 29 轮）：半透明，帮助确认裁剪区域
+    const ventRangeEntities = this.buildVentRangeEntities(params);
+    if (ventRangeEntities.length > 0) {
+      entities.push(...ventRangeEntities);
     }
 
     // Re-frame the camera when the grid becomes visible (so it lands in view)

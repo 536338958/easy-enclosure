@@ -266,3 +266,66 @@ export const ventilationCut = (params: Params, target: 'lid' | 'base'): Geom3 | 
   }
   return parts.length === 1 ? parts[0] : union(parts);
 };
+
+/**
+ * 通风「开孔范围」的预览框（性能可视化，第 29 轮）。
+ *
+ * 返回世界坐标系下的范围盒（半透明，仅用于预览，**不参与切割**）：
+ * - 范围以面中心为默认中心、随 x/y 偏移移动，与 buildOne 的裁剪盒同一套几何约定；
+ * - 厚度覆盖所在面的穿透厚度（顶/底 = roof/floor，墙面 = 侧壁总厚）；
+ * - 未设范围（两轴都 ≤ 0）返回 null —— 整面通风不需要画框。
+ */
+export const ventRangeBox = (params: Params, item: Ventilation): Geom3 | null => {
+  const { rangeWidth: rawW, rangeLength: rawL } = normalizeVentilation(item);
+  if (rawW <= 0 && rawL <= 0) {
+    return null;
+  }
+  const surface = item.surface;
+  const isFlat = surface === 'top' || surface === 'bottom';
+  const fullA = isFlat
+    ? params.width
+    : surface === 'left' || surface === 'right'
+      ? params.length
+      : params.width;
+  const fullB = isFlat ? params.length : params.height;
+  const ra = rawW > 0 ? Math.min(rawW, fullA) : fullA;
+  const rb = rawL > 0 ? Math.min(rawL, fullB) : fullB;
+  const sideWall = params.insertThickness + params.insertClearance * 2 + params.wall * 2 + 2;
+  const centerH = params.width / 2 + item.x;
+  const centerV = params.length / 2 + item.y;
+
+  if (surface === 'top') {
+    return cuboid({
+      size: [ra, rb, params.roof],
+      center: [centerH, centerV, params.roof / 2],
+    });
+  }
+  if (surface === 'bottom') {
+    return cuboid({
+      size: [ra, rb, params.floor],
+      center: [centerH, centerV, params.floor / 2],
+    });
+  }
+  if (surface === 'front') {
+    return cuboid({
+      size: [ra, sideWall, rb],
+      center: [centerH, params.length - sideWall / 2, params.height / 2 + item.y],
+    });
+  }
+  if (surface === 'back') {
+    return cuboid({
+      size: [ra, sideWall, rb],
+      center: [centerH, sideWall / 2, params.height / 2 + item.y],
+    });
+  }
+  if (surface === 'right') {
+    return cuboid({
+      size: [sideWall, ra, rb],
+      center: [sideWall / 2, centerV, params.height / 2 + item.y],
+    });
+  }
+  return cuboid({
+    size: [sideWall, ra, rb],
+    center: [params.width - sideWall / 2, centerV, params.height / 2 + item.y],
+  });
+};

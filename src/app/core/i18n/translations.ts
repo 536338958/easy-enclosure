@@ -307,7 +307,7 @@ export const ZH = {
   'params.ventSlotCountHint': '这组通风槽的条数',
   'params.ventRangeWidth': '开孔范围·水平 (mm)',
   'params.ventRangeWidthHint':
-    '开孔只在这个范围内生效：范围外的开孔被裁掉、压线的截成平头。0 = 不限制（整面可用）。范围以面中心为默认中心、随 X/Y 偏移一起移动，始终与面的水平轴对齐、不随槽角度旋转',
+    '开孔只在这个范围内生效：范围外的开孔被裁掉、压线的截成平头（预览中以半透明橙框显示范围）。0 = 不限制（整面可用）。范围以面中心为默认中心、随 X/Y 偏移一起移动，始终与面的水平轴对齐、不随槽角度旋转',
   'params.ventRangeLength': '开孔范围·竖直 (mm)',
   'params.ventRangeLengthHint':
     '同「开孔范围·水平」，沿面的另一条轴：顶/底面 = 长度方向，四个墙面 = 竖直（高度）方向。0 = 不限制',
@@ -684,7 +684,7 @@ export const EN: Record<TranslationKey, string> = {
   'params.ventSlotCountHint': 'How many slots this group has',
   'params.ventRangeWidth': 'Vent range · horizontal (mm)',
   'params.ventRangeWidthHint':
-    'Vents only exist inside this range: vents outside are removed, ones crossing the edge are trimmed flat. 0 = no limit (whole face). The range is centred on the face, moves with the X/Y offsets, stays aligned with the face axes and does not rotate with the slot angle',
+    'Vents only exist inside this range: vents outside are removed, ones crossing the edge are trimmed flat (the range is shown as a translucent orange box in the preview). 0 = no limit (whole face). The range is centred on the face, moves with the X/Y offsets, stays aligned with the face axes and does not rotate with the slot angle',
   'params.ventRangeLength': 'Vent range · vertical (mm)',
   'params.ventRangeLengthHint':
     'Same as the horizontal range along the other face axis: top/bottom = length direction, walls = vertical (height). 0 = no limit',

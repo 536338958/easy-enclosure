@@ -2,7 +2,7 @@ import type { Geom3 } from '@jscad/modeling/src/geometries/types';
 import measureBoundingBox from '@jscad/modeling/src/measurements/measureBoundingBox';
 
 import { cloneParams, DEFAULT_PARAMS, Ventilation } from '../params';
-import { ventilationCut } from './ventilation';
+import { ventRangeBox, ventilationCut } from './ventilation';
 
 /** 构造一组通风参数；覆盖项通过 over 传入 */
 const makeParams = (over: Partial<Ventilation> = {}) => {
@@ -219,5 +219,67 @@ describe('ventilation', () => {
       expect(s.w).toBeLessThanOrEqual(24.02);
       expect(s.d).toBeLessThanOrEqual(24.02);
     });
+  });
+});
+
+describe('ventRangeBox（开孔范围预览框）', () => {
+  const params = cloneParams(DEFAULT_PARAMS);
+  params.width = 100;
+  params.length = 80;
+  params.height = 30;
+
+  it('returns null when no range is set', () => {
+    expect(
+      ventRangeBox(params, { surface: 'top', slotWidth: 2, slotLength: 0, slotGap: 2, slotCount: 3, x: 0, y: 0 }),
+    ).toBeNull();
+  });
+
+  it('builds a top-face range box centred on the face with x/y offsets', () => {
+    const item: Ventilation = {
+      surface: 'top', slotWidth: 2, slotLength: 0, slotGap: 2, slotCount: 3,
+      rangeWidth: 50, rangeLength: 40, x: 10, y: 5,
+    };
+    const box = ventRangeBox(params, item);
+    expect(box).not.toBeNull();
+    const [[x0, y0, z0], [x1, y1, z1]] = measureBoundingBox(box as never);
+    // 中心 = (50+10, 40+5)，跨 50×40，厚度 = roof
+    expect((x0 + x1) / 2).toBeCloseTo(60, 3);
+    expect((y0 + y1) / 2).toBeCloseTo(45, 3);
+    expect(x1 - x0).toBeCloseTo(50, 3);
+    expect(y1 - y0).toBeCloseTo(40, 3);
+    expect(z1 - z0).toBeCloseTo(params.roof, 3);
+  });
+
+  it('clamps the range to the face size', () => {
+    const box = ventRangeBox(params, {
+      surface: 'top', slotWidth: 2, slotLength: 0, slotGap: 2, slotCount: 3,
+      rangeWidth: 500, rangeLength: 500, x: 0, y: 0,
+    });
+    const [[x0, y0], [x1, y1]] = measureBoundingBox(box as never);
+    expect(x1 - x0).toBeCloseTo(100, 3);
+    expect(y1 - y0).toBeCloseTo(80, 3);
+  });
+
+  it('maps the range onto wall bands with the right axes', () => {
+    const sideWall =
+      params.insertThickness + params.insertClearance * 2 + params.wall * 2 + 2;
+    // 前面：水平 = 宽（X），竖直 = 高（Z），厚度沿 Y
+    const front = ventRangeBox(params, {
+      surface: 'front', slotWidth: 2, slotLength: 0, slotGap: 2, slotCount: 3,
+      rangeWidth: 40, rangeLength: 10, x: 0, y: 0,
+    });
+    const [f0, f1] = measureBoundingBox(front as never);
+    expect(f1[0] - f0[0]).toBeCloseTo(40, 3); // X 跨 = 范围水平
+    expect(f1[2] - f0[2]).toBeCloseTo(10, 3); // Z 跨 = 范围竖直
+    expect(f1[1] - f0[1]).toBeCloseTo(sideWall, 3); // Y 跨 = 穿透厚度
+    // 左面：水平 = 长（Y），竖直 = 高（Z），厚度沿 X
+    const left = ventRangeBox(params, {
+      surface: 'left', slotWidth: 2, slotLength: 0, slotGap: 2, slotCount: 3,
+      rangeWidth: 40, rangeLength: 10, x: 0, y: 0,
+    });
+    const [l0, l1] = measureBoundingBox(left as never);
+    expect(l1[1] - l0[1]).toBeCloseTo(40, 3); // Y 跨 = 范围水平（左面水平 = 长度方向）
+    expect(l1[2] - l0[2]).toBeCloseTo(10, 3); // Z 跨 = 范围竖直
+    expect(l1[0] - l0[0]).toBeCloseTo(sideWall, 3); // X 跨 = 穿透厚度
   });
 });
