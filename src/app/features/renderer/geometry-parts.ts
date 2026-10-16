@@ -2,8 +2,8 @@ import type { Geom3 } from '@jscad/modeling/src/geometries/types';
 
 import type { Params } from '../../core/params';
 import { base } from '../../core/enclosure/base';
-import { cableClamps } from '../../core/enclosure/clamp';
-import { dinRailMountsPair } from '../../core/enclosure/dinrailmount';
+import { cableClampTops, cableClamps, cableClampsOnBase, cableClampsOnLid } from '../../core/enclosure/clamp';
+import { dinRailMountGeometry, dinRailMountsPair } from '../../core/enclosure/dinrailmount';
 import { internalWalls } from '../../core/enclosure/internalwalls';
 import { lid } from '../../core/enclosure/lid';
 import { pcbCollision, type PCBCollisionResult } from '../../core/enclosure/pcbpreview';
@@ -13,7 +13,11 @@ import { waterProofSeal } from '../../core/enclosure/waterproofseal';
 
 /**
  * 可委托给 Worker 构建的部件。位置组装（平移到展示区）留在主线程 ——
- * 这里只产出**本地坐标系**下的几何，与 renderModel 原来的逐段调用一一对应。
+ * 这里只产出**本地坐标系**下的几何。
+ *
+ * 渲染器与导出面板共用本清单：
+ * - 渲染器要 lid/base/seal/baseMounts/lidMounts/internalWalls/cableClamps/dinRail（成对挂夹）；
+ * - 导出面板还要 lidClamps / cableClampTops / dinRailSingle（单件挂夹，导出用）。
  */
 export type PartName =
   | 'lid'
@@ -23,7 +27,10 @@ export type PartName =
   | 'lidMounts'
   | 'internalWalls'
   | 'cableClamps'
+  | 'lidClamps'
+  | 'cableClampTops'
   | 'dinRail'
+  | 'dinRailSingle'
   | 'collision';
 
 export type BuiltParts = {
@@ -71,8 +78,19 @@ export const buildParts = (
   if (want('cableClamps') && (params.cableClamps?.length ?? 0) > 0) {
     out.parts.cableClamps = cableClamps(params) ?? undefined;
   }
+  if (want('lidClamps') && (params.cableClamps?.length ?? 0) > 0) {
+    out.parts.lidClamps = cableClampsOnLid(params) ?? undefined;
+  }
+  if (want('cableClampTops') && (params.cableClamps?.length ?? 0) > 0) {
+    out.parts.cableClampTops = cableClampTops(params) ?? undefined;
+  }
   if (want('dinRail') && params.dinRailMount && params.showDinRailMount) {
     out.parts.dinRail = dinRailMountsPair(params);
+  }
+  // 导出用的单件挂夹：不看 dinRailMount / showDinRailMount 开关
+  // （导出面板勾了「DIN 挂夹」就要能导，即使预览里隐藏）
+  if (want('dinRailSingle') && params.dinRailMount) {
+    out.parts.dinRailSingle = dinRailMountGeometry(params);
   }
   if (want('collision') && params.pcbPreview.enabled) {
     out.collision = pcbCollision(params, out.parts.base);

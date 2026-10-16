@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { cloneParams, DEFAULT_PARAMS } from '../../core/params';
+import type { Params } from '../../core/params';
 import { GeometryBuilder } from './geometry-builder';
 
 /**
@@ -52,5 +53,11 @@ describe('GeometryBuilder', () => {
     const got = (built.parts.lid as { polygons: unknown[] }).polygons.length;
     const want = (expected.parts.lid as { polygons: unknown[] }).polygons.length;
     expect(got).toBe(want);
+  });
+
+  it('rejects instead of hanging when the build throws inside the worker', async () => {
+    // 空参数缺全部字段：buildParts 内部必然抛错。
+    // Worker 的 onmessage 必须捕获并回传 error —— 否则主线程 Promise 永远挂起
+    await expectAsync(builder.build({} as Params, ['base'], false)).toBeRejectedWithError();
   });
 });

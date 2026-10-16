@@ -4,6 +4,9 @@
  * 几何构建 Worker（性能选项 A）：把 base()/lid() 等布尔运算从主线程搬走，
  * 重建期间 UI 不冻结。Worker 只做薄壳 —— 全部逻辑在同目录的 geometry-parts.ts
  * （纯函数，单测直接打它，不依赖 Worker 环境）。
+ *
+ * 布尔运算可能抛错（参数极端时 JSCAD 布尔失稳）：onmessage 必须 try/catch，
+ * 出错时回传 {seq, error}，否则主线程的 Promise 会永远挂起。
  */
 import { buildParts, type PartName } from './geometry-parts';
 
@@ -16,17 +19,26 @@ export interface BuildRequest {
 
 export interface BuildResponse {
   seq: number;
-  parts: unknown;
-  collision: unknown;
+  parts?: unknown;
+  collision?: unknown;
+  error?: string;
 }
 
 self.onmessage = (event: MessageEvent<BuildRequest>) => {
   const { seq, params, parts, interactive } = event.data;
-  const built = buildParts(params as Parameters<typeof buildParts>[0], parts, interactive);
-  const response: BuildResponse = {
-    seq,
-    parts: built.parts,
-    collision: built.collision,
-  };
-  (self as unknown as Worker).postMessage(response);
+  try {
+    const built = buildParts(params as Parameters<typeof buildParts>[0], parts, interactive);
+    const response: BuildResponse = {
+      seq,
+      parts: built.parts,
+      collision: built.collision,
+    };
+    (self as unknown as Worker).postMessage(response);
+  } catch (e) {
+    const response: BuildResponse = {
+      seq,
+      error: e instanceof Error ? e.message : String(e),
+    };
+    (self as unknown as Worker).postMessage(response);
+  }
 };

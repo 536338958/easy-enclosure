@@ -19,13 +19,8 @@ import {
 } from '../../core/export/export-format';
 import { ExportFormatService } from '../../core/export/export-format.service';
 
-import { base } from '../../core/enclosure/base';
-import { cableClampTops, cableClampsOnBase, cableClampsOnLid } from '../../core/enclosure/clamp';
-import { dinRailMountGeometry } from '../../core/enclosure/dinrailmount';
-import { internalWalls } from '../../core/enclosure/internalwalls';
-import { lid } from '../../core/enclosure/lid';
-import { pcbMountsOnBase, pcbMountsOnLid } from '../../core/enclosure/pcbmount';
-import { waterProofSeal } from '../../core/enclosure/waterproofseal';
+import { GeometryBuilder } from '../renderer/geometry-builder';
+import type { BuiltParts, PartName } from '../renderer/geometry-parts';
 import { I18nService } from '../../core/i18n/i18n.service';
 import type { TranslationKey } from '../../core/i18n/translations';
 import type { Params } from '../../core/params';
@@ -48,6 +43,8 @@ export class ToolsComponent {
   private readonly state = inject(EnclosureStateService);
   private readonly i18n = inject(I18nService);
   private readonly exportFormatService = inject(ExportFormatService);
+  // 几何构建委托给 GeometryBuilder（worker 优先，自动回退同步）
+  private readonly geometry = inject(GeometryBuilder);
 
   readonly isExportModalOpen = signal(false);
   readonly isExporting = signal(false);
@@ -246,20 +243,40 @@ export class ToolsComponent {
       const currentParams = this.state.params();
       const files: { name: string; blob: Blob }[] = [];
 
+      // 几何构建委托给 GeometryBuilder（worker 优先）：base()/lid() 等布尔运算
+      // 不再阻塞主线程；序列化与部件 union 仍在主线程完成。
+      // 勾选即请求 —— 一次 build 拿齐全部所需部件
+      const wanted: PartName[] = [];
       if (this.exportBase()) {
-        const baseParts: Geom3[] = [base(currentParams)];
-        const baseMounts = pcbMountsOnBase(currentParams);
+        wanted.push('base', 'baseMounts', 'internalWalls', 'cableClamps');
+      }
+      if (this.exportLid()) {
+        wanted.push('lid', 'lidMounts', 'lidClamps');
+      }
+      if (this.hasSeal() && this.exportSeal()) {
+        wanted.push('seal');
+      }
+      if (this.hasPcbMounts() && this.exportPcbMounts()) {
+        wanted.push('baseMounts', 'lidMounts');
+      }
+      if (this.hasDinRailMount() && this.exportDinRail()) {
+        wanted.push('dinRailSingle');
+      }
+      if (this.hasCableClamps() && this.exportCableClamps()) {
+        wanted.push('cableClampTops');
+      }
+      const built: BuiltParts = await this.geometry.build(currentParams, wanted, false);
 
-        if (baseMounts) {
-          baseParts.push(baseMounts);
+      if (this.exportBase()) {
+        const baseParts: Geom3[] = [built.parts.base as Geom3];
+        if (built.parts.baseMounts) {
+          baseParts.push(built.parts.baseMounts);
         }
-
-        if (currentParams.internalWalls.length > 0) {
-          baseParts.push(internalWalls(currentParams));
+        if (built.parts.internalWalls) {
+          baseParts.push(built.parts.internalWalls);
         }
-        const baseClamps = cableClampsOnBase(currentParams);
-        if (baseClamps) {
-          baseParts.push(baseClamps);
+        if (built.parts.cableClamps) {
+          baseParts.push(built.parts.cableClamps);
         }
 
         files.push({
@@ -269,11 +286,9 @@ export class ToolsComponent {
       }
 
       if (this.exportLid()) {
-        const lidMounts = pcbMountsOnLid(currentParams);
-        const lidClamps = cableClampsOnLid(currentParams);
-        const lidParts: Geom3[] = [lid(currentParams)];
-        if (lidMounts) lidParts.push(lidMounts);
-        if (lidClamps) lidParts.push(lidClamps);
+        const lidParts: Geom3[] = [built.parts.lid as Geom3];
+        if (built.parts.lidMounts) lidParts.push(built.parts.lidMounts);
+        if (built.parts.lidClamps) lidParts.push(built.parts.lidClamps);
         const lidGeometry = lidParts.length > 1 ? union(lidParts) : lidParts[0];
         files.push({
           name: `enclosure-lid-${tsStr}.${ext}`,
@@ -284,24 +299,22 @@ export class ToolsComponent {
       if (this.hasSeal() && this.exportSeal()) {
         files.push({
           name: `enclosure-waterproof-seal-${tsStr}.${ext}`,
-          blob: this.geometryToBlob(waterProofSeal(currentParams)),
+          blob: this.geometryToBlob(built.parts.seal as Geom3),
         });
       }
 
       if (this.hasPcbMounts() && this.exportPcbMounts()) {
-        const baseMounts = pcbMountsOnBase(currentParams);
-        if (baseMounts) {
+        if (built.parts.baseMounts) {
           files.push({
             name: `enclosure-pcb-mounts-base-${tsStr}.${ext}`,
-            blob: this.geometryToBlob(baseMounts),
+            blob: this.geometryToBlob(built.parts.baseMounts),
           });
         }
 
-        const lidMounts = pcbMountsOnLid(currentParams);
-        if (lidMounts) {
+        if (built.parts.lidMounts) {
           files.push({
             name: `enclosure-pcb-mounts-lid-${tsStr}.${ext}`,
-            blob: this.geometryToBlob(lidMounts),
+            blob: this.geometryToBlob(built.parts.lidMounts),
           });
         }
       }
@@ -309,18 +322,18 @@ export class ToolsComponent {
       if (this.hasDinRailMount() && this.exportDinRail()) {
         files.push({
           name: `enclosure-din-rail-mount-${tsStr}.${ext}`,
-          blob: this.geometryToBlob(dinRailMountGeometry(currentParams)),
+          blob: this.geometryToBlob(built.parts.dinRailSingle as Geom3),
         });
       }
 
-      if (this.hasCableClamps() && this.exportCableClamps()) {
-        const clampTops = cableClampTops(currentParams);
-        if (clampTops) {
-          files.push({
-            name: `enclosure-cable-clamp-straps-${tsStr}.${ext}`,
-            blob: this.geometryToBlob(clampTops, `enclosure-cable-clamp-straps-${tsStr}`),
-          });
-        }
+      if (this.hasCableClamps() && this.exportCableClamps() && built.parts.cableClampTops) {
+        files.push({
+          name: `enclosure-cable-clamp-straps-${tsStr}.${ext}`,
+          blob: this.geometryToBlob(
+            built.parts.cableClampTops,
+            `enclosure-cable-clamp-straps-${tsStr}`,
+          ),
+        });
       }
 
       if (files.length === 1) {

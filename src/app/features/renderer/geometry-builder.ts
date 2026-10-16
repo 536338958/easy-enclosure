@@ -45,10 +45,19 @@ export class GeometryBuilder {
         type: 'module',
       });
       worker.onmessage = (event: MessageEvent<BuildResponse>) => {
-        const { seq, parts, collision } = event.data;
+        const { seq, parts, collision, error } = event.data;
         const entry = this.pending.get(seq);
         this.pending.delete(seq);
-        entry?.resolve({
+        if (!entry) {
+          return;
+        }
+        // Worker 内布尔抛错（参数极端时 JSCAD 失稳）：只拒绝这一个请求，
+        // 不标记 workerBroken —— 调用方的 catch 会走主线程同步兜底
+        if (error) {
+          entry.reject(new Error(error));
+          return;
+        }
+        entry.resolve({
           parts: parts as BuiltParts['parts'],
           collision: collision as BuiltParts['collision'],
         });
@@ -77,7 +86,12 @@ export class GeometryBuilder {
   build(params: Params, parts: PartName[], interactive: boolean): Promise<BuiltParts> {
     const worker = this.ensureWorker();
     if (!worker) {
-      return Promise.resolve(buildParts(params, parts, interactive));
+      // 同步回退：构建抛错转为 rejection（保持「永远返回 Promise」的 API 契约）
+      try {
+        return Promise.resolve(buildParts(params, parts, interactive));
+      } catch (e) {
+        return Promise.reject(e instanceof Error ? e : new Error(String(e)));
+      }
     }
     const seq = ++this.seq;
     const request: BuildRequest = { seq, params, parts, interactive };
