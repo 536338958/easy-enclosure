@@ -48,9 +48,20 @@
 > 偏移语义改上游（用户决定保留本地旧语义）；防水槽按 lidScrews 选形状族（UI 不可达）；
 > 真等距内缩 / clover 解析式 / 叶加厚（clover 数学死结，已放弃）。
 >
-> **推送状态**：`main` 与 `restart/v1.4.2` 均已同步到 `74116c5`（v1.6.1-2），
-> tag `v1.6.1-2` + Release 附件 `easy-enclosure-v1.6.1-2.zip` 已发布
-> （https://github.com/536338958/easy-enclosure/releases/tag/v1.6.1-2）。
+> **进度续记**（v1.6.1-2 之后）：
+>
+> | 轮次 | 内容 | 状态 |
+> |---|---|---|
+> | 22~27 | PCB 碰撞延后补算、交互期低段数预览、Worker 化 A-1~A-3 | ✅ |
+> | 28~31 | 开孔倒角尺寸可调、通风范围可视化、范围框悬浮/聚焦、错位修复 | ✅ |
+> | 32 | clover2d 内容键缓存（E-①） | ✅ |
+> | 33 | 倒角工具内容键缓存（E-②） | ❌ 引入几何 bug，已废弃（现场 `backup/round35-buggy`） |
+> | 34 重做 | 通风数量自动适配范围（per-item autoFitCount 开关）+ 防水/卡扣互斥 | ✅ |
+> | 34 原版 | wall 1 新起始模型 + 顶层 ventAutoFitCount | ❌ 随回滚废弃（用户未点名重做） |
+>
+> **推送状态**：`main` 与 `restart/v1.4.2` 均已同步到 `5507511`（v1.6.1-5），
+> tag `v1.6.1-2`/`v1.6.1-3`/`v1.6.1-4`/`v1.6.1-5` 与各自 Release 均已发布；
+> 回滚点：`backup/v1.6.1-2`、`backup/round22-pcb-defer`、`backup/round35-buggy`。
 
 ---
 
