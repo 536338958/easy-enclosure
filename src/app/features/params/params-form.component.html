@@ -231,10 +231,14 @@
           <label>{{ t('params.snapFitEnable') }}</label>
           <input
             type="checkbox"
+            [disabled]="params().waterProof"
             [checked]="params().snapFit.enabled"
             (change)="setSnapFitEnabled($any($event.target).checked)"
           />
         </div>
+        @if (params().waterProof) {
+          <p class="input-group-full hint">{{ t('params.snapFitWaterproofHint') }}</p>
+        }
         <div class="input-group">
           <label>{{ t('params.snapFitPreset') }}<app-help-tip [hintKey]="'params.snapFitPresetHint'" /></label>
           <select
@@ -900,6 +904,14 @@
       }}<span class="accordian-icon">{{ activeTab() === 7 ? '-' : '+' }}</span>
     </p>
     <div class="accordian-body">
+      <div class="input-group grid-toggle-group input-group-full">
+        <label>{{ t('params.ventAutoFitCount') }}<app-help-tip [hintKey]="'params.ventAutoFitCountHint'" /></label>
+        <input
+          type="checkbox"
+          [checked]="params().ventAutoFitCount ?? true"
+          (change)="setBooleanParam('ventAutoFitCount', $any($event.target).checked)"
+        />
+      </div>
       @for (vent of params().ventilation; track $index) {
         <div class="sub-params">
           <button

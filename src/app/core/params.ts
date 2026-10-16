@@ -288,6 +288,11 @@ export type Params = {
   lidScrewProtrusion: number;
   pcbPreview: PCBPreview;
   ventilation: Ventilation[];
+  /**
+   * 通风数量自动适配开孔范围（第 34 轮）：设范围时条数/行数自动收缩到完整落在范围内。
+   * 缺省 true；false = 恢复裁剪语义（两端开孔被裁掉半截）。
+   */
+  ventAutoFitCount?: boolean;
   snapFit: SnapFit;
   pcbMountFillet: PcbMountFillet;
   baseBedChamfer: number;

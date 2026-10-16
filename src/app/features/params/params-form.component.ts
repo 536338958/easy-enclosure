@@ -241,9 +241,11 @@ export class ParamsFormComponent {
   }
 
   onWaterproofChange(checked: boolean): void {
+    // 防水与卡扣互斥：密封圈占着嵌入边卡槽，两者不能同时启用
     this.state.patchParams({
       waterProof: checked,
       lidScrews: checked ? true : this.params().lidScrews,
+      ...(checked ? { snapFit: { ...this.params().snapFit, enabled: false } } : {}),
     });
   }
 
@@ -347,6 +349,10 @@ export class ParamsFormComponent {
   }
 
   setSnapFitEnabled(checked: boolean): void {
+    // 防水开启时不允许卡扣（UI 层已禁用，此处兜底）
+    if (checked && this.params().waterProof) {
+      return;
+    }
     const current = this.params();
     this.state.patchParams({ snapFit: { ...current.snapFit, enabled: checked } });
   }

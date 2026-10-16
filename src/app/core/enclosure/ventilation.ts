@@ -221,9 +221,10 @@ const buildOne = (item: Ventilation, params: Params, target: 'lid' | 'base'): Ge
   // 「完整落在范围内」，免得两端的开孔被裁掉半截。未设范围的轴不收缩。
   // 槽模式的堆叠方向垂直于槽轴：范围矩形沿堆叠方向的有效跨度 =
   // A·|sin t| + B·|cos t|（轴向随槽角度旋转，与裁剪盒同一套约定）。
+  // ventAutoFitCount 开关（第 35 轮）：false = 恢复裁剪语义（数量照设，两端裁平头）。
   let cols = colsRequested;
   let rows = rowsRequested;
-  if (rangeA > 0 || rangeB > 0) {
+  if ((rangeA > 0 || rangeB > 0) && (params.ventAutoFitCount ?? true)) {
     if (mode === 'slot') {
       const extent =
         (rangeA > 0 ? rangeA : fullA) * Math.abs(Math.sin(t)) +

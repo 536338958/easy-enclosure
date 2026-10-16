@@ -290,6 +290,22 @@ describe('ventRangeBox（开孔范围预览框）', () => {
     expect(s.d).toBeCloseTo(21, 3);
   });
 
+  it('keeps the requested count when auto-fit is off (clipped instead)', () => {
+    // ventAutoFitCount=false（顶级开关，非通风项字段）：条数照设（8 条跨 38 > 范围 20），
+    // 超出部分被裁掉半截
+    const params = cloneParams(DEFAULT_PARAMS);
+    params.width = 100; params.length = 80; params.roof = 6; params.floor = 2;
+    params.ventAutoFitCount = false;
+    params.ventilation = [{
+      surface: 'top', angle: 0, slotWidth: 2, slotLength: 0, slotGap: 2, slotCount: 8,
+      rangeWidth: 60, rangeLength: 20, x: 0, y: 0,
+    }];
+    const s = size(ventilationCut(params, 'lid') as Geom3);
+    // 裁剪语义：堆叠跨被裁到范围 20 以内，两端槽截成平头
+    expect(s.d).toBeLessThanOrEqual(20.02);
+    expect(s.d).toBeGreaterThan(18); // 裁剪后仍比自动收缩(18)更占满范围
+  });
+
   it('does not shrink the count when no range is set', () => {
     const g = cut('top', { angle: 0, slotWidth: 2, slotLength: 0, slotGap: 2, slotCount: 8 });
     const s = size(g);
