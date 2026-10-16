@@ -1004,6 +1004,8 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
    * 通风「开孔范围」预览框：半透明，随所在部件显隐（top → 盖板，其余 → 基座）。
    * 编辑态过滤：正在编辑的通风项才显示范围框（null = 未聚焦，全部显示）；
    * 框沿法向外移 1.5mm 悬浮在面上方 —— 内嵌实体会被表面遮挡（第 30 轮结论）。
+   * ⚠️ ventRangeBox 返回的是部件**本地坐标**，必须平移到对应部件的展示原点
+   * （lidOrigin / baseOrigin），否则框会悬空在场景原点附近、与模型错位（第 31 轮修复）。
    */
   private buildVentRangeEntities(params: Params): Entity[] {
     const entities: Entity[] = [];
@@ -1021,7 +1023,10 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       if (!box) {
         return;
       }
-      entities.push(...(entitiesFromSolids({}, colorize(color, box)) as Entity[]));
+      const origin: Vec3Tuple = item.surface === 'top' ? this.lidOrigin : this.baseOrigin;
+      entities.push(
+        ...(entitiesFromSolids({}, colorize(color, translate(origin, box))) as Entity[]),
+      );
     });
     return entities;
   }

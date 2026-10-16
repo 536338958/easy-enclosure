@@ -190,6 +190,59 @@ describe('RendererComponent', () => {
       expect(options.entities.length).toBeGreaterThan(0);
     });
 
+    it('places vent range boxes at the hosting part display origin (not local coords)', async () => {
+      // 回归（第 31 轮）：范围框是部件本地坐标，必须跟随 lidOrigin/baseOrigin
+      // 平移到展示位 —— 漏加平移会让框悬空在场景原点附近、与模型严重错位
+      const fixture = TestBed.createComponent(RendererComponent);
+      const component = fixture.componentInstance;
+      (component as any).renderer = () => {};
+      (component as any).renderOptions = {
+        camera: {},
+        drawCommands: {},
+        entities: [],
+      };
+
+      const params = cloneParams(DEFAULT_PARAMS);
+      params.ventilation = [
+        {
+          surface: 'top',
+          slotWidth: 2,
+          slotLength: 0,
+          slotGap: 2,
+          slotCount: 3,
+          rangeWidth: 30,
+          rangeLength: 20,
+          x: 0,
+          y: 0,
+        },
+      ];
+      await (component as any).renderModel(params, Object.keys(params), true, false);
+
+      // 渲染后盖板展示原点 = [width/2 + SPACING, -length/2, 0]
+      const lidOrigin = (component as any).lidOrigin as [number, number, number];
+      // 盖板展示位在 +X / -Y（摆在基座旁边）
+      expect(lidOrigin[0]).toBeGreaterThan(params.width / 2);
+      expect(lidOrigin[1]).toBeLessThan(0);
+
+      // 范围框实体的顶点必须已平移到展示位：
+      // 本地坐标的框 x ∈ [width/2−15, width/2+15]；跟随平移后全部顶点 x > width/2
+      const range = (component as any).buildVentRangeEntities(params) as unknown as {
+        geometry: { positions: { data: number[] } };
+      }[];
+      expect(range.length).toBeGreaterThan(0);
+      let minX = Infinity;
+      for (const entity of range) {
+        const data = entity?.geometry?.positions?.data as number[] | undefined;
+        if (!Array.isArray(data)) {
+          continue; // 环境不给顶点数据时跳过顶点断言（原点断言仍然有效）
+        }
+        for (let i = 0; i < data.length; i += 3) {
+          minX = Math.min(minX, data[i]);
+        }
+      }
+      expect(minX).toBeGreaterThan(params.width / 2);
+    });
+
     it('omits the base when showBase is false', async () => {
       const fixture = TestBed.createComponent(RendererComponent);
       const [minX, maxX] = await renderParts(
