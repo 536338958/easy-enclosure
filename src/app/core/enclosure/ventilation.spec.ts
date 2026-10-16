@@ -12,6 +12,7 @@ const makeParams = (over: Partial<Ventilation> = {}) => {
   params.height = 30;
   params.roof = 6;
   params.floor = 2;
+  params.wall = 2; // 通风几何的数学断言基于 wall=2 的默认壁厚，显式钉住
   params.ventilation = [
     {
       surface: 'top',
@@ -191,18 +192,20 @@ describe('ventilation', () => {
       expect(size(g).w).toBeCloseTo(18, 3);
     });
 
-    it('drops the whole vent when the range falls into a gap', () => {
-      // 范围与内容同为中心对称（x/y 一起动），所以空集只发生在：
-      // 偶数条槽的中心正好是间隙，且范围比间隙还小 —— 框不到任何开孔
+    it('guarantees vents inside the range (count auto-adapts, no empty gaps)', () => {
+      // 数量自动适配（第 34 轮）后的新语义：设范围时条数自动收缩，
+      // 范围内保证有开孔 —— 不再出现「范围落在间隙 → 空集」的旧行为
+      // （旧行为下 2 条槽 + 微小范围落中心间隙会返回 null）
       const params = makeParams({
         surface: 'top',
         slotWidth: 2,
         slotCount: 2,
         slotGap: 3,
-        rangeWidth: 0.4,
-        rangeLength: 0.4,
+        rangeWidth: 2,
+        rangeLength: 2,
       });
-      expect(ventilationCut(params, 'lid')).toBeNull();
+      const g = ventilationCut(params, 'lid');
+      expect(g).not.toBeNull(); // 范围内必有开孔材料被切
     });
 
     it('clips wall vents too', () => {
@@ -259,6 +262,38 @@ describe('ventRangeBox（开孔范围预览框）', () => {
     const [[x0, y0], [x1, y1]] = measureBoundingBox(box as never);
     expect(x1 - x0).toBeCloseTo(100, 3);
     expect(y1 - y0).toBeCloseTo(80, 3);
+  });
+
+  it('auto-adapts the slot count to fit the range', () => {
+    // 8 条 sw2/gap2（pitch 4）需跨 38；范围竖直 20 → 收缩到 floor((20-2)/4)+1 = 5 条
+    const g = cut('top', {
+      angle: 0, slotWidth: 2, slotLength: 0, slotGap: 2, slotCount: 8,
+      rangeWidth: 60, rangeLength: 20, x: 0, y: 0,
+    });
+    const s = size(g);
+    // 5 条的堆叠跨 = 4×4 + 2 = 18 ≤ 20 ✓ 完整落在范围内
+    expect(s.d).toBeCloseTo(18, 3);
+    expect(s.d).toBeLessThanOrEqual(20.02);
+    // 槽长不设限（rangeWidth 60 > 面可用）→ 槽长 = 自动（avail×0.6）
+    expect(s.w).toBeLessThanOrEqual(60.02);
+  });
+
+  it('auto-adapts grid rows and cols to fit the range', () => {
+    // 圆孔网格 8×8、sw3/gap3（pitch 6）跨 45；范围 24×24 → 收缩到 4×4
+    const g = cut('top', {
+      mode: 'circleGrid', slotWidth: 3, slotCount: 8, rows: 8,
+      rangeWidth: 24, rangeLength: 24, x: 0, y: 0,
+    });
+    const s = size(g);
+    // 4×4 孔阵跨 = 3×6 + 3 = 21 ≤ 24 ✓
+    expect(s.w).toBeCloseTo(21, 3);
+    expect(s.d).toBeCloseTo(21, 3);
+  });
+
+  it('does not shrink the count when no range is set', () => {
+    const g = cut('top', { angle: 0, slotWidth: 2, slotLength: 0, slotGap: 2, slotCount: 8 });
+    const s = size(g);
+    expect(s.d).toBeCloseTo(8 * 2 + 7 * 2, 3); // 8 条全保留，跨 30
   });
 
   it('maps the range onto wall bands with the right axes', () => {

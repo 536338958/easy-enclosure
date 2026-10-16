@@ -319,7 +319,7 @@ export const DEFAULT_PARAMS: Params = {
   height: 30,
   floor: 2,
   roof: 2,
-  wall: 2,
+  wall: 1,
   waterProof: true,
   sealThickness: 2,
   insertThickness: 2,

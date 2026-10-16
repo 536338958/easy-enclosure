@@ -48,13 +48,18 @@ describe('lid', () => {
     const rimInset = 2 + 0.04; // wall + insertClearance
     const rimTopZ = 2 + 4; // roof + insertHeight
 
+    const withWall2 = (p: Params): Params => {
+      p.wall = 2; // rimInset 断言基于 wall=2，显式钉住避免默认模型变更牵连
+      return p;
+    };
+
     it('cuts the top outer edge of the insert rim', () => {
-      const params = cloneParams(DEFAULT_PARAMS);
+      const params = withWall2(cloneParams(DEFAULT_PARAMS));
       params.roof = 2;
       params.insertHeight = 4;
       params.lidTopChamfer = 0.4;
 
-      const plain = cloneParams(params);
+      const plain = withWall2(cloneParams(params));
       plain.lidTopChamfer = 0;
 
       const at: [number, number, number] = [rimInset + 0.1, 40, rimTopZ - 0.05];
@@ -64,7 +69,7 @@ describe('lid', () => {
     });
 
     it('leaves the lid body top surface square', () => {
-      const params = cloneParams(DEFAULT_PARAMS);
+      const params = withWall2(cloneParams(DEFAULT_PARAMS));
       params.roof = 2;
       params.insertHeight = 4;
       params.lidTopChamfer = 0.4;

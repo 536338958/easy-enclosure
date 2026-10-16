@@ -12,8 +12,8 @@ describe('params defaults', () => {
     expect(DEFAULT_PARAMS.lidTopChamfer).toBe(0.4);
   });
 
-  it('uses a 2mm wall by default', () => {
-    expect(DEFAULT_PARAMS.wall).toBe(2);
+  it('uses a 1mm wall by default (新起始模型)', () => {
+    expect(DEFAULT_PARAMS.wall).toBe(1);
   });
 
   it('defaults the four bump snap preset to a 20 percent end offset', () => {

@@ -34,6 +34,7 @@ describe('holes', () => {
     const base = () => {
       const params = cloneParams(DEFAULT_PARAMS);
       params.holes = [];
+      params.wall = 2; // 盲孔/倒角的数学断言基于 wall=2 的壁厚，显式钉住
       return params;
     };
     const bbox = (g: ReturnType<typeof holes>) => {

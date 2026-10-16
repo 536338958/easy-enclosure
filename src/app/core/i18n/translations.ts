@@ -287,7 +287,7 @@ export const ZH = {
   'params.ventModeSquareGrid': '方形网格',
   'params.ventModeHexGrid': '蜂窝网格',
   'params.ventRows': '行数',
-  'params.ventRowsHint': '网格模式下的行数；蜂窝网格相邻行会自动错开半格',
+  'params.ventRowsHint': '网格模式下的行数；蜂窝网格相邻行会自动错开半格；设了开孔范围时自动收缩到装得下',
 'params.ventilation': '散热通风',
   'params.ventItem': '通风槽 {n}',
   'params.ventItemEditHint': '点击编辑 · 预览只显示此项的范围框',
@@ -305,7 +305,7 @@ export const ZH = {
   'params.ventSlotGap': '槽间距 (mm)',
   'params.ventSlotGapHint': '相邻两条槽之间的间隙，mm',
   'params.ventSlotCount': '槽数量',
-  'params.ventSlotCountHint': '这组通风槽的条数',
+  'params.ventSlotCountHint': '这组通风槽的条数；设了开孔范围时自动收缩到完整落在范围内',
   'params.ventRangeWidth': '开孔范围·水平 (mm)',
   'params.ventRangeWidthHint':
     '开孔只在这个范围内生效：范围外的开孔被裁掉、压线的截成平头（预览中以半透明橙框显示范围）。0 = 不限制（整面可用）。范围以面中心为默认中心、随 X/Y 偏移一起移动，始终与面的水平轴对齐、不随槽角度旋转',
@@ -683,7 +683,7 @@ export const EN: Record<TranslationKey, string> = {
   'params.ventSlotGap': 'Slot gap (mm)',
   'params.ventSlotGapHint': 'Gap between two neighbouring slots, mm',
   'params.ventSlotCount': 'Slot count',
-  'params.ventSlotCountHint': 'How many slots this group has',
+  'params.ventSlotCountHint': 'How many slots this group has; shrinks automatically to fit when a vent range is set',
   'params.ventRangeWidth': 'Vent range · horizontal (mm)',
   'params.ventRangeWidthHint':
     'Vents only exist inside this range: vents outside are removed, ones crossing the edge are trimmed flat (the range is shown as a translucent orange box in the preview). 0 = no limit (whole face). The range is centred on the face, moves with the X/Y offsets, stays aligned with the face axes and does not rotate with the slot angle',
