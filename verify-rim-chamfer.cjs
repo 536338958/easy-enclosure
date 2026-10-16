@@ -146,27 +146,33 @@ const run = (label, params) => {
   return { tool, rimBody, rimInset, rimTopZ };
 };
 
-run('默认参数 / 盖板螺丝开（clover 嵌入边）', cloneParams(DEFAULT_PARAMS));
+// 体积比值断言基于 wall=2 标定；起始模型默认墙厚已改 1，这里显式钉住
+const withWall2 = (p) => {
+  p.wall = 2;
+  return p;
+};
+
+run('默认参数 / 盖板螺丝开（clover 嵌入边）', withWall2(cloneParams(DEFAULT_PARAMS)));
 const d12 = cloneParams(DEFAULT_PARAMS);
 d12.lidTopChamfer = 1.2;
-run('倒角放大到 1.2', d12);
+run('倒角放大到 1.2', withWall2(d12));
 const dOff = cloneParams(DEFAULT_PARAMS);
 dOff.lidScrews = false;
-run('盖板螺丝关（圆角矩形嵌入边）', dOff);
+run('盖板螺丝关（圆角矩形嵌入边）', withWall2(dOff));
 const dSmall = cloneParams(DEFAULT_PARAMS);
 dSmall.lidScrewProtrusion = 0.8;
-run('螺丝柱凸出量 0.8', dSmall);
+run('螺丝柱凸出量 0.8', withWall2(dSmall));
 const dNoWp = cloneParams(DEFAULT_PARAMS);
 dNoWp.waterProof = false;
-run('防水关闭（凸出量自动取最小值）', dNoWp);
+run('防水关闭（凸出量自动取最小值）', withWall2(dNoWp));
 const dSmallBox = cloneParams(DEFAULT_PARAMS);
 dSmallBox.width = 40;
 dSmallBox.length = 30;
 dSmallBox.cornerRadius = 2;
-run('小外壳 40×30（边界情形）', dSmallBox);
+run('小外壳 40×30（边界情形）', withWall2(dSmallBox));
 const dHuge = cloneParams(DEFAULT_PARAMS);
 dHuge.lidTopChamfer = 5;
-run('倒角 5mm（超额，应被夹到 1.6）', dHuge);
+run('倒角 5mm（超额，应被夹到 1.6）', withWall2(dHuge));
 // 超额倒角不得把盖板整体削矮
 {
   const mbb = load('@jscad/modeling/src/measurements/measureBoundingBox');
@@ -180,10 +186,10 @@ run('倒角 5mm（超额，应被夹到 1.6）', dHuge);
 }
 const dZero = cloneParams(DEFAULT_PARAMS);
 dZero.lidTopChamfer = 0;
-run('倒角关闭（c=0）', dZero);
+run('倒角关闭（c=0）', withWall2(dZero));
 
 const t0 = Date.now();
-for (let i = 0; i < 5; i++) lid(cloneParams(DEFAULT_PARAMS));
+for (let i = 0; i < 5; i++) lid(withWall2(cloneParams(DEFAULT_PARAMS)));
 console.log(`\nlid() 端到端平均耗时：${((Date.now() - t0) / 5).toFixed(1)} ms`);
 
 console.log(`\n${failures === 0 ? '全部通过' : failures + ' 项失败'}`);
