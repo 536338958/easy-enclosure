@@ -811,6 +811,20 @@
                 (change)="updateHole($index, { chamfer: $any($event.target).checked })"
               />
             </div>
+            @if (hole.chamfer ?? false) {
+              <div class="input-group">
+                <label>{{ t('params.holeChamferSize') }}<app-help-tip [hintKey]="'params.holeChamferSizeHint'" /></label>
+                <input
+                  type="number"
+                  min="0.2"
+                  max="2"
+                  step="0.1"
+                  [value]="hole.chamferSize ?? 0.6"
+                  (keydown.enter)="$any($event.target).blur()"
+                  (blur)="updateHole($index, { chamferSize: +$any($event.target).value })"
+                />
+              </div>
+            }
           }
 
           <div class="input-group">

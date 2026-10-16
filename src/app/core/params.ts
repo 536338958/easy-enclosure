@@ -14,6 +14,8 @@ export type Hole = {
   blindDepth?: number;
   /** 孔口 45° 导入倒角（宽 0.6mm），在外壁孔口扩一圈，便于螺丝/LED 导入 */
   chamfer?: boolean;
+  /** 孔口倒角宽度（mm），仅方孔/矩形孔；缺省 0.6，自动夹紧 [0.2, 2]，盲孔再夹到孔深内 */
+  chamferSize?: number;
 };
 
 export type PCBMount = {

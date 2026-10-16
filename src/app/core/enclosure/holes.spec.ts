@@ -183,6 +183,38 @@ describe('holes', () => {
         expect(b.x0).toBeCloseTo(100 - 6.08 - 0.2, 6);
       });
 
+      it('honors a per-hole chamfer size', () => {
+        // 倒角宽 1.0：面内跨 = 8 + 2×1.0 = 10（外加 0.2 的破共面外伸不计入）
+        const cham = bbox(mkChamfer({ chamfer: true, chamferSize: 1 }));
+        expect(cham.x1 - cham.x0).toBeCloseTo(8 + 2, 3);
+        expect(cham.z1 - cham.z0).toBeCloseTo(8 + 2, 3);
+      });
+
+      it('clamps the chamfer size for blind holes so the bottom stays intact', () => {
+        // 盲孔深 1、倒角宽 2 → 夹到 1（锥不切穿孔底）
+        const params = base();
+        params.waterProof = true;
+        params.holes = [
+          {
+            shape: 'square',
+            surface: 'front',
+            diameter: 8,
+            width: 8,
+            length: 8,
+            x: 0,
+            y: 0,
+            holeType: 'blind',
+            blindDepth: 1,
+            chamfer: true,
+            chamferSize: 2,
+          },
+        ];
+        const b = bbox(holes(params, ['front']));
+        // 锥最深到 y = 80 − 1 = 79（盲孔底），不深入
+        expect(b.y0).toBeCloseTo(79, 3);
+        expect(b.y1).toBeCloseTo(80 + 0.2, 3);
+      });
+
       it('ignores chamfer on circle holes (disabled for performance)', () => {
         const plain = bbox(mkChamferCircle({}));
         const forced = bbox(mkChamferCircle({ chamfer: true }));

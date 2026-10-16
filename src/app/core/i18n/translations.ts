@@ -261,7 +261,10 @@ export const ZH = {
     '从所在面的外壁向内量。自动夹紧到 0.2 ～ 壁厚−0.4，保证孔底不打穿；留空按壁厚一半处理',
   'params.holeChamfer': '孔口倒角',
   'params.holeChamferHint':
-    '仅方孔 / 矩形孔支持（圆孔因性能影响已关闭此功能）。在外壁孔口切一圈 45° 导入倒角（宽 0.6mm），螺丝 / 棒料更容易导入，也改善打印孔口的毛边',
+    '仅方孔 / 矩形孔支持（圆孔因性能影响已关闭此功能）。在外壁孔口切一圈 45° 导入倒角，螺丝 / 棒料更容易导入，也改善打印孔口的毛边',
+  'params.holeChamferSize': '倒角宽 (mm)',
+  'params.holeChamferSizeHint':
+    '45° 倒角的宽度，自动夹紧到 0.2 ～ 2；盲孔再夹到孔深以内，保证不切穿孔底。缺省 0.6',
   'params.holeWidth': '宽度',
   'params.holeWidthHint': '方/矩形孔的边长（水平方向），mm',
   'params.holeLength': '长度',
@@ -635,7 +638,10 @@ export const EN: Record<TranslationKey, string> = {
     'Measured inward from the outer surface of the face. Auto-clamped to 0.2 – wall−0.4 so the bottom never breaks through; empty = half the wall thickness',
   'params.holeChamfer': 'Hole chamfer',
   'params.holeChamferHint':
-    'Square / rectangular holes only (disabled for circles due to performance). Cuts a 45° lead-in chamfer (0.6 mm wide) around the opening on the outer surface — screws / rods slide in easier and printed hole edges come out cleaner',
+    'Square / rectangular holes only (disabled for circles due to performance). Cuts a 45° lead-in chamfer around the opening on the outer surface — screws / rods slide in easier and printed hole edges come out cleaner',
+  'params.holeChamferSize': 'Chamfer width (mm)',
+  'params.holeChamferSizeHint':
+    'Width of the 45° chamfer, auto-clamped to 0.2 – 2; blind holes are further clamped inside the hole depth so the bottom never breaks. Default 0.6',
   'params.holeWidth': 'Width',
   'params.holeWidthHint': 'Edge length of the square / rectangular hole (horizontal), mm',
   'params.holeLength': 'Length',
