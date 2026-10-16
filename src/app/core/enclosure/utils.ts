@@ -91,6 +91,8 @@ const roundedCorner2d = (r: number, s = seg(48)) => {
 // 单次 ~12ms。Geom2 是不可变数据，跨调用复用安全（JSCAD 操作均返回新几何）。
 // 拖动参数会产生大量一次性键：超上限整表清空，防止内存膨胀。
 const cloverCache = new Map<string, Geom2>();
+const chamferToolCache = new Map<string, Geom3>();
+const CHAMFER_TOOL_CACHE_MAX = 32;
 const CLOVER_CACHE_MAX = 64;
 
 export const clover2d = (l: number, w: number, r = 8, s = seg(48)) => {
@@ -164,11 +166,22 @@ export const bottomChamferTool = (
     return cuboid({ size: [eps, eps, eps] });
   }
   const innerR = Math.max(r - cc, 0.1);
+  // 内容键含段数（交互期/全质量不同，不可串缓存）
+  const key = `bottom|${l.toFixed(3)}|${w.toFixed(3)}|${cc.toFixed(3)}|${r.toFixed(3)}|${s}`;
+  const cached = chamferToolCache.get(key);
+  if (cached) {
+    return cached;
+  }
   const fullSlab = roundedCube(l, w, cc, r, s);
   const bottom = translate([cc, cc, 0], roundedCube(l - cc * 2, w - cc * 2, eps, innerR, s));
   const top = translate([0, 0, cc - eps], roundedCube(l, w, eps, r, s));
   const flare = hull(bottom, top);
-  return subtract(fullSlab, flare);
+  const tool = subtract(fullSlab, flare);
+  if (chamferToolCache.size >= CHAMFER_TOOL_CACHE_MAX) {
+    chamferToolCache.clear();
+  }
+  chamferToolCache.set(key, tool);
+  return tool;
 };
 
 /**
@@ -249,13 +262,20 @@ export const topChamferTool = (
   c: number,
   topZ: number,
   outline: OutlineBuilder,
+  family = '',
 ): Geom3 => {
   const eps = 0.01;
   const cc = Math.max(Math.min(c, topZ * 0.9, l / 2 - 0.5, w / 2 - 0.5), 0);
   if (cc <= 0) {
     return cuboid({ size: [eps, eps, eps] });
   }
-  const slabZ = topZ - cc;
+    // 内容键含段数（交互期/全质量的轮廓细分不同，不可串缓存）
+  const key = `top|${family}|${l.toFixed(3)}|${w.toFixed(3)}|${cc.toFixed(3)}|${topZ.toFixed(3)}|${seg(48)}`;
+  const cached = chamferToolCache.get(key);
+  if (cached) {
+    return cached;
+  }
+const slabZ = topZ - cc;
   const slab = outline(l, w, cc);
   let keep: Geom3 | null = null;
   for (let i = 0; i < CHAMFER_DIRECTIONS; i += 1) {
@@ -263,7 +283,12 @@ export const topChamferTool = (
     const sheared = transform(shearMatrix(Math.cos(angle), Math.sin(angle)), slab);
     keep = keep ? intersect(keep, sheared) : sheared;
   }
-  return translate([0, 0, slabZ], subtract(slab, keep as Geom3));
+  const tool = translate([0, 0, slabZ], subtract(slab, keep as Geom3));
+  if (chamferToolCache.size >= CHAMFER_TOOL_CACHE_MAX) {
+    chamferToolCache.clear();
+  }
+  chamferToolCache.set(key, tool);
+  return tool;
 };
 
 // 适用于外形不规则的部件（如壁挂挂耳），使其贴合打印床的底边同样获得倒角。

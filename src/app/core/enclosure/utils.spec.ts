@@ -8,6 +8,9 @@ import {
   roundedFrame2d,
   clover,
   clover2d,
+  cloverOutline,
+  topChamferTool,
+  bottomChamferTool,
   cloverFrame,
   cloverFrame2d,
   hollowRoundCube,
@@ -129,6 +132,30 @@ describe('enclosure utils（2D 剖面挤出）', () => {
       const a = clover2d(60, 40, 3, 48);
       const b = clover2d(60, 40, 3, 24);
       expect(b).not.toBe(a); // 交互期(24段)与全质量(48段)各归各，不串线
+    });
+  });
+
+  describe('倒角工具内容键缓存（性能 E-②）', () => {
+    it('topChamferTool returns the same instance for identical args', () => {
+      const outline = cloverOutline(3);
+      const a = topChamferTool(95.92, 75.92, 0.4, 6, outline, 'clover');
+      const b = topChamferTool(95.92, 75.92, 0.4, 6, outline, 'clover');
+      expect(b).toBe(a); // 同一实例 = 缓存命中，8 次求交被跳过
+    });
+
+    it('topChamferTool builds separately for different args', () => {
+      const outline = cloverOutline(3);
+      const a = topChamferTool(95.92, 75.92, 0.4, 6, outline, 'clover');
+      const b = topChamferTool(96, 75.92, 0.4, 6, outline, 'clover');
+      const c = topChamferTool(95.92, 75.92, 0.5, 6, outline, 'clover');
+      expect(b).not.toBe(a);
+      expect(c).not.toBe(a);
+    });
+
+    it('bottomChamferTool returns the same instance for identical args', () => {
+      const a = bottomChamferTool(100, 80, 0.6, 3, 48);
+      const b = bottomChamferTool(100, 80, 0.6, 3, 48);
+      expect(b).toBe(a);
     });
   });
 });

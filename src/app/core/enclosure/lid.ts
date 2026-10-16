@@ -133,7 +133,14 @@ export const lid = (params: Params) => {
       result,
       translate(
         [rimInset, rimInset, 0],
-        topChamferTool(width - rimInset * 2, length - rimInset * 2, rimChamfer, rimTopZ, outline),
+        topChamferTool(
+          width - rimInset * 2,
+          length - rimInset * 2,
+          rimChamfer,
+          rimTopZ,
+          outline,
+          params.lidScrews ? 'clover' : 'rounded',
+        ),
       ),
     );
   }
