@@ -136,6 +136,8 @@ describe('ToolsComponent', () => {
 
     component.openExportModal();
     component.exportLid.set(false);
+    // 新默认起始模型带线缆夹，导出面板默认勾选它 —— 只导基座要显式取消
+    component.exportCableClamps.set(false);
     await component.exportSelected();
 
     expect(saveSpy).toHaveBeenCalledWith(

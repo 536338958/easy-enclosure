@@ -217,6 +217,8 @@ export class ToolsComponent {
     this.exportLid.set(false);
     this.exportSeal.set(false);
     this.exportDinRail.set(false);
+    // 线缆夹也要清掉：否则「只导出支柱」会夹带压条，产出 ZIP 而不是单个 STL
+    this.exportCableClamps.set(false);
     this.exportPcbMounts.set(true);
     return this.exportSelected();
   }
@@ -227,6 +229,7 @@ export class ToolsComponent {
     this.exportLid.set(false);
     this.exportSeal.set(false);
     this.exportPcbMounts.set(false);
+    this.exportCableClamps.set(false);
     this.exportDinRail.set(true);
     return this.exportSelected();
   }

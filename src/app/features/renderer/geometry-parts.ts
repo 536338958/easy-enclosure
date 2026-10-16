@@ -8,7 +8,7 @@ import { internalWalls } from '../../core/enclosure/internalwalls';
 import { lid } from '../../core/enclosure/lid';
 import { pcbCollision, type PCBCollisionResult } from '../../core/enclosure/pcbpreview';
 import { pcbMountsOnBase, pcbMountsOnLid } from '../../core/enclosure/pcbmount';
-import { setInteractiveQuality } from '../../core/enclosure/quality';
+import { isInteractiveQuality, setInteractiveQuality } from '../../core/enclosure/quality';
 import { waterProofSeal } from '../../core/enclosure/waterproofseal';
 
 /**
@@ -42,6 +42,9 @@ export const buildParts = (
   parts: PartName[],
   interactive: boolean,
 ): BuiltParts => {
+  // 画质开关是模块级单例：构建期间切换、结束后恢复原值，
+  // 避免污染同进程内的其他几何构建（单测里尤其致命）
+  const prevInteractive = isInteractiveQuality();
   setInteractiveQuality(interactive);
   const out: BuiltParts = { parts: {}, collision: null };
   const want = (name: PartName): boolean => parts.includes(name);
@@ -74,5 +77,6 @@ export const buildParts = (
   if (want('collision') && params.pcbPreview.enabled) {
     out.collision = pcbCollision(params, out.parts.base);
   }
+  setInteractiveQuality(prevInteractive);
   return out;
 };
