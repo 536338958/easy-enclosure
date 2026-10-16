@@ -1,4 +1,6 @@
+import { seg } from './quality';
 import type { Geom3 } from '@jscad/modeling/src/geometries/types';
+
 import { union } from '@jscad/modeling/src/operations/booleans';
 import { rotateX, rotateY, scale, translate } from '@jscad/modeling/src/operations/transforms';
 import { cuboid, cylinder } from '@jscad/modeling/src/primitives';
@@ -21,7 +23,7 @@ type Placement = { wall: WallId; along: 'x' | 'y'; positions: number[] };
 //  'x' → 轴沿 X、外凸沿 ±Y（用于前/后墙）
 //  'y' → 轴沿 Y、外凸沿 ±X（用于左/右墙）
 const bead = (depth: number, height: number, barWidth: number, along: 'x' | 'y'): Geom3 => {
-  const cyl = cylinder({ radius: depth, height: barWidth, segments: 24 });
+  const cyl = cylinder({ radius: depth, height: barWidth, segments: seg(24) });
   const base = along === 'x' ? rotateY(degToRad(90), cyl) : rotateX(degToRad(90), cyl);
   const kz = height / (2 * depth);
   return scale([1, 1, kz], base);

@@ -1,4 +1,6 @@
+import { seg } from './quality';
 import { subtract, union } from '@jscad/modeling/src/operations/booleans';
+
 import { rotateX, rotateZ, translate } from '@jscad/modeling/src/operations/transforms';
 import { cuboid, cylinder } from '@jscad/modeling/src/primitives';
 import type { Geom3 } from '@jscad/modeling/src/geometries/types';
@@ -162,7 +164,7 @@ export const dinRailMount = (params: Params): Geom3 => {
         height: totalHeight + 4,
         radius: screwDiameter / 2,
         center: [0, y, totalHeight / 2],
-        segments: 32,
+        segments: seg(32),
       }),
     );
 

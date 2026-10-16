@@ -1,4 +1,6 @@
+import { seg } from './quality';
 import type { Geom3 } from '@jscad/modeling/src/geometries/types';
+
 import { geom2 } from '@jscad/modeling/src/geometries';
 import { union } from '@jscad/modeling/src/operations/booleans';
 import { extrudeRotate } from '@jscad/modeling/src/operations/extrusions';
@@ -74,7 +76,7 @@ export const pcbMount = (mountParams: PCBMount, params: Params): Geom3 => {
 
   // 旋转挤出得到的是 z ∈ [0, h]，而调用方按「柱体中心在原点」摆放
   // （translate 到 baseFloor + height/2），所以这里要移回中心，保持契约一致
-  return translate([0, 0, -h / 2], extrudeRotate({ segments: 32 }, geom2.fromPoints(points)));
+  return translate([0, 0, -h / 2], extrudeRotate({ segments: seg(32) }, geom2.fromPoints(points)));
 };
 
 const placeBaseMount = (mount: PCBMount, params: Params): Geom3 => {

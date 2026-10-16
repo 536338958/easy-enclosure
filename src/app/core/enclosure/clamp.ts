@@ -1,4 +1,6 @@
+import { seg } from './quality';
 import type { Geom3 } from '@jscad/modeling/src/geometries/types';
+
 import { subtract, union } from '@jscad/modeling/src/operations/booleans';
 import { rotateX, rotateZ, translate } from '@jscad/modeling/src/operations/transforms';
 import { cuboid, cylinder } from '@jscad/modeling/src/primitives';
@@ -18,14 +20,14 @@ export const cableClampBase = (clamp: CableClamp): Geom3 => {
     center: [0, -span / 2, postHeight / 2],
     height: postHeight,
     radius: outerRadius,
-    segments: 32,
+    segments: seg(32),
   });
 
   const rightPost = cylinder({
     center: [0, span / 2, postHeight / 2],
     height: postHeight,
     radius: outerRadius,
-    segments: 32,
+    segments: seg(32),
   });
 
   const saddle = cuboid({
@@ -58,14 +60,14 @@ export const cableClampBase = (clamp: CableClamp): Geom3 => {
     center: [0, -span / 2, postHeight / 2],
     height: postHeight + 0.2,
     radius: screwRadius,
-    segments: 24,
+    segments: seg(24),
   });
 
   const rightHole = cylinder({
     center: [0, span / 2, postHeight / 2],
     height: postHeight + 0.2,
     radius: screwRadius,
-    segments: 24,
+    segments: seg(24),
   });
 
   return subtract(union(baseBodies), union(leftHole, rightHole));
@@ -82,14 +84,14 @@ export const cableClampTop = (clamp: CableClamp): Geom3 => {
     center: [0, -span / 2, topHeight / 2],
     height: topHeight,
     radius: outerRadius,
-    segments: 32,
+    segments: seg(32),
   });
 
   const rightLobe = cylinder({
     center: [0, span / 2, topHeight / 2],
     height: topHeight,
     radius: outerRadius,
-    segments: 32,
+    segments: seg(32),
   });
 
   const bridge = cuboid({
@@ -120,14 +122,14 @@ export const cableClampTop = (clamp: CableClamp): Geom3 => {
     center: [0, -span / 2, topHeight / 2],
     height: topHeight + 2,
     radius: clearanceRadius,
-    segments: 24,
+    segments: seg(24),
   });
 
   const rightHole = cylinder({
     center: [0, span / 2, topHeight / 2],
     height: topHeight + 2,
     radius: clearanceRadius,
-    segments: 24,
+    segments: seg(24),
   });
 
   return subtract(union(topBodies), union(leftHole, rightHole));

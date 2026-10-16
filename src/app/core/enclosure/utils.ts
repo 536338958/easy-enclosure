@@ -15,8 +15,10 @@ import type { Geom3 } from '@jscad/modeling/src/geometries/types';
  * 两者都远低于 FDM 打印精度，肉眼与切片结果均不可分辨。
  * 但 JSCAD 的布尔运算开销随面数超线性增长，clover 一条链上就有 20+ 个圆弧，
  * 降到 48 段能省掉一半以上的重建耗时。
+ * 交互期（参数拖动中）由 seg() 折半到 24 段快速出预览，见 quality.ts。
  */
-const DEFAULT_SEGMENTS = 48;
+
+import { seg } from './quality';
 
 /**
  * 所有实体轮廓一律走「2D 剖面 → 线性挤出」。
@@ -27,7 +29,7 @@ const DEFAULT_SEGMENTS = 48;
  * 而且挤出比 3D hull 快得多。
  */
 
-export const roundedCube2d = (l: number, w: number, r = 8, s = DEFAULT_SEGMENTS) => {
+export const roundedCube2d = (l: number, w: number, r = 8, s = seg(48)) => {
   const c = circle({
     radius: r,
     segments: s,
@@ -41,11 +43,11 @@ export const roundedCube2d = (l: number, w: number, r = 8, s = DEFAULT_SEGMENTS)
   );
 };
 
-export const roundedCube = (l: number, w: number, h: number, r = 8, s = DEFAULT_SEGMENTS) => {
+export const roundedCube = (l: number, w: number, h: number, r = 8, s = seg(48)) => {
   return extrudeLinear({ height: h }, roundedCube2d(l, w, r, s));
 };
 
-export const roundedFrame2d = (l: number, w: number, t: number, r = 8, s = DEFAULT_SEGMENTS) => {
+export const roundedFrame2d = (l: number, w: number, t: number, r = 8, s = seg(48)) => {
   const outer = roundedCube2d(l, w, r, s);
   const inner = roundedCube2d(l - t * 2, w - t * 2, r, s);
   return subtract(outer, translate([t, t], inner));
@@ -57,7 +59,7 @@ export const roundedFrame = (
   h: number,
   t: number,
   r = 8,
-  s = DEFAULT_SEGMENTS,
+  s = seg(48),
 ) => {
   return extrudeLinear({ height: h }, roundedFrame2d(l, w, t, r, s));
 };
@@ -68,7 +70,7 @@ export const hollowRoundCube = (
   h: number,
   t: number,
   r = 8,
-  s = DEFAULT_SEGMENTS,
+  s = seg(48),
 ) => {
   const outer = roundedCube(l, w, h, r, s);
   const inner = roundedCube(l - t * 2, w - t * 2, h, r, s);
@@ -76,7 +78,7 @@ export const hollowRoundCube = (
 };
 
 /** 2D 的「圆角外补角」：边长 2r 的正方形挖掉一个半径 r 的圆角，剩下的尖角块 */
-const roundedCorner2d = (r: number, s = DEFAULT_SEGMENTS) => {
+const roundedCorner2d = (r: number, s = seg(48)) => {
   return subtract(
     rectangle({ size: [r * 2, r * 2] }),
     translate([r, r], roundedCube2d(r, r, r, s)),
@@ -84,7 +86,7 @@ const roundedCorner2d = (r: number, s = DEFAULT_SEGMENTS) => {
   );
 };
 
-export const clover2d = (l: number, w: number, r = 8, s = DEFAULT_SEGMENTS) => {
+export const clover2d = (l: number, w: number, r = 8, s = seg(48)) => {
   const cornersRemoved = subtract(
     roundedCube2d(l, w, r, s),
     translate([0, 0], roundedCube2d(r, r, r, s)),
@@ -107,11 +109,11 @@ export const clover2d = (l: number, w: number, r = 8, s = DEFAULT_SEGMENTS) => {
   return rounded;
 };
 
-export const clover = (l: number, w: number, h: number, r = 8, s = DEFAULT_SEGMENTS) => {
+export const clover = (l: number, w: number, h: number, r = 8, s = seg(48)) => {
   return extrudeLinear({ height: h }, clover2d(l, w, r, s));
 };
 
-export const cloverFrame2d = (l: number, w: number, t: number, r = 8, s = DEFAULT_SEGMENTS) => {
+export const cloverFrame2d = (l: number, w: number, t: number, r = 8, s = seg(48)) => {
   const outer = clover2d(l, w, r, s);
   const inner = clover2d(l - t * 2, w - t * 2, r, s);
   return subtract(outer, translate([t, t], inner));
@@ -123,7 +125,7 @@ export const cloverFrame = (
   h: number,
   t: number,
   r = 8,
-  s = DEFAULT_SEGMENTS,
+  s = seg(48),
 ) => {
   return extrudeLinear({ height: h }, cloverFrame2d(l, w, t, r, s));
 };
@@ -136,7 +138,7 @@ export const bottomChamferTool = (
   w: number,
   c: number,
   r = 8,
-  s = DEFAULT_SEGMENTS,
+  s = seg(48),
 ): Geom3 => {
   const eps = 0.01;
   // 夹取倒角尺寸，避免超过圆角半径或壁厚导致几何异常
@@ -172,13 +174,13 @@ export type OutlineBuilder = (l: number, w: number, h: number) => Geom3;
 
 /** 圆角矩形轮廓 */
 export const roundedOutline =
-  (r: number, s = DEFAULT_SEGMENTS): OutlineBuilder =>
+  (r: number, s = seg(48)): OutlineBuilder =>
   (l, w, h) =>
     roundedCube(l, w, h, r, s);
 
 /** clover 轮廓：开启盖板螺丝后嵌入边的外形（四角被螺丝柱让位缺口大幅切掉） */
 export const cloverOutline =
-  (r: number, s = DEFAULT_SEGMENTS): OutlineBuilder =>
+  (r: number, s = seg(48)): OutlineBuilder =>
   (l, w, h) =>
     clover(l, w, h, r, s);
 

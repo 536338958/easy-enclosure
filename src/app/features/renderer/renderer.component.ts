@@ -36,6 +36,7 @@ import {
   pcbCollision,
   type PCBCollisionResult,
 } from '../../core/enclosure/pcbpreview';
+import { isInteractiveQuality, setInteractiveQuality } from '../../core/enclosure/quality';
 import { waterProofSeal } from '../../core/enclosure/waterproofseal';
 import { I18nService } from '../../core/i18n/i18n.service';
 import type { TranslationKey } from '../../core/i18n/translations';
@@ -356,6 +357,9 @@ type SurfaceAnchor = {
   templateUrl: './renderer.component.html',
 })
 export class RendererComponent implements AfterViewInit, OnDestroy {
+  /** 交互期低段数预览的延迟（ms）：比精修的 250ms 短，拖动中持续有反馈 */
+  private static readonly INTERACTIVE_DELAY = 120;
+
   @ViewChild('container', { static: true })
   containerRef?: ElementRef<HTMLDivElement>;
 
@@ -434,6 +438,9 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
   private lastCollision: PCBCollisionResult | null = null;
   private coreEntities: Entity[] = [];
   private pcbEntities: Entity[] = [];
+  // 交互期低段数预览（B 优化）：拖动中先出快模，停手后精修
+  private interactiveHandle: ReturnType<typeof setTimeout> | null = null;
+  private destroyed = false;
 
   constructor() {
     effect(() => {
@@ -453,6 +460,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
     if (this.animationFrame !== null) {
@@ -462,6 +470,10 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     if (this.renderDelayHandle !== null) {
       clearTimeout(this.renderDelayHandle);
       this.renderDelayHandle = null;
+    }
+    if (this.interactiveHandle !== null) {
+      clearTimeout(this.interactiveHandle);
+      this.interactiveHandle = null;
     }
     if (this.collisionHandle !== null) {
       clearTimeout(this.collisionHandle);
@@ -652,12 +664,34 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
 
     this.state.setLoading(true);
 
+    if (this.interactiveHandle !== null) {
+      clearTimeout(this.interactiveHandle);
+    }
     if (this.renderDelayHandle !== null) {
       clearTimeout(this.renderDelayHandle);
     }
 
+    // 交互期（参数拖动中）：短延迟后用低段数快速出一版预览，
+    // 保证拖动过程中持续有反馈（质量降、延迟低，见 quality.ts）
+    this.interactiveHandle = setTimeout(() => {
+      this.interactiveHandle = null;
+      if (this.destroyed) {
+        return;
+      }
+      setInteractiveQuality(true);
+      void this.renderModel(params, paramsDiff, true).finally(() => {
+        setInteractiveQuality(false);
+      });
+    }, RendererComponent.INTERACTIVE_DELAY);
+
+    // 停手 250ms 后全段数精修一次（force 全量重建，交付最终产物）
     this.renderDelayHandle = setTimeout(() => {
-      void this.renderModel(params, paramsDiff).finally(() => {
+      this.renderDelayHandle = null;
+      if (this.destroyed) {
+        return;
+      }
+      void this.renderModel(params, paramsDiff, true).finally(() => {
+        setInteractiveQuality(false);
         this.state.setLoading(false);
         // Params 是不可变的：每次更新都由 updateParam/patchParams 生成新对象，
         // 嵌套数组经 map/filter 重建，不存在就地修改，因此直接持有引用即可，
@@ -974,7 +1008,9 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     return entities;
   }
 
-  private async renderModel(params: Params, diff: string[]): Promise<void> {
+  private async renderModel(params: Params, diff: string[], force = false): Promise<void> {
+    // force（交互期精修 / 低段数预览后收尾）时忽略 diff 差异，全量重建
+    const effDiff = force ? Object.keys(params) : diff;
     let lidPos: Vec3;
     let basePos: Vec3;
     let sealPos: Vec3;
@@ -990,13 +1026,13 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       showDinRailMount,
     } = params;
 
-    if (this.checkDeps(diff, lidDeps)) {
+    if (this.checkDeps(effDiff, lidDeps)) {
       lidPos = waterProof ? [width / 2 + SPACING, -length / 2, 0] : [SPACING / 2, -length / 2, 0];
       this.lidOrigin = lidPos;
       this.lidModel = translate(lidPos, lid(params));
     }
 
-    if (this.checkDeps(diff, baseDeps)) {
+    if (this.checkDeps(effDiff, baseDeps)) {
       basePos = waterProof
         ? [-width / 2, -length / 2, 0]
         : [-(width + SPACING / 2), -length / 2, 0];
@@ -1005,15 +1041,15 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       this.baseModel = translate(basePos, this.baseModelLocal);
     }
 
-    if (this.checkDeps(diff, sealDeps) && waterProof) {
+    if (this.checkDeps(effDiff, sealDeps) && waterProof) {
       sealPos = [-width - width / 2 - SPACING, -length / 2, 0];
       this.sealOrigin = sealPos;
       this.sealModel = translate(sealPos, waterProofSeal(params));
-    } else if (this.checkDeps(diff, sealDeps) && !waterProof) {
+    } else if (this.checkDeps(effDiff, sealDeps) && !waterProof) {
       this.sealModel = null;
     }
 
-    if (this.checkDeps(diff, dinRailDeps) && dinMountEnabled && showDinRailMount) {
+    if (this.checkDeps(effDiff, dinRailDeps) && dinMountEnabled && showDinRailMount) {
       // 摆在盖板右侧，整体左边缘贴着「盖板右边缘 + SPACING」
       const lidX = waterProof ? width / 2 + SPACING : SPACING / 2;
       const rawDin = dinRailMountsPair(params);
@@ -1022,11 +1058,11 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       const dinRailPos: Vec3 = [lidX + width + SPACING - minX, 0, 0];
       this.dinRailOrigin = dinRailPos;
       this.dinRailModel = translate(dinRailPos, rawDin);
-    } else if (this.checkDeps(diff, dinRailDeps) && (!dinMountEnabled || !showDinRailMount)) {
+    } else if (this.checkDeps(effDiff, dinRailDeps) && (!dinMountEnabled || !showDinRailMount)) {
       this.dinRailModel = null;
     }
 
-    if (this.checkDeps(diff, mountDeps) && pcbMountParams.length > 0) {
+    if (this.checkDeps(effDiff, mountDeps) && pcbMountParams.length > 0) {
       const baseMountsPos: Vec3 = waterProof
         ? [-width / 2, -length / 2, 0]
         : [-(width + SPACING / 2), -length / 2, 0];
@@ -1042,20 +1078,20 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
       this.lidMountsModel = lidMounts ? translate(lidMountsPos, lidMounts) : null;
     }
 
-    if (this.checkDeps(diff, internalWallDeps) && internalWallParams.length > 0) {
+    if (this.checkDeps(effDiff, internalWallDeps) && internalWallParams.length > 0) {
       mountsPos = waterProof
         ? [-width / 2, -length / 2, 0]
         : [-(width + SPACING / 2), -length / 2, 0];
       this.internalWallsModel = translate(mountsPos, internalWalls(params));
     }
 
-    if (this.checkDeps(diff, cableClampDeps) && (params.cableClamps?.length ?? 0) > 0) {
+    if (this.checkDeps(effDiff, cableClampDeps) && (params.cableClamps?.length ?? 0) > 0) {
       const clampsPos: Vec3 = waterProof
         ? [-width / 2, -length / 2, 0]
         : [-(width + SPACING / 2), -length / 2, 0];
       const rawClamps = cableClamps(params);
       this.cableClampsModel = rawClamps ? translate(clampsPos, rawClamps) : null;
-    } else if (this.checkDeps(diff, cableClampDeps)) {
+    } else if (this.checkDeps(effDiff, cableClampDeps)) {
       this.cableClampsModel = null;
     }
 
@@ -1123,7 +1159,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     // 碰撞检测照常跑，只是基座隐藏时不把 PCB 悬空画出来。
     // 碰撞结果按依赖缓存 + 延后补算（D 优化）：改通风 / 壁挂 / 显示开关等无关参数时
     // 直接复用上次结果；依赖变化时先按旧结果渲染，300ms 后补算并原位替换 PCB 实体。
-    const collisionDirty = this.lastCollision === null || this.checkDeps(diff, collisionDeps);
+    const collisionDirty = this.lastCollision === null || this.checkDeps(effDiff, collisionDeps);
     this.pcbEntities = this.buildPcbEntities(params, this.lastCollision ?? {
       collides: false,
       hitsWalls: false,
@@ -1133,7 +1169,7 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     if (this.pcbEntities.length > 0 && params.showBase) {
       entities.push(...this.pcbEntities);
     }
-    if (params.pcbPreview.enabled && collisionDirty) {
+    if (params.pcbPreview.enabled && collisionDirty && !isInteractiveQuality()) {
       const seq = ++this.collisionSeq;
       if (this.collisionHandle !== null) {
         clearTimeout(this.collisionHandle);
@@ -1164,8 +1200,8 @@ export class RendererComponent implements AfterViewInit, OnDestroy {
     // manual orbit alone when the grid is simply toggled off.
     // 挂夹在盖板右侧另起一列，出现/消失会明显改变整体包络，重新取景一次
     if (
-      (gridEntity && this.checkDeps(diff, gridDeps)) ||
-      this.checkDeps(diff, ['dinRailMount', 'showDinRailMount'])
+      (gridEntity && this.checkDeps(effDiff, gridDeps)) ||
+      this.checkDeps(effDiff, ['dinRailMount', 'showDinRailMount'])
     ) {
       this.zoomToFit = true;
     }

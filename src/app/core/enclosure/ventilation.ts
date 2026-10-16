@@ -1,4 +1,6 @@
+import { seg } from './quality';
 import type { Geom3 } from '@jscad/modeling/src/geometries/types';
+
 import measureVolume from '@jscad/modeling/src/measurements/measureVolume';
 import { intersect, union } from '@jscad/modeling/src/operations/booleans';
 import { hull } from '@jscad/modeling/src/operations/hulls';
@@ -22,7 +24,7 @@ const clampAngle = (angle: number): number => {
  */
 const slotZ = (slotWidth: number, slotLength: number, depth: number, angle: number): Geom3 => {
   const r = Math.max(slotWidth / 2, 0.2);
-  const c = cylinder({ radius: r, height: depth, segments: 24 });
+  const c = cylinder({ radius: r, height: depth, segments: seg(24) });
   if (slotLength <= slotWidth) {
     return c;
   }
@@ -39,7 +41,7 @@ const slotZ = (slotWidth: number, slotLength: number, depth: number, angle: numb
  */
 const slotY = (slotWidth: number, slotLength: number, depth: number, angle: number): Geom3 => {
   const r = Math.max(slotWidth / 2, 0.2);
-  const c = rotateX(degToRad(90), cylinder({ radius: r, height: depth, segments: 24 }));
+  const c = rotateX(degToRad(90), cylinder({ radius: r, height: depth, segments: seg(24) }));
   if (slotLength <= slotWidth) {
     return c;
   }

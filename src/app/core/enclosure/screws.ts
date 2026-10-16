@@ -3,6 +3,8 @@ import { union } from '@jscad/modeling/src/operations/booleans';
 import { cylinder, cylinderElliptic } from '@jscad/modeling/src/primitives';
 import { translate } from '@jscad/modeling/src/operations/transforms';
 
+import { seg } from './quality';
+
 import { Params } from '../params';
 import {
   MIN_SCREW_RECESS_DEPTH,
@@ -121,7 +123,7 @@ export const lidScrewRecesses = (params: Params) => {
       startRadius: [lidScrewRecessDiameter / 2 + TOLERANCE, lidScrewRecessDiameter / 2 + TOLERANCE],
       endRadius: [lidScrewDiameter / 2, lidScrewDiameter / 2],
       height,
-      segments: 32,
+      segments: seg(32),
     });
 
     return union(
