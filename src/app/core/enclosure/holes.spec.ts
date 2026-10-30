@@ -231,4 +231,36 @@ describe('holes', () => {
       };
     });
   });
+
+  it('creates bottom hole cutters that cleanly span the entire floor thickness', () => {
+    // 底面透孔过切（对齐上游 62b0a89）：切割体两端各越界 0.2，不再与基座
+    // z=0 底面共面（共面留残膜），也不依赖「壁厚恰好大于地板」才打得穿
+    const params = cloneParams(DEFAULT_PARAMS);
+    params.floor = 3;
+    params.holes = [
+      { shape: 'circle', surface: 'bottom', diameter: 10, width: 10, length: 10, x: 0, y: 0 },
+    ];
+
+    const bottomHole = holes(params, ['bottom']);
+    const [[, , zMin], [, , zMax]] = measureBoundingBox(bottomHole);
+
+    expect(zMin).toBeLessThan(0);
+    expect(zMax).toBeGreaterThan(params.floor);
+  });
+
+  it('cuts through a floor thicker than the wall without leaving material', () => {
+    // 地板 12mm 远厚于壁厚（约 4mm）：旧实现切割体深度取壁厚，会在地板中间
+    // 戛然而止——孔根本打不穿；新实现按地板厚度取深
+    const params = cloneParams(DEFAULT_PARAMS);
+    params.floor = 12;
+    params.holes = [
+      { shape: 'circle', surface: 'bottom', diameter: 10, width: 10, length: 10, x: 0, y: 0 },
+    ];
+
+    const bottomHole = holes(params, ['bottom']);
+    const [[, , zMin], [, , zMax]] = measureBoundingBox(bottomHole);
+
+    expect(zMin).toBeLessThan(0);
+    expect(zMax).toBeGreaterThan(params.floor);
+  });
 });

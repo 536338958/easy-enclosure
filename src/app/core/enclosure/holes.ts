@@ -134,6 +134,12 @@ export const holes = (
         if (surface === 'top') {
           holeDepth = roof + insertHeight + TOP_HOLE_DEPTH_TOLERANCE;
           z = holeDepth / 2;
+        } else if (!isBlind) {
+          // 底面透孔：按地板厚度取深并在 z 向居中（上游 62b0a89 同修）。
+          // 旧实现 z=0 起切、深度取壁厚 —— 切割体底面与基座 z=0 底面严格共面
+          //（残膜风险），且地板厚于壁厚时根本切不穿。盲孔走下方独立定位，不在此列。
+          holeDepth = floor + SIDE_HOLE_DEPTH_TOLERANCE * 2;
+          z = floor / 2;
         }
         rot = [0, 0, 0];
       } else {
