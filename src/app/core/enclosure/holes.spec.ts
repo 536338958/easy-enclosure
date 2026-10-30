@@ -232,6 +232,99 @@ describe('holes', () => {
     });
   });
 
+  it('creates a double-d hole with parallel flats and correct dimensions on top surface', () => {
+    const params = cloneParams(DEFAULT_PARAMS);
+    params.holes = [
+      {
+        shape: 'double-d',
+        surface: 'top',
+        diameter: 13,
+        flatWidth: 11.8,
+        rotation: 0,
+        width: 10,
+        length: 10,
+        x: 0,
+        y: 0,
+      },
+    ];
+
+    const topHole = holes(params, ['top']);
+    const [[xMin, yMin], [xMax, yMax]] = measureBoundingBox(topHole);
+
+    expect(xMax - xMin).toBeCloseTo(13, 1);
+    expect(yMax - yMin).toBeCloseTo(11.8, 1);
+  });
+
+  it('rotates double-d hole flats with rotation angle', () => {
+    const params = cloneParams(DEFAULT_PARAMS);
+    params.holes = [
+      {
+        shape: 'double-d',
+        surface: 'top',
+        diameter: 13,
+        flatWidth: 11.8,
+        rotation: 90,
+        width: 10,
+        length: 10,
+        x: 0,
+        y: 0,
+      },
+    ];
+
+    const topHole = holes(params, ['top']);
+    const [[xMin, yMin], [xMax, yMax]] = measureBoundingBox(topHole);
+
+    expect(xMax - xMin).toBeCloseTo(11.8, 1);
+    expect(yMax - yMin).toBeCloseTo(13, 1);
+  });
+
+  it('creates double-d holes on side walls with flats oriented horizontally at 0 deg', () => {
+    const params = cloneParams(DEFAULT_PARAMS);
+    params.holes = [
+      {
+        shape: 'double-d',
+        surface: 'front',
+        diameter: 13,
+        flatWidth: 11.8,
+        rotation: 0,
+        width: 10,
+        length: 10,
+        x: 0,
+        y: 0,
+      },
+    ];
+
+    const frontHole = holes(params, ['front']);
+    const [[xMin, , zMin], [xMax, , zMax]] = measureBoundingBox(frontHole);
+
+    // 前面：水平轴 = X（孔径 13），竖直轴 = Z（切边间距 11.8）
+    expect(xMax - xMin).toBeCloseTo(13, 1);
+    expect(zMax - zMin).toBeCloseTo(11.8, 1);
+  });
+
+  it('preserves circular shape when flatWidth is greater than or equal to diameter', () => {
+    const params = cloneParams(DEFAULT_PARAMS);
+    params.holes = [
+      {
+        shape: 'double-d',
+        surface: 'top',
+        diameter: 13,
+        flatWidth: 15,
+        rotation: 0,
+        width: 10,
+        length: 10,
+        x: 0,
+        y: 0,
+      },
+    ];
+
+    const topHole = holes(params, ['top']);
+    const [[xMin, yMin], [xMax, yMax]] = measureBoundingBox(topHole);
+
+    expect(xMax - xMin).toBeCloseTo(13, 1);
+    expect(yMax - yMin).toBeCloseTo(13, 1);
+  });
+
   it('creates bottom hole cutters that cleanly span the entire floor thickness', () => {
     // 底面透孔过切（对齐上游 62b0a89）：切割体两端各越界 0.2，不再与基座
     // z=0 底面共面（共面留残膜），也不依赖「壁厚恰好大于地板」才打得穿

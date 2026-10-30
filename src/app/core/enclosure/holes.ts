@@ -1,7 +1,7 @@
 import { rotate, translate } from '@jscad/modeling/src/operations/transforms';
 import { degToRad } from '@jscad/modeling/src/utils';
 import { cuboid, cylinder } from '@jscad/modeling/src/primitives';
-import { union } from '@jscad/modeling/src/operations/booleans';
+import { intersect, union } from '@jscad/modeling/src/operations/booleans';
 import { hull } from '@jscad/modeling/src/operations/hulls';
 
 import { Params } from '../params';
@@ -175,7 +175,7 @@ export const holes = (
       // back / left 的旋转把规范 +Z 映向「朝外」，锥体需翻转（大口仍朝外）。
       // 段数 16：0.6mm 宽的装饰性倒角上弦高误差 <0.08mm 不可见，
       // 但能让倒角锥的三角形数（进而 holes() 的 union 成本）降 ~1/3 —— 见 docs/HOLE-CHAMFER-PERF.md
-      if (hole.chamfer && hole.shape !== 'circle') {
+      if (hole.chamfer && hole.shape !== 'circle' && hole.shape !== 'double-d') {
         // 倒角宽度按孔设置（缺省 0.6），夹紧 [0.2, 2]；
         // 盲孔再夹到孔深以内 —— 锥体切穿盲孔底等于把孔加深
         const c = Math.min(
@@ -245,6 +245,29 @@ export const holes = (
             ),
           ),
         );
+      } else if (hole.shape === 'double-d') {
+        // Double D 防旋转孔（对齐上游 a16d265）：圆柱 ∩ 扁方盒 = 两条平行切边。
+        // flatWidth ≥ diameter 时退化为整圆（与上游一致）；rotation 绕孔轴转切边方向。
+        const diameter = Math.max(0.1, hole.diameter);
+        const radius = diameter / 2;
+        const flatW =
+          hole.flatWidth !== undefined && hole.flatWidth > 0
+            ? Math.min(hole.flatWidth, diameter)
+            : diameter * 0.9;
+        let cutter = cylinder({
+          radius,
+          height: holeDepth,
+        });
+        if (flatW < diameter) {
+          const flatBox = cuboid({
+            size: [diameter * 2, flatW, holeDepth + 2],
+          });
+          cutter = intersect(cutter, flatBox);
+        }
+        if (hole.rotation) {
+          cutter = rotate([0, 0, degToRad(hole.rotation)], cutter);
+        }
+        result.push(translate([x, y, z], rotate(rot, cutter)));
       }
     });
   });

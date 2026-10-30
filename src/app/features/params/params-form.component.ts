@@ -184,7 +184,20 @@ export class ParamsFormComponent {
   updateHole(index: number, patch: Partial<Hole>): void {
     const current = this.params();
     this.state.patchParams({
-      holes: current.holes.map((item, i) => (i === index ? { ...item, ...patch } : item)),
+      holes: current.holes.map((item, i) => {
+        if (i !== index) return item;
+        const updated = { ...item, ...patch };
+        // 切到 Double D 时补缺省：切边间距 = 直径×0.9、旋转 0
+        if (patch.shape === 'double-d') {
+          if (updated.flatWidth === undefined) {
+            updated.flatWidth = updated.diameter ? Number((updated.diameter * 0.9).toFixed(1)) : 11;
+          }
+          if (updated.rotation === undefined) {
+            updated.rotation = 0;
+          }
+        }
+        return updated;
+      }),
     });
   }
 

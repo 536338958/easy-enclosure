@@ -109,6 +109,36 @@ describe('ParamsFormComponent', () => {
     expect(state.params().snapFit.enabled).toBeTrue();
   });
 
+  it('supports double-d hole shape, flat width, and rotation', () => {
+    const initialCount = state.params().holes.length;
+
+    component.addHole();
+    component.updateHole(initialCount, {
+      shape: 'double-d',
+      diameter: 13,
+      flatWidth: 11.8,
+      rotation: 90,
+    });
+
+    const hole = state.params().holes[initialCount];
+    expect(hole.shape).toBe('double-d');
+    expect(hole.diameter).toBe(13);
+    expect(hole.flatWidth).toBe(11.8);
+    expect(hole.rotation).toBe(90);
+
+    // 切形状时补缺省（只填缺失字段，不覆盖已有值）：新孔只给 shape，
+    // flatWidth 应播种为 diameter×0.9、rotation 0
+    component.addHole();
+    component.updateHole(initialCount + 1, { shape: 'double-d', diameter: 10 });
+    const seeded = state.params().holes[initialCount + 1];
+    expect(seeded.flatWidth).toBe(9);
+    expect(seeded.rotation).toBe(0);
+
+    component.removeHole(initialCount + 1);
+    component.removeHole(initialCount);
+    expect(state.params().holes.length).toBe(initialCount);
+  });
+
   it('ignores empty numeric input', () => {
     const before = state.params().length;
     component.setNumberParam('length', '');

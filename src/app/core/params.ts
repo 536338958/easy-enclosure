@@ -1,13 +1,19 @@
 import type { Surface } from './enclosure';
 
+export type HoleShape = 'circle' | 'square' | 'rectangle' | 'double-d';
+
 export type Hole = {
-  shape: 'circle' | 'square' | 'rectangle';
+  shape: HoleShape;
   diameter: number;
   width: number;
   length: number;
   surface: Surface;
   x: number;
   y: number;
+  /** Double D 防旋转孔：两平行切边的间距；缺省 diameter×0.9；≥ diameter 时退化为圆孔 */
+  flatWidth?: number;
+  /** Double D 防旋转孔：绕孔轴旋转角（度） */
+  rotation?: number;
   /** 孔型：through = 透孔（缺省，兼容旧预设）；blind = 不透孔，由外壁向内只钻 blindDepth */
   holeType?: 'through' | 'blind';
   /** 不透孔深度（mm），由外壁向内量；超出壁厚会被夹住保证不打穿 */
