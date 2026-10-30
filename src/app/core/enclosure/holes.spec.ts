@@ -4,6 +4,7 @@ import { intersect } from '@jscad/modeling/src/operations/booleans';
 import { cuboid } from '@jscad/modeling/src/primitives';
 import { translate } from '@jscad/modeling/src/operations/transforms';
 import { DEFAULT_PARAMS, cloneParams } from '../params';
+import { cavityFloorZ } from './dimensions';
 import { holes } from './holes';
 
 describe('holes', () => {
@@ -339,6 +340,25 @@ describe('holes', () => {
 
     expect(zMin).toBeLessThan(0);
     expect(zMax).toBeGreaterThan(params.floor);
+  });
+
+  it('cuts through the base slab even when lid screws are off (slab = innerWallInset)', () => {
+    // lidScrews=false 时底板是 innerWallInset（约 6mm）而非 floor ——
+    // 切割体若按 floor 取深会在底板中间戛然而止（用户实测「打不穿」）
+    const params = cloneParams(DEFAULT_PARAMS);
+    params.lidScrews = false;
+    params.floor = 2;
+    params.holes = [
+      { shape: 'circle', surface: 'bottom', diameter: 10, width: 10, length: 10, x: 0, y: 0 },
+    ];
+
+    const bottomHole = holes(params, ['bottom']);
+    const [[, , zMin], [, , zMax]] = measureBoundingBox(bottomHole);
+    const slab = cavityFloorZ(params);
+
+    expect(slab).toBeGreaterThan(params.floor); // 前提：底板比 floor 厚
+    expect(zMin).toBeLessThan(0);
+    expect(zMax).toBeGreaterThan(slab);
   });
 
   it('cuts through a floor thicker than the wall without leaving material', () => {
